@@ -46,7 +46,12 @@ def _przebieg(con) -> int:
 
 @app.get("/", response_class=HTMLResponse)
 def start():
-    return RedirectResponse("/anomalie")
+    """Pusta baza = pierwsze uruchomienie. Wtedy sensowny start to import,
+    a nie kolejka, w ktorej nic nie ma."""
+    con = _con()
+    jest_przebieg = bool(db.ostatni_przebieg(con))
+    con.close()
+    return RedirectResponse("/anomalie" if jest_przebieg else "/import")
 
 
 @app.get("/anomalie", response_class=HTMLResponse)
@@ -59,9 +64,7 @@ def anomalie(request: Request,
     przebieg = _przebieg(con)
     if not przebieg:
         con.close()
-        return HTMLResponse("<p style='font-family:sans-serif;padding:2rem'>"
-                            "Brak danych — uruchom <code>python -m atrybuty.pipeline "
-                            "import dane/products.csv</code></p>")
+        return RedirectResponse("/import")
 
     fl = zapytania.Filtr(
         kategoria=kategoria, producent=producent, regula=regula, warstwa=warstwa,

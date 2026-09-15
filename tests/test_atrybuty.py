@@ -546,3 +546,20 @@ def test_zapisz_plik_wymusza_rozszerzenie(tmp_path, monkeypatch):
     monkeypatch.setattr(importer, "KATALOG_DANYCH", tmp_path)
     p = importer.zapisz_plik("eksport", b"id;nazwa\n1;X\n")
     assert p.suffix == ".csv" and p.parent == tmp_path and p.read_bytes().startswith(b"id;")
+
+
+def test_pusta_baza_prowadzi_do_importu(tmp_path, monkeypatch):
+    """Na świeżej instalacji `/` i `/anomalie` mają prowadzić do wgrania pliku,
+    a nie pokazywać komendy z konsoli."""
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from fastapi.testclient import TestClient
+
+    baza = tmp_path / "pusta.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    klient = TestClient(app_mod.app)
+
+    for sciezka in ("/", "/anomalie"):
+        odp = klient.get(sciezka, follow_redirects=False)
+        assert odp.status_code in (303, 307) and odp.headers["location"] == "/import"
