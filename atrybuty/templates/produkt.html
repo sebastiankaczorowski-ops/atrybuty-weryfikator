@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ p.nazwa }} — atrybuty</title>
+<style>
+:root{--bg:#f6f8f7;--surface:#fff;--surface-2:#edf1ef;--ink:#15201d;--muted:#6b7c76;
+      --line:#d9e1dd;--accent:#0e5e52;--crit:#9a2b2b;--crit-soft:#f5dedc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.6 "IBM Plex Sans",system-ui,sans-serif;padding:20px}
+.wrap{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:320px 1fr;gap:24px}
+h1{font-size:19px;margin:0 0 4px}
+img{width:100%;border:1px solid var(--line);border-radius:3px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line)}
+th,td{text-align:left;padding:7px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{background:var(--surface-2);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+code{font-family:"IBM Plex Mono",monospace;font-size:.9em}
+.meta{color:var(--muted);font-size:13px;margin-bottom:14px}
+.f{background:var(--crit-soft);border-left:3px solid var(--crit);padding:8px 11px;
+   margin-bottom:6px;border-radius:2px;font-size:13px}
+a{color:var(--accent)}
+a.panel{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;
+        padding:6px 13px;border-radius:2px;font-weight:600;font-size:13.5px}
+@media(max-width:760px){.wrap{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    {% if p.zdjecie %}<img src="{{ p.zdjecie }}" alt="{{ p.nazwa }}">
+    {% else %}<p class="meta">Brak zdjęcia</p>{% endif %}
+  </div>
+  <div>
+    <h1>{{ p.nazwa }}</h1>
+    <div class="meta">
+      <code>{{ p.id }}</code> · {{ p.producent }}{% if p.kolekcja %} · {{ p.kolekcja }}{% endif %}<br>
+      kategoria: {{ nazwy_kat.get(p.kategoria, p.kategoria) }} (źródło: {{ p.zrodlo_kategorii }})
+    </div>
+    <p><a class="panel" href="{{ link_panelu(p.id) }}" target="_blank" rel="noopener">
+      Edytuj w panelu sklepu ↗</a></p>
+
+    {% if findingi %}
+      <h2 style="font-size:15px">Findingi ({{ findingi|length }})</h2>
+      {% for f in findingi %}
+        <div class="f"><b>{{ f.atrybut }}</b> — {{ f.dowod }}
+          <br><code>{{ f.regula_id }}</code> · {{ f.waga }} · pewność {{ '%.0f'|format(f.pewnosc*100) }}%
+          {% if f.proponowana_wartosc %} · propozycja: <b>{{ f.proponowana_wartosc }}</b>{% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <h2 style="font-size:15px">Atrybuty po normalizacji</h2>
+    <table>
+      <thead><tr><th>Atrybut</th><th>Wartość</th><th>Wartość surowa</th></tr></thead>
+      <tbody>
+      {% for k, v in p.atrybuty.items() %}
+        <tr><td>{{ k }}</td><td>{{ v }}</td>
+            <td>{% if p.atrybuty_surowe.get(k) != v %}<code>{{ p.atrybuty_surowe.get(k) }}</code>{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p><a href="/anomalie">← wróć do kolejki</a></p>
+  </div>
+</div>
+</body>
+</html>

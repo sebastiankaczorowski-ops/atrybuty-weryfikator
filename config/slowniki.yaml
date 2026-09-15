@@ -1,0 +1,171 @@
+# Definicje atrybutów: typ, jednostka, wartości kanoniczne.
+#
+# Słowniki są ZBUDOWANE Z REALNYCH DANYCH z eksportu 2026-09-09 — wartość
+# kanoniczna to ta faktycznie używana w sklepie, nie wymyślona. Dzięki temu
+# reguła zgłasza tylko realne odstępstwa, a nie własne braki.
+#
+# typ:
+#   liczba      — wartość numeryczna, walidowana zakresem ze schema.yaml
+#   enum        — jedna wartość ze słownika
+#   multi_enum  — lista wartości po przecinku (kolejność bez znaczenia)
+#   tekst       — bez walidacji słownikowej
+#
+# aliasy: warianty zapisu mapowane na wartość kanoniczną.
+# Wszystko poza słownikiem i aliasami idzie przez rapidfuzz: powyżej progu
+# `auto` poprawiane automatycznie, między `auto` a `sugestia` do weryfikacji
+# ręcznej, poniżej — nowa wartość do decyzji.
+
+progi_fuzzy:
+  auto: 92
+  sugestia: 78
+
+# Atrybut wypełniony u co najmniej tylu % produktów kategorii uznajemy
+# za wymagany — brak jest wtedy findingiem.
+prog_wymagalnosci: 0.95
+
+atrybuty:
+  # --- wymiary i masy ---
+  Szerokość:           {typ: liczba, jednostka: cm}
+  Wysokość:            {typ: liczba, jednostka: cm}
+  Głębokość:           {typ: liczba, jednostka: cm}
+  Długość:             {typ: liczba, jednostka: cm}
+  Średnica:            {typ: liczba, jednostka: cm}
+  Waga:                {typ: liczba, jednostka: kg}
+  Wysokość do ziemi:   {typ: liczba, jednostka: cm}
+  Wysokość siedziska:  {typ: liczba, jednostka: cm}
+  Głębokość siedziska: {typ: liczba, jednostka: cm}
+  Szerokość siedziska: {typ: liczba, jednostka: cm}
+  Długość powierzchni spania:   {typ: liczba, jednostka: cm}
+  Szerokość powierzchni spania: {typ: liczba, jednostka: cm}
+  Szerokość po rozłożeniu: {typ: liczba, jednostka: cm}
+  Udźwig:              {typ: liczba, jednostka: kg}
+  Maksymalne obciążenie: {typ: liczba, jednostka: kg}
+
+  # --- materiały ---
+  Materiał:
+    typ: multi_enum
+    wartosci: [płyta meblowa, drewno, metal, szkło, tworzywo sztuczne,
+               tapicerowane, marmur, ceramika, kamień, rattan, lustro, mdf]
+    aliasy: {plyta: płyta meblowa, płyta: płyta meblowa, lite drewno: drewno,
+             stal: metal, plastik: tworzywo sztuczne, tkanina: tapicerowane}
+  Materiał obicia:
+    typ: multi_enum
+    wartosci: [welur, ekoskóra, tkanina, bouclé, sztruks, szenil, plecionka,
+               skóra naturalna]
+  Właściwości obicia: {typ: tekst}
+  Wypełnienie:        {typ: tekst}
+
+  # --- liczebniki (porównywalne z nazwą i ze zdjęciem) ---
+  Liczba drzwi:
+    typ: enum
+    liczebnik: true
+    wartosci: [bez drzwi, 1-drzwiowe, 2-drzwiowe, 3-drzwiowe, 4-drzwiowe, wielodrzwiowe]
+  Liczba szuflad:
+    typ: enum
+    liczebnik: true
+    wartosci: [bez szuflad, 1-szuflada, 2-szuflady, 3-szuflady, 4 i więcej]
+  Liczba półek:
+    typ: enum
+    liczebnik: true
+    wartosci: [bez półek, 1-półka, 2-półki, 3-półki, 4-półki, 5 i więcej]
+  Liczba szafek:
+    typ: enum
+    liczebnik: true
+    wartosci: [bez szafek, 1-szafka, 2-szafki, 3-szafki, 4 i więcej]
+  Liczba drążków:
+    typ: enum
+    liczebnik: true
+    wartosci: [brak drążków, 1 drążek, 2 drążki, 3 drążki, 4 i więcej drążków]
+    aliasy: {"4 i więcej": 4 i więcej drążków}
+  Ilość nóg:   {typ: tekst}
+  Ilość osób:
+    typ: enum
+    wartosci: [1-osobowe, 2-osobowe, 3-osobowe, 4-osobowe, 6-osobowe,
+               8-osobowe, 10-osobowe, 12-osobowe]
+
+  # --- cechy konstrukcyjne ---
+  Stopień montażu:
+    typ: enum
+    wartosci: [wymaga złożenia, mebel gotowy]
+  Podparcie:
+    typ: enum
+    wartosci: [na nóżkach, na kółkach, na płozach, wiszące, kolumna, inne]
+  Sposób ustawienia:
+    typ: enum
+    wartosci: [stojący, wiszący]
+  Oświetlenie:
+    typ: enum
+    wartosci: [brak, opcjonalne, w zestawie]
+  Rodzaj drzwi:
+    typ: enum
+    wartosci: [uchylne, przesuwne, klapowe, składane]
+  Kierunek otwierania:
+    typ: enum
+    wartosci: [Uniwersalna, W lewą stronę, W prawą stronę, Do góry, W dół]
+  Kształt blatu:
+    typ: enum
+    wartosci: [prostokątny, okrągły, kwadratowy, owalny, nieregularny]
+  Rodzaj frontu:
+    typ: multi_enum
+    wartosci: [pełny, ryflowany, przeszklony, z lustrem, ażurowy]
+  Rodzaj komody:
+    typ: enum
+    wartosci: [Z szufladami i drzwiami, Z szufladami, Z drzwiami, Ze szkłem,
+               Z szufladą i drzwiami]
+  Układ mebla:
+    typ: enum
+    wartosci: [lewostronny, prawostronny, uniwersalny]
+  Dekoracje:
+    typ: multi_enum
+    wartosci: [przeszycia, pikowanie, widoczne usłojenie drewna, guziki,
+               ryflowanie, fazowanie, postarzanie, rzeźbienia]
+
+  # --- cechy opisowe typu "z / bez" (w danych NIE są tak/nie) ---
+  Tapicerowane:   {typ: enum, wartosci: [tapicerowane, nietapicerowane]}
+  Zagłówek:       {typ: enum, wartosci: [z zagłówkiem, bez zagłówka]}
+  Podłokietniki:  {typ: enum, wartosci: [z podłokietnikami, bez podłokietników]}
+  Antyalergiczne: {typ: enum, wartosci: [antyalergiczne, nie antyalergiczne]}
+
+  # --- cechy tak / nie ---
+  Rozkładane:               {typ: enum, wartosci: [tak, nie]}
+  Na nóżkach:               {typ: enum, wartosci: [tak, nie]}
+  Materac w zestawie:       {typ: enum, wartosci: [tak, nie]}
+  Stelaż w zestawie:        {typ: enum, wartosci: [tak, nie]}
+  Z pojemnikiem na pościel: {typ: enum, wartosci: [tak, nie]}
+
+  # --- materace i siedziska ---
+  Twardość:
+    typ: multi_enum
+    wartosci: [miękkie, średnie, twarde, bardzo twarde]
+  Cechy materaca:
+    typ: multi_enum
+    wartosci: [antyalergiczny, dwustronny, wentylowany, ze strefami twardości,
+               ze zdejmowanym pokrowcem]
+  Funkcje:
+    typ: multi_enum
+    wartosci: [funkcja spania, funkcja relax, regulowane zagłówki,
+               regulowane siedzisko, regulowane podłokietniki, port usb]
+  Typ funkcji spania:
+    typ: enum
+    wartosci: [delfin, DL, click-clack, stelaż włoski, wózek,
+               stelaż belgijski, leopard, easy-lift, sedalift]
+  Masa ciała:
+    typ: enum
+    wartosci: [do 80 kg, od 80 do 120 kg]
+  Dla kogo:
+    typ: enum
+    wartosci: [Dla dorosłych, Dla dzieci, Dla młodzieży, Dla niemowląt]
+
+  Styl:
+    typ: enum
+    wartosci: [nowoczesny, klasyczny, dziecięce i młodzieżowe, glamour,
+               industrialny, skandynawski, minimalistyczny, retro,
+               prowansalski, loftowy, rustykalny, boho, dziewczęcy]
+  Kategorie:
+    typ: enum
+    wartosci: [Ekonomiczne, Premium, Polecane]
+  Rozmiar: {typ: tekst}      # "160x200" — walidowane osobno, przez porównanie z nazwą
+  Typ:     {typ: enum, wartosci: [Wiszące, Stojące, Z koszem na pranie]}
+
+# Reguły (sprzeczności, relacje, klucze do usunięcia) przeniesione do
+# config/reguly.yaml — są edytowalne z podstrony /reguly.

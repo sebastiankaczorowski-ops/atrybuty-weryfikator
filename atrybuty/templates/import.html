@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wgranie pliku — kontrola atrybutów OXM</title>
+<script src="/static/htmx.min.js"></script>
+<style>
+:root{
+  --bg:#f6f8f7; --surface:#fff; --surface-2:#edf1ef;
+  --ink:#15201d; --ink-2:#3c4c47; --muted:#6b7c76;
+  --line:#d9e1dd; --line-strong:#b9c7c1;
+  --accent:#0e5e52; --accent-soft:#d7e8e3;
+  --crit:#9a2b2b; --crit-soft:#f5dedc;
+  --ok:#3a6b2e; --ok-soft:#dfebd6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9em}
+a{color:var(--accent)}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px;
+       display:flex;flex-wrap:wrap;gap:16px;align-items:baseline}
+header h1{font-size:16px;margin:0;font-weight:600}
+header nav{margin-left:auto;display:flex;gap:14px;font-size:13.5px}
+main{padding:18px 20px 70px;max-width:1080px;margin:0 auto;display:flex;
+     flex-direction:column;gap:24px}
+h2{font-size:15px;margin:0 0 3px;font-weight:600}
+.pod{color:var(--muted);font-size:13px;margin:0 0 12px;max-width:80ch}
+section.karta{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+              padding:16px 18px}
+.pola{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.pole{display:flex;flex-direction:column;gap:4px}
+.pole label{font-size:11.5px;color:var(--muted)}
+input[type=file],select{font:inherit;padding:6px 8px;border:1px solid var(--line-strong);
+       border-radius:2px;background:var(--bg);color:var(--ink)}
+label.ptaszek{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2)}
+button{font:inherit;padding:7px 16px;border:1px solid var(--line-strong);border-radius:2px;
+       background:var(--bg);color:var(--ink-2);cursor:pointer}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button[disabled]{opacity:.5;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line)}
+thead th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+         background:var(--surface-2);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.wymagania{background:var(--surface-2);border-radius:3px;padding:12px 15px;font-size:13px;
+           color:var(--ink-2)}
+.wymagania code{background:var(--surface);padding:1px 5px;border-radius:2px}
+.kolo{width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;
+      border-radius:50%;display:inline-block;animation:obrot .7s linear infinite;flex:none}
+@keyframes obrot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){ .kolo{animation:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Wgranie pliku</h1>
+  <span class="pod" style="margin:0">dane lądują w <code>{{ katalog }}</code></span>
+  <nav>
+    <a href="/anomalie">kolejka weryfikacji</a>
+    <a href="/braki">braki danych</a>
+    <a href="/reguly">reguły</a>
+  </nav>
+</header>
+
+<main>
+
+<section class="karta">
+  <h2>Nowy eksport ze sklepu</h2>
+  <p class="pod">Plik zastępuje poprzedni komplet produktów i findingów.
+  <b>Decyzje przeżywają</b> — są kluczowane po produkcie, atrybucie i starej
+  wartości, więc po wgraniu system sam rozpozna, co już poprawiłeś, a co jest
+  wciąż otwarte.</p>
+
+  <form method="post" action="/import" enctype="multipart/form-data">
+    <div class="pola">
+      <div class="pole">
+        <label>Plik produktów (CSV, średnik)</label>
+        <input type="file" name="plik" accept=".csv,text/csv" required>
+      </div>
+      <div class="pole">
+        <label>Opcjonalnie: osobny plik kategorii (starszy format z BigQuery)</label>
+        <input type="file" name="plik_kategorii" accept=".csv,text/csv">
+      </div>
+      <label class="ptaszek">
+        <input type="checkbox" name="regeneruj_schema" value="1">
+        przelicz zakresy per kategoria
+      </label>
+      <button class="p" type="submit" {{ 'disabled' if trwa }}>
+        {{ 'Import w toku…' if trwa else 'Wgraj i przelicz' }}</button>
+    </div>
+  </form>
+
+  <p class="pod" style="margin-top:10px">Przeliczenie zakresów aktualizuje
+  <code>config/schema.yaml</code> na podstawie nowych danych — rób to przy
+  pierwszym imporcie i gdy oferta mocno się zmieni. Uwaga: nadpisze ręczne
+  korekty progów.</p>
+
+  <div class="wymagania">
+    Wymagane kolumny: <code>id</code>, <code>nazwa</code>, <code>producent</code>,
+    <code>kolekcja</code>, <code>zdjecie</code>, <code>atrybuty</code>.
+    Opcjonalne: <code>typ</code> i <code>podtyp</code> (kategoria ze sklepu —
+    bez nich kategoria jest zgadywana z nazwy), <code>style</code>.
+    Atrybuty w formacie <code>Klucz: wartość | Klucz: wartość</code>.
+  </div>
+</section>
+
+<section class="karta" id="stan"
+         hx-get="/import/stan" hx-trigger="{{ 'load, every 2s' if trwa else 'none' }}"
+         hx-swap="innerHTML">
+  {% include "_stan_importu.html" %}
+</section>
+
+{% if wgrane %}
+<section class="karta">
+  <h2>Wgrane pliki</h2>
+  <p class="pod">Możesz przeliczyć ponownie z pliku, który już tu jest —
+  bez wgrywania go drugi raz.</p>
+  <table>
+    <thead><tr><th>Plik</th><th>Rozmiar</th><th>Wgrano</th><th></th></tr></thead>
+    <tbody>
+      {% for p in wgrane %}
+      <tr>
+        <td><code>{{ p.nazwa }}</code></td>
+        <td class="n">{{ p.rozmiar_mb }} MB</td>
+        <td>{{ p.zmodyfikowano }}</td>
+        <td>
+          <form method="post" action="/import/ponow" style="display:inline">
+            <input type="hidden" name="nazwa" value="{{ p.nazwa }}">
+            <button type="submit" {{ 'disabled' if trwa }}>Przelicz z tego pliku</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section class="karta">
+  <h2>Historia przebiegów</h2>
+  {% if historia %}
+  <table>
+    <thead><tr><th>#</th><th>Kiedy</th><th>Plik</th><th>Produktów</th><th>Findingów</th></tr></thead>
+    <tbody>
+      {% for h in historia %}
+      <tr>
+        <td class="n">{{ h.id }}</td>
+        <td>{{ h.utworzono[:16].replace('T',' ') }}</td>
+        <td><code>{{ h.plik.split('/')[-1] }}</code></td>
+        <td class="n">{{ h.liczba_produktow }}</td>
+        <td class="n">{{ h.liczba_findingow }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="pod">Jeszcze nic nie wgrano.</p>
+  {% endif %}
+</section>
+
+</main>
+</body>
+</html>

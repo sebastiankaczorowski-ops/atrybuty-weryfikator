@@ -1,0 +1,8 @@
+# Ustawienia aplikacji.
+
+# Link do edycji produktu w panelu sklepu. {id} podstawiamy z kolumny `id`
+# eksportu (= short_id z BigQuery).
+link_produktu: "https://oxm.twojemeble.pl/admin/product/product/{id}/edit?page=1#group1"
+
+# Ile pozycji na stronę w kolejce weryfikacji.
+na_stronie: 50

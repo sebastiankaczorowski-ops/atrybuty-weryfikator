@@ -1,0 +1,3775 @@
+_meta:
+  opis: 'Wygenerowane automatycznie przez schema_gen. Poprawiaj ręcznie — plik jest wersjonowany, a regeneracja
+    NIE nadpisuje pól oznaczonych `recznie: true`.'
+  min_probka: 30
+  mnoznik_mad: 6.0
+kategorie:
+  akcesorium:
+    liczba_produktow: 553
+    zakresy:
+      Szerokość:
+        n: 415
+        mediana: 87.0
+        mad: 36.1
+        p1: 3.1
+        p99: 280.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 303.6
+      Wysokość:
+        n: 400
+        mediana: 21.0
+        mad: 18.8
+        p1: 1.5
+        p99: 238.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 238.0
+      Głębokość:
+        n: 366
+        mediana: 40.5
+        mad: 13.9
+        p1: 1.0
+        p99: 106.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 123.9
+      Długość:
+        n: 38
+        mediana: 72.5
+        mad: 21.0
+        p1: 34.3
+        p99: 200.3
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 200.3
+      Waga:
+        n: 283
+        mediana: 9.0
+        mad: 5.5
+        p1: 0.1
+        p99: 95.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 95.0
+    pokrycie:
+      Szerokość: 0.75
+      Wysokość: 0.723
+      Stopień montażu: 0.698
+      Głębokość: 0.662
+      Waga: 0.514
+      Materiał: 0.468
+      Styl: 0.199
+      Długość: 0.069
+      Tapicerowane: 0.065
+      Liczba szuflad: 0.061
+      Stelaż w zestawie: 0.061
+      Materac w zestawie: 0.061
+      Liczba drzwi: 0.056
+      Liczba półek: 0.052
+      Oświetlenie: 0.049
+      Zagłówek: 0.034
+      Rodzaj drzwi: 0.031
+      Z pojemnikiem na pościel: 0.022
+      Podparcie: 0.016
+      Rodzaj frontu: 0.016
+      Dekoracje: 0.014
+      Wypełnienie: 0.014
+      Na nóżkach: 0.009
+      Rodzaj komody: 0.007
+      Udźwig: 0.007
+      Rodzaj łóżka: 0.007
+      Do poprawy: 0.007
+      Liczba szafek: 0.007
+      Maksymalne obciążenie: 0.007
+      Designerskie: 0.005
+      Wysokość siedziska: 0.005
+      Podłokietniki: 0.005
+      Ilość osób: 0.005
+      Twardość: 0.005
+      Rozkładane: 0.005
+      Regulacja: 0.005
+      Pokrowiec zdejmowalny: 0.005
+      Podnóżek: 0.005
+      Kształt: 0.004
+      Wyświetlanie sofy w wyszukiwarce: 0.004
+      Rozmiar: 0.004
+      Środek szafy: 0.004
+      Kształt blatu: 0.004
+      Liczba drążków: 0.002
+      Skórzane: 0.002
+      Rodzaj krzesła: 0.002
+      Ilość nóg: 0.002
+      '!przepisać na pokoje -> Rodzaj biurka': 0.002
+      Ilość wkładek: 0.002
+      Typ: 0.002
+      Sposób ustawienia: 0.002
+    wymagane: []
+  biurko:
+    liczba_produktow: 622
+    zakresy:
+      Długość:
+        n: 110
+        mediana: 125.0
+        mad: 10.0
+        p1: 100.0
+        p99: 190.0
+        min_dopuszczalne: 65.0
+        max_dopuszczalne: 190.0
+      Szerokość:
+        n: 618
+        mediana: 124.0
+        mad: 13.4
+        p1: 77.2
+        p99: 200.0
+        min_dopuszczalne: 43.6
+        max_dopuszczalne: 204.4
+      Głębokość:
+        n: 616
+        mediana: 60.0
+        mad: 10.0
+        p1: 27.0
+        p99: 136.8
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 136.8
+      Wysokość:
+        n: 617
+        mediana: 75.5
+        mad: 1.0
+        p1: 60.0
+        p99: 138.2
+        min_dopuszczalne: 60.0
+        max_dopuszczalne: 138.2
+      Waga:
+        n: 480
+        mediana: 40.0
+        mad: 10.0
+        p1: 12.2
+        p99: 99.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 100.0
+    pokrycie:
+      Szerokość: 0.994
+      Wysokość: 0.992
+      Głębokość: 0.99
+      Materiał: 0.961
+      Stopień montażu: 0.947
+      Liczba szuflad: 0.937
+      Kształt blatu: 0.865
+      Liczba półek: 0.852
+      Liczba drzwi: 0.82
+      Liczba szafek: 0.777
+      Waga: 0.773
+      Podparcie: 0.703
+      Półka na klawiaturę: 0.63
+      Długość: 0.177
+      Styl: 0.177
+      Układ mebla: 0.138
+      Do poprawy: 0.129
+      Regulacja: 0.124
+      '!przepisać na pokoje -> Rodzaj biurka': 0.095
+      Maksymalna wysokość: 0.085
+      Podnóżek: 0.069
+      Rodzaj frontu: 0.066
+      Rodzaj drzwi: 0.042
+      Wysokość do ziemi: 0.04
+      Oświetlenie: 0.035
+      Ilość nóg: 0.021
+      Maksymalne obciążenie: 0.019
+      Udźwig: 0.016
+      Elementy zestawu: 0.016
+      Wyposażenie: 0.014
+      Dekoracje: 0.013
+      Kierunek otwierania: 0.01
+      Rodzaj płyty: 0.01
+      Rodzaj folii: 0.006
+      Liczba drążków: 0.003
+      Na nóżkach: 0.003
+      Środek szafy: 0.002
+      Rodzaj witryny: 0.002
+      Sposób ustawienia: 0.002
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Materiał
+    - Stopień montażu
+    - Liczba szuflad
+  fotel:
+    liczba_produktow: 1014
+    zakresy:
+      Szerokość:
+        n: 893
+        mediana: 77.0
+        mad: 9.0
+        p1: 48.0
+        p99: 135.1
+        min_dopuszczalne: 23.0
+        max_dopuszczalne: 135.1
+      Wysokość:
+        n: 888
+        mediana: 90.5
+        mad: 11.5
+        p1: 43.5
+        p99: 130.6
+        min_dopuszczalne: 21.5
+        max_dopuszczalne: 159.5
+      Głębokość:
+        n: 854
+        mediana: 86.0
+        mad: 8.0
+        p1: 48.0
+        p99: 187.0
+        min_dopuszczalne: 38.0
+        max_dopuszczalne: 187.0
+      Wysokość siedziska:
+        n: 734
+        mediana: 46.0
+        mad: 2.0
+        p1: 35.0
+        p99: 62.0
+        min_dopuszczalne: 34.0
+        max_dopuszczalne: 62.0
+      Waga:
+        n: 708
+        mediana: 23.0
+        mad: 9.0
+        p1: 5.3
+        p99: 68.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 77.0
+      Głębokość siedziska:
+        n: 633
+        mediana: 53.0
+        mad: 3.0
+        p1: 41.0
+        p99: 80.7
+        min_dopuszczalne: 35.0
+        max_dopuszczalne: 80.7
+      Szerokość siedziska:
+        n: 447
+        mediana: 52.0
+        mad: 4.0
+        p1: 37.0
+        p99: 107.7
+        min_dopuszczalne: 28.0
+        max_dopuszczalne: 107.7
+      Udźwig:
+        n: 37
+        mediana: 110.0
+        mad: 0.0
+        p1: 110.0
+        p99: 141.0
+        min_dopuszczalne: 110.0
+        max_dopuszczalne: 141.0
+    pokrycie:
+      Szerokość: 0.881
+      Wysokość: 0.876
+      Materiał: 0.864
+      Głębokość: 0.842
+      Podłokietniki: 0.834
+      Podparcie: 0.805
+      Na nóżkach: 0.802
+      Stopień montażu: 0.766
+      Wysokość siedziska: 0.724
+      Waga: 0.698
+      Głębokość siedziska: 0.624
+      Szerokość siedziska: 0.441
+      Dekoracje: 0.42
+      Podnóżek: 0.298
+      Wypełnienie: 0.297
+      Tapicerowane: 0.178
+      Funkcje: 0.176
+      Materiał obicia: 0.134
+      Ilość osób: 0.088
+      Styl: 0.081
+      Zagłówek: 0.058
+      Z pojemnikiem na pościel: 0.044
+      Udźwig: 0.036
+      Właściwości obicia: 0.034
+      Designerskie: 0.028
+      Ilość nóg: 0.025
+      Do poprawy: 0.021
+      Regulacja: 0.017
+      Pokrowiec zdejmowalny: 0.016
+      TM Design: 0.015
+      Typ oparcia: 0.015
+      Typ funkcji spania: 0.011
+      Wysokość oparcia: 0.008
+      Liczba półek: 0.006
+      Maksymalne obciążenie: 0.006
+      Wyświetlanie sofy w wyszukiwarce: 0.005
+      Szerokość powierzchni spania: 0.005
+      Długość powierzchni spania: 0.005
+      Wysokość z zagłówkiem: 0.005
+      Rozkładane: 0.005
+      Liczba szuflad: 0.005
+      Rozmiar: 0.005
+      Skórzane: 0.004
+      Maksymalna wysokość krzesła: 0.004
+      Schowek: 0.004
+      Rodzaj krzesła: 0.004
+      Układ mebla: 0.003
+      Maksymalna głębokość: 0.002
+      Liczba szafek: 0.002
+      Liczba drążków: 0.002
+      Długość: 0.002
+      Wysokość do ziemi: 0.002
+      Kształt: 0.001
+      Rodzaj dodatku: 0.001
+    wymagane: []
+  hoker:
+    liczba_produktow: 253
+    zakresy:
+      Szerokość:
+        n: 240
+        mediana: 46.6
+        mad: 3.6
+        p1: 34.0
+        p99: 66.2
+        min_dopuszczalne: 25.0
+        max_dopuszczalne: 68.2
+      Wysokość:
+        n: 244
+        mediana: 95.0
+        mad: 11.0
+        p1: 40.4
+        p99: 118.3
+        min_dopuszczalne: 29.0
+        max_dopuszczalne: 161.0
+      Wysokość siedziska:
+        n: 60
+        mediana: 75.0
+        mad: 5.0
+        p1: 38.4
+        p99: 238.2
+        min_dopuszczalne: 38.4
+        max_dopuszczalne: 238.2
+      Głębokość:
+        n: 236
+        mediana: 50.0
+        mad: 3.0
+        p1: 31.4
+        p99: 60.3
+        min_dopuszczalne: 31.4
+        max_dopuszczalne: 68.0
+      Waga:
+        n: 197
+        mediana: 7.2
+        mad: 1.35
+        p1: 2.5
+        p99: 15.7
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 15.7
+    pokrycie:
+      Wysokość: 0.964
+      Materiał: 0.953
+      Szerokość: 0.949
+      Tapicerowane: 0.945
+      Głębokość: 0.933
+      Podłokietniki: 0.834
+      Waga: 0.779
+      Stopień montażu: 0.628
+      Podnóżek: 0.482
+      Dekoracje: 0.269
+      Wysokość siedziska: 0.237
+      Styl: 0.229
+      Materiał obicia: 0.134
+      Podparcie: 0.126
+      Kształt: 0.083
+      Głębokość siedziska: 0.055
+      Szerokość siedziska: 0.055
+      Udźwig: 0.047
+      Rodzaj krzesła: 0.032
+      Średnica: 0.024
+      Do poprawy: 0.024
+      Wypełnienie: 0.02
+      Maksymalna wysokość krzesła: 0.02
+      Ilość osób: 0.012
+      Właściwości obicia: 0.012
+      Maksymalne obciążenie: 0.012
+      Schowek: 0.008
+      Z pojemnikiem na pościel: 0.008
+      Zagłówek: 0.008
+      Designerskie: 0.004
+      Wyświetlanie sofy w wyszukiwarce: 0.004
+      Długość: 0.004
+      Liczba drzwi: 0.004
+      Liczba szuflad: 0.004
+      Kształt blatu: 0.004
+      Półka na klawiaturę: 0.004
+      '!przepisać na pokoje -> Rodzaj biurka': 0.004
+      Liczba szafek: 0.004
+      Liczba półek: 0.004
+      Rozmiar: 0.004
+      Regulacja: 0.004
+    wymagane:
+    - Wysokość
+    - Materiał
+    - Szerokość
+    - Tapicerowane
+    - Głębokość
+  komoda:
+    liczba_produktow: 2769
+    zakresy:
+      Wysokość do ziemi:
+        n: 100
+        mediana: 122.0
+        mad: 45.0
+        p1: 76.6
+        p99: 1731.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 1731.0
+      Szerokość:
+        n: 2656
+        mediana: 121.0
+        mad: 31.05
+        p1: 41.8
+        p99: 213.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 307.3
+      Wysokość:
+        n: 2656
+        mediana: 88.0
+        mad: 7.0
+        p1: 48.0
+        p99: 150.0
+        min_dopuszczalne: 46.0
+        max_dopuszczalne: 150.0
+      Głębokość:
+        n: 2656
+        mediana: 40.8
+        mad: 1.2
+        p1: 30.0
+        p99: 53.0
+        min_dopuszczalne: 30.0
+        max_dopuszczalne: 53.0
+      Waga:
+        n: 2074
+        mediana: 50.4
+        mad: 12.39
+        p1: 15.9
+        p99: 108.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 124.7
+      Udźwig:
+        n: 37
+        mediana: 25.0
+        mad: 10.0
+        p1: 3.7
+        p99: 50.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 85.0
+      Maksymalne obciążenie:
+        n: 37
+        mediana: 20.0
+        mad: 0.0
+        p1: 10.0
+        p99: 20.0
+        min_dopuszczalne: 10.0
+        max_dopuszczalne: 20.0
+    pokrycie:
+      Szerokość: 0.959
+      Wysokość: 0.959
+      Głębokość: 0.959
+      Stopień montażu: 0.936
+      Liczba drzwi: 0.931
+      Materiał: 0.913
+      Liczba szuflad: 0.901
+      Liczba półek: 0.869
+      Waga: 0.752
+      Sposób ustawienia: 0.713
+      Podparcie: 0.7
+      Oświetlenie: 0.698
+      Na nóżkach: 0.423
+      Styl: 0.259
+      Rodzaj komody: 0.161
+      Do poprawy: 0.159
+      Rodzaj frontu: 0.144
+      Liczba szafek: 0.065
+      Rodzaj drzwi: 0.056
+      Ilość nóg: 0.054
+      Układ mebla: 0.05
+      Wyposażenie: 0.046
+      Dekoracje: 0.037
+      Wysokość do ziemi: 0.036
+      Kształt blatu: 0.036
+      Rodzaj płyty: 0.022
+      Udźwig: 0.013
+      Maksymalne obciążenie: 0.013
+      Typ uchwytu: 0.012
+      Tapicerowane: 0.012
+      Długość: 0.009
+      Kierunek otwierania: 0.008
+      Rodzaj folii: 0.004
+      Kształt: 0.004
+      Ilość uchwytów: 0.004
+      Elementy zestawu: 0.004
+      Liczba drążków: 0.003
+      Rozkładane: 0.002
+      Rodzaj drewna: 0.002
+      Rodzaj dodatku: 0.001
+      Środek szafy: 0.001
+      Półka na klawiaturę: 0.001
+      '!przepisać na pokoje -> Rodzaj biurka': 0.001
+      Podłokietniki: 0.001
+      Typ: 0.001
+      Status produktu: 0.001
+      Zamykanie: 0.0
+      Rodzaj witryny: 0.0
+      Podnóżek: 0.0
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+    - Liczba drzwi
+    - Materiał
+    - Liczba szuflad
+  konsola:
+    liczba_produktow: 105
+    zakresy:
+      Szerokość:
+        n: 105
+        mediana: 60.0
+        mad: 0.0
+        p1: 60.0
+        p99: 151.5
+        min_dopuszczalne: 60.0
+        max_dopuszczalne: 151.5
+      Wysokość:
+        n: 105
+        mediana: 80.0
+        mad: 0.0
+        p1: 79.0
+        p99: 86.5
+        min_dopuszczalne: 79.0
+        max_dopuszczalne: 86.5
+      Głębokość:
+        n: 105
+        mediana: 20.0
+        mad: 0.0
+        p1: 20.0
+        p99: 36.0
+        min_dopuszczalne: 20.0
+        max_dopuszczalne: 36.0
+      Waga:
+        n: 103
+        mediana: 8.4
+        mad: 3.5
+        p1: 4.9
+        p99: 40.8
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 40.8
+    pokrycie:
+      Materiał: 1.0
+      Szerokość: 1.0
+      Podparcie: 1.0
+      Wysokość: 1.0
+      Liczba szuflad: 1.0
+      Głębokość: 1.0
+      Sposób ustawienia: 1.0
+      Stopień montażu: 0.99
+      Waga: 0.981
+      Liczba półek: 0.971
+      Liczba drzwi: 0.971
+      Liczba szafek: 0.952
+      Rozkładane: 0.714
+      Kształt blatu: 0.552
+      Oświetlenie: 0.105
+      Podnóżek: 0.076
+      Na nóżkach: 0.067
+      Udźwig: 0.019
+      Rodzaj frontu: 0.01
+    wymagane:
+    - Materiał
+    - Szerokość
+    - Podparcie
+    - Wysokość
+    - Liczba szuflad
+    - Głębokość
+    - Sposób ustawienia
+    - Stopień montażu
+    - Waga
+    - Liczba półek
+    - Liczba drzwi
+    - Liczba szafek
+  kontenerek:
+    liczba_produktow: 58
+    zakresy:
+      Szerokość:
+        n: 56
+        mediana: 42.3
+        mad: 4.65
+        p1: 32.0
+        p99: 87.7
+        min_dopuszczalne: 14.4
+        max_dopuszczalne: 87.7
+      Wysokość:
+        n: 56
+        mediana: 64.0
+        mad: 2.7
+        p1: 49.9
+        p99: 132.5
+        min_dopuszczalne: 47.8
+        max_dopuszczalne: 132.5
+      Głębokość:
+        n: 56
+        mediana: 45.0
+        mad: 5.0
+        p1: 35.8
+        p99: 60.0
+        min_dopuszczalne: 15.0
+        max_dopuszczalne: 75.0
+      Waga:
+        n: 35
+        mediana: 17.8
+        mad: 2.8
+        p1: 11.6
+        p99: 31.8
+        min_dopuszczalne: 1.0
+        max_dopuszczalne: 34.6
+    pokrycie:
+      Szerokość: 0.966
+      Wysokość: 0.966
+      Głębokość: 0.966
+      Stopień montażu: 0.931
+      Materiał: 0.914
+      Liczba szuflad: 0.897
+      Podparcie: 0.862
+      Sposób ustawienia: 0.862
+      Liczba drzwi: 0.741
+      Liczba półek: 0.724
+      Waga: 0.603
+      Na nóżkach: 0.534
+      Liczba szafek: 0.466
+      Zamykanie: 0.276
+      Styl: 0.172
+      Rodzaj komody: 0.086
+      Rodzaj frontu: 0.069
+      Do poprawy: 0.069
+      Ilość nóg: 0.052
+      Udźwig: 0.052
+      Wysokość do ziemi: 0.052
+      Oświetlenie: 0.052
+      Rodzaj folii: 0.034
+      Kształt blatu: 0.034
+      Podnóżek: 0.034
+      Dekoracje: 0.017
+      Rodzaj płyty: 0.017
+      Długość: 0.017
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+    - Materiał
+  kredens:
+    liczba_produktow: 1
+    zakresy: {}
+    pokrycie:
+      Maksymalne obciążenie: 1.0
+      Materiał: 1.0
+      Szerokość: 1.0
+      Wysokość: 1.0
+      Głębokość: 1.0
+      Liczba drzwi: 1.0
+      Liczba szuflad: 1.0
+      Oświetlenie: 1.0
+      Waga: 1.0
+      Stopień montażu: 1.0
+      Podparcie: 1.0
+      Liczba półek: 1.0
+      Na nóżkach: 1.0
+      Sposób ustawienia: 1.0
+    wymagane:
+    - Maksymalne obciążenie
+    - Materiał
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Liczba drzwi
+    - Liczba szuflad
+    - Oświetlenie
+    - Waga
+    - Stopień montażu
+    - Podparcie
+    - Liczba półek
+    - Na nóżkach
+    - Sposób ustawienia
+  krzeslo:
+    liczba_produktow: 1784
+    zakresy:
+      Szerokość:
+        n: 1558
+        mediana: 53.0
+        mad: 6.5
+        p1: 41.3
+        p99: 75.0
+        min_dopuszczalne: 14.0
+        max_dopuszczalne: 92.0
+      Wysokość:
+        n: 1558
+        mediana: 87.0
+        mad: 5.0
+        p1: 70.0
+        p99: 135.0
+        min_dopuszczalne: 57.0
+        max_dopuszczalne: 135.0
+      Głębokość:
+        n: 1549
+        mediana: 57.0
+        mad: 4.0
+        p1: 39.0
+        p99: 75.0
+        min_dopuszczalne: 33.0
+        max_dopuszczalne: 81.0
+      Wysokość siedziska:
+        n: 1104
+        mediana: 48.0
+        mad: 2.0
+        p1: 36.0
+        p99: 60.5
+        min_dopuszczalne: 36.0
+        max_dopuszczalne: 60.5
+      Szerokość siedziska:
+        n: 827
+        mediana: 46.0
+        mad: 3.0
+        p1: 39.0
+        p99: 63.0
+        min_dopuszczalne: 28.0
+        max_dopuszczalne: 64.0
+      Głębokość siedziska:
+        n: 921
+        mediana: 44.0
+        mad: 2.0
+        p1: 37.5
+        p99: 62.4
+        min_dopuszczalne: 32.0
+        max_dopuszczalne: 62.4
+      Waga:
+        n: 1318
+        mediana: 8.0
+        mad: 3.0
+        p1: 3.0
+        p99: 31.2
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 31.2
+      Maksymalne obciążenie:
+        n: 196
+        mediana: 120.0
+        mad: 0.0
+        p1: 100.0
+        p99: 152.5
+        min_dopuszczalne: 100.0
+        max_dopuszczalne: 152.5
+      Udźwig:
+        n: 71
+        mediana: 110.0
+        mad: 0.0
+        p1: 110.0
+        p99: 110.0
+        min_dopuszczalne: 110.0
+        max_dopuszczalne: 110.0
+    pokrycie:
+      Szerokość: 0.873
+      Wysokość: 0.873
+      Materiał: 0.869
+      Głębokość: 0.868
+      Podparcie: 0.828
+      Podłokietniki: 0.828
+      Tapicerowane: 0.769
+      Waga: 0.739
+      Stopień montażu: 0.714
+      Wysokość siedziska: 0.619
+      Głębokość siedziska: 0.516
+      Szerokość siedziska: 0.464
+      Dekoracje: 0.239
+      Podnóżek: 0.212
+      Styl: 0.188
+      Materiał obicia: 0.176
+      Wypełnienie: 0.175
+      Regulacja: 0.143
+      Maksymalne obciążenie: 0.11
+      Właściwości obicia: 0.077
+      Rodzaj krzesła: 0.071
+      Maksymalna wysokość krzesła: 0.05
+      Udźwig: 0.04
+      Maksymalna wysokość: 0.018
+      Zagłówek: 0.012
+      Ilość osób: 0.012
+      Wysokość oparcia: 0.007
+      Do poprawy: 0.006
+      Z pojemnikiem na pościel: 0.003
+      Na nóżkach: 0.003
+      Ilość nóg: 0.003
+      Pokrowiec zdejmowalny: 0.003
+      Typ oparcia: 0.002
+      Rozkładane: 0.002
+      Sposób ustawienia: 0.002
+      TM Design: 0.001
+      Liczba szuflad: 0.001
+      Wysokość do ziemi: 0.001
+      Liczba drzwi: 0.001
+      Oświetlenie: 0.001
+      Liczba półek: 0.001
+      Rodzaj drewna: 0.001
+    wymagane: []
+  kuchnia:
+    liczba_produktow: 1094
+    zakresy:
+      Szerokość:
+        n: 898
+        mediana: 60.0
+        mad: 15.0
+        p1: 5.0
+        p99: 200.6
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 200.6
+      Wysokość:
+        n: 846
+        mediana: 72.0
+        mad: 18.0
+        p1: 1.6
+        p99: 211.1
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 211.1
+      Głębokość:
+        n: 832
+        mediana: 32.0
+        mad: 18.0
+        p1: 1.6
+        p99: 79.6
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 140.0
+      Waga:
+        n: 333
+        mediana: 14.7
+        mad: 7.2
+        p1: 2.0
+        p99: 51.4
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 57.9
+    pokrycie:
+      Stopień montażu: 0.841
+      Szerokość: 0.821
+      Wysokość: 0.773
+      Głębokość: 0.761
+      Materiał: 0.608
+      Liczba drzwi: 0.549
+      Ilość uchwytów: 0.498
+      Liczba szuflad: 0.464
+      Kierunek otwierania: 0.437
+      Waga: 0.304
+      Styl: 0.066
+      Typ szuflad: 0.023
+      Długość: 0.013
+      Rozstaw: 0.011
+      Kształt blatu: 0.007
+      Typ uchwytu: 0.003
+      Podparcie: 0.002
+      Liczba półek: 0.002
+      Rodzaj płyty: 0.001
+      Sposób ustawienia: 0.001
+      Układ mebla: 0.001
+    wymagane: []
+  lawa:
+    liczba_produktow: 1246
+    zakresy:
+      Wysokość:
+        n: 1113
+        mediana: 45.0
+        mad: 4.0
+        p1: 31.6
+        p99: 73.0
+        min_dopuszczalne: 21.0
+        max_dopuszczalne: 73.0
+      Długość:
+        n: 240
+        mediana: 100.0
+        mad: 20.0
+        p1: 40.0
+        p99: 160.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 220.0
+      Szerokość:
+        n: 981
+        mediana: 93.0
+        mad: 22.0
+        p1: 30.5
+        p99: 150.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 225.0
+      Głębokość:
+        n: 972
+        mediana: 60.0
+        mad: 9.0
+        p1: 30.0
+        p99: 110.0
+        min_dopuszczalne: 6.0
+        max_dopuszczalne: 114.0
+      Waga:
+        n: 955
+        mediana: 20.0
+        mad: 9.0
+        p1: 2.8
+        p99: 68.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 74.0
+      Średnica:
+        n: 266
+        mediana: 60.0
+        mad: 15.0
+        p1: 30.0
+        p99: 113.5
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 150.0
+      Udźwig:
+        n: 73
+        mediana: 10.0
+        mad: 5.0
+        p1: 2.0
+        p99: 110.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 110.0
+    pokrycie:
+      Kształt blatu: 0.91
+      Wysokość: 0.893
+      Materiał: 0.879
+      Stopień montażu: 0.815
+      Szerokość: 0.787
+      Głębokość: 0.78
+      Podparcie: 0.779
+      Rozkładane: 0.778
+      Waga: 0.768
+      Liczba szuflad: 0.753
+      Liczba półek: 0.396
+      Liczba szafek: 0.294
+      Średnica: 0.213
+      Długość: 0.193
+      Styl: 0.185
+      Półka pod blatem: 0.12
+      Ilość nóg: 0.102
+      Do poprawy: 0.065
+      Udźwig: 0.059
+      Podnóżek: 0.049
+      Liczba drzwi: 0.024
+      Dekoracje: 0.019
+      Maksymalne obciążenie: 0.017
+      Oświetlenie: 0.016
+      Wysokość do ziemi: 0.014
+      Rozmiar stołu: 0.012
+      Rodzaj frontu: 0.011
+      Ilość wkładek: 0.01
+      Sposób ustawienia: 0.009
+      Rodzaj płyty: 0.006
+      Liczba drążków: 0.006
+      Szerokość po rozłożeniu: 0.006
+      Na nóżkach: 0.004
+      TM Design: 0.003
+      Rodzaj drzwi: 0.002
+      Tapicerowane: 0.002
+      Rodzaj komody: 0.002
+      Kształt: 0.002
+      Wyposażenie: 0.002
+      Schowek: 0.002
+      Ilość uchwytów: 0.002
+      Designerskie: 0.001
+      Skórzane: 0.001
+      Kierunek otwierania: 0.001
+      Układ mebla: 0.001
+      Ilość osób: 0.001
+      Typ uchwytu: 0.001
+    wymagane:
+    - Kształt blatu
+  lawka:
+    liczba_produktow: 125
+    zakresy:
+      Szerokość:
+        n: 110
+        mediana: 100.0
+        mad: 20.0
+        p1: 50.3
+        p99: 183.2
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 220.0
+      Wysokość:
+        n: 110
+        mediana: 45.0
+        mad: 2.25
+        p1: 40.0
+        p99: 88.7
+        min_dopuszczalne: 31.5
+        max_dopuszczalne: 88.7
+      Głębokość:
+        n: 110
+        mediana: 40.0
+        mad: 4.0
+        p1: 25.3
+        p99: 73.5
+        min_dopuszczalne: 16.0
+        max_dopuszczalne: 73.5
+      Waga:
+        n: 73
+        mediana: 12.0
+        mad: 5.0
+        p1: 3.4
+        p99: 47.7
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 47.7
+    pokrycie:
+      Szerokość: 0.88
+      Wysokość: 0.88
+      Głębokość: 0.88
+      Materiał: 0.848
+      Stopień montażu: 0.824
+      Podparcie: 0.8
+      Tapicerowane: 0.736
+      Podłokietniki: 0.696
+      Waga: 0.584
+      Dekoracje: 0.384
+      Schowek: 0.208
+      Podnóżek: 0.192
+      Udźwig: 0.192
+      Kształt: 0.184
+      Wypełnienie: 0.168
+      Styl: 0.08
+      Do poprawy: 0.056
+      Ilość nóg: 0.056
+      Pokrowiec zdejmowalny: 0.056
+      Materiał obicia: 0.032
+      Liczba szuflad: 0.024
+      Typ oparcia: 0.016
+      Wysokość do ziemi: 0.016
+      Rodzaj frontu: 0.016
+      Liczba drzwi: 0.008
+      Oświetlenie: 0.008
+      Liczba półek: 0.008
+      Rozkładane: 0.008
+      Kształt blatu: 0.008
+      Wysokość oparcia: 0.008
+      Wysokość siedziska: 0.008
+      Szerokość siedziska: 0.008
+      Głębokość siedziska: 0.008
+    wymagane: []
+  lawostol:
+    liczba_produktow: 57
+    zakresy:
+      Szerokość:
+        n: 54
+        mediana: 110.0
+        mad: 10.0
+        p1: 62.6
+        p99: 134.7
+        min_dopuszczalne: 50.0
+        max_dopuszczalne: 170.0
+      Wysokość:
+        n: 54
+        mediana: 56.5
+        mad: 8.5
+        p1: 27.0
+        p99: 78.0
+        min_dopuszczalne: 5.5
+        max_dopuszczalne: 107.5
+      Głębokość:
+        n: 54
+        mediana: 70.0
+        mad: 9.0
+        p1: 52.6
+        p99: 121.5
+        min_dopuszczalne: 16.0
+        max_dopuszczalne: 124.0
+      Waga:
+        n: 52
+        mediana: 45.9
+        mad: 14.17
+        p1: 16.1
+        p99: 69.1
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 131.0
+    pokrycie:
+      Szerokość: 0.947
+      Wysokość: 0.947
+      Głębokość: 0.947
+      Rozkładane: 0.93
+      Waga: 0.912
+      Stopień montażu: 0.895
+      Materiał: 0.842
+      Kształt blatu: 0.754
+      Podparcie: 0.649
+      Liczba półek: 0.596
+      Liczba szuflad: 0.579
+      Liczba szafek: 0.246
+      Ilość wkładek: 0.158
+      Ilość nóg: 0.123
+      Styl: 0.123
+      Szerokość po rozłożeniu: 0.123
+      Ilość osób: 0.123
+      Długość: 0.088
+      Rozmiar stołu: 0.088
+      Regulacja: 0.07
+      Rodzaj płyty: 0.053
+      Wysokość do ziemi: 0.018
+      Udźwig: 0.018
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Rozkładane
+    - Waga
+  lozko:
+    liczba_produktow: 3648
+    zakresy:
+      Szerokość:
+        n: 3637
+        mediana: 160.0
+        mad: 35.0
+        p1: 78.0
+        p99: 260.3
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 370.0
+      Wysokość:
+        n: 3610
+        mediana: 97.5
+        mad: 19.5
+        p1: 38.0
+        p99: 190.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 214.5
+      Długość:
+        n: 1044
+        mediana: 215.0
+        mad: 8.0
+        p1: 144.0
+        p99: 249.0
+        min_dopuszczalne: 144.0
+        max_dopuszczalne: 263.0
+      Głębokość:
+        n: 3554
+        mediana: 209.4
+        mad: 10.6
+        p1: 74.0
+        p99: 245.4
+        min_dopuszczalne: 74.0
+        max_dopuszczalne: 273.0
+      Waga:
+        n: 2304
+        mediana: 77.0
+        mad: 31.6
+        p1: 15.0
+        p99: 194.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 266.6
+      Długość powierzchni spania:
+        n: 2059
+        mediana: 200.0
+        mad: 0.0
+        p1: 140.0
+        p99: 212.0
+        min_dopuszczalne: 140.0
+        max_dopuszczalne: 212.0
+      Udźwig:
+        n: 111
+        mediana: 240.0
+        mad: 20.0
+        p1: 10.0
+        p99: 260.0
+        min_dopuszczalne: 10.0
+        max_dopuszczalne: 360.0
+      Szerokość powierzchni spania:
+        n: 771
+        mediana: 90.0
+        mad: 20.0
+        p1: 70.0
+        p99: 200.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 210.0
+      Głębokość siedziska:
+        n: 124
+        mediana: 200.0
+        mad: 0.0
+        p1: 164.6
+        p99: 238.2
+        min_dopuszczalne: 164.6
+        max_dopuszczalne: 238.2
+      Wysokość siedziska:
+        n: 114
+        mediana: 53.0
+        mad: 11.5
+        p1: 34.0
+        p99: 66.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 122.0
+      Szerokość siedziska:
+        n: 158
+        mediana: 160.0
+        mad: 20.0
+        p1: 120.0
+        p99: 180.0
+        min_dopuszczalne: 40.0
+        max_dopuszczalne: 280.0
+      Maksymalne obciążenie:
+        n: 485
+        mediana: 100.0
+        mad: 0.0
+        p1: 100.0
+        p99: 280.0
+        min_dopuszczalne: 100.0
+        max_dopuszczalne: 280.0
+    pokrycie:
+      Szerokość: 0.997
+      Wysokość: 0.99
+      Materac w zestawie: 0.983
+      Stelaż w zestawie: 0.983
+      Głębokość: 0.974
+      Stopień montażu: 0.963
+      Z pojemnikiem na pościel: 0.958
+      Rozmiar: 0.95
+      Materiał: 0.913
+      Zagłówek: 0.894
+      Tapicerowane: 0.858
+      Waga: 0.632
+      Ilość osób: 0.614
+      Długość powierzchni spania: 0.564
+      Styl: 0.334
+      Długość: 0.286
+      Na nóżkach: 0.229
+      Szerokość powierzchni spania: 0.211
+      Dekoracje: 0.145
+      Podparcie: 0.135
+      Oświetlenie: 0.134
+      Maksymalne obciążenie: 0.133
+      Ilość nóg: 0.133
+      Układ mebla: 0.114
+      Materiał obicia: 0.075
+      Właściwości obicia: 0.072
+      Typ stelaża: 0.055
+      Kształt: 0.053
+      Kierunek otwierania: 0.047
+      Szerokość siedziska: 0.043
+      Funkcje: 0.038
+      Liczba szuflad: 0.034
+      Głębokość siedziska: 0.034
+      Liczba półek: 0.031
+      Wysokość siedziska: 0.031
+      Udźwig: 0.03
+      Liczba drzwi: 0.03
+      Twardość: 0.026
+      Elementy zestawu: 0.024
+      Wypełnienie: 0.022
+      Podnóżek: 0.021
+      Pokrowiec zdejmowalny: 0.019
+      Rodzaj łóżka: 0.018
+      Antyalergiczne: 0.017
+      Modułowe: 0.008
+      Rodzaj płyty: 0.007
+      Rodzaj frontu: 0.006
+      Rodzaj drewna: 0.004
+      Rodzaj drzwi: 0.004
+      Liczba drążków: 0.002
+      Rodzaj folii: 0.002
+      Do poprawy: 0.002
+      Środek szafy: 0.001
+      Liczba szafek: 0.001
+      Rozkładane: 0.001
+      Rodzaj komody: 0.001
+      Wysokość z zagłówkiem: 0.001
+      Kształt blatu: 0.001
+      Rodzaj witryny: 0.001
+      Wysokość do ziemi: 0.0
+      '!przepisać na pokoje -> Rodzaj biurka': 0.0
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Materac w zestawie
+    - Stelaż w zestawie
+    - Głębokość
+    - Stopień montażu
+    - Z pojemnikiem na pościel
+    - Rozmiar
+    - Materiał
+  lozko_dzieciece:
+    liczba_produktow: 153
+    zakresy:
+      Szerokość:
+        n: 153
+        mediana: 190.0
+        mad: 2.0
+        p1: 81.0
+        p99: 214.0
+        min_dopuszczalne: 81.0
+        max_dopuszczalne: 214.0
+      Wysokość:
+        n: 153
+        mediana: 171.0
+        mad: 4.0
+        p1: 123.5
+        p99: 209.5
+        min_dopuszczalne: 123.5
+        max_dopuszczalne: 209.5
+      Głębokość:
+        n: 153
+        mediana: 93.0
+        mad: 5.0
+        p1: 78.2
+        p99: 199.6
+        min_dopuszczalne: 63.0
+        max_dopuszczalne: 199.6
+      Długość powierzchni spania:
+        n: 153
+        mediana: 180.0
+        mad: 0.0
+        p1: 160.8
+        p99: 200.0
+        min_dopuszczalne: 160.8
+        max_dopuszczalne: 200.0
+      Waga:
+        n: 151
+        mediana: 100.0
+        mad: 10.0
+        p1: 63.0
+        p99: 124.0
+        min_dopuszczalne: 40.0
+        max_dopuszczalne: 160.0
+    pokrycie:
+      Szerokość: 1.0
+      Wysokość: 1.0
+      Głębokość: 1.0
+      Z pojemnikiem na pościel: 1.0
+      Materiał: 1.0
+      Rozmiar: 1.0
+      Długość powierzchni spania: 1.0
+      Tapicerowane: 1.0
+      Ilość osób: 1.0
+      Stelaż w zestawie: 1.0
+      Materac w zestawie: 1.0
+      Stopień montażu: 0.993
+      Waga: 0.987
+      Zagłówek: 0.902
+      Podnóżek: 0.039
+      Liczba szuflad: 0.026
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Z pojemnikiem na pościel
+    - Materiał
+    - Rozmiar
+    - Długość powierzchni spania
+    - Tapicerowane
+    - Ilość osób
+    - Stelaż w zestawie
+    - Materac w zestawie
+    - Stopień montażu
+    - Waga
+    - Zagłówek
+  lustro:
+    liczba_produktow: 245
+    zakresy:
+      Szerokość:
+        n: 234
+        mediana: 72.0
+        mad: 22.05
+        p1: 25.3
+        p99: 155.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 204.3
+      Wysokość:
+        n: 234
+        mediana: 80.0
+        mad: 13.5
+        p1: 40.0
+        p99: 180.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 180.0
+      Głębokość:
+        n: 203
+        mediana: 3.0
+        mad: 1.0
+        p1: 0.5
+        p99: 59.6
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 59.6
+      Waga:
+        n: 207
+        mediana: 9.8
+        mad: 4.16
+        p1: 0.9
+        p99: 33.8
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 34.8
+      Średnica:
+        n: 50
+        mediana: 70.0
+        mad: 10.0
+        p1: 28.8
+        p99: 130.6
+        min_dopuszczalne: 10.0
+        max_dopuszczalne: 130.6
+    pokrycie:
+      Sposób ustawienia: 0.988
+      Szerokość: 0.955
+      Wysokość: 0.955
+      Materiał: 0.931
+      Stopień montażu: 0.931
+      Kształt: 0.902
+      Waga: 0.845
+      Głębokość: 0.829
+      Styl: 0.241
+      Średnica: 0.204
+      Podparcie: 0.045
+      Liczba drzwi: 0.024
+      Elementy zestawu: 0.02
+      Liczba drążków: 0.02
+      Liczba szuflad: 0.016
+      Liczba półek: 0.016
+      Dekoracje: 0.012
+      Kształt blatu: 0.008
+      Rodzaj frontu: 0.008
+      Rodzaj drzwi: 0.004
+      Środek szafy: 0.004
+      Długość: 0.004
+      Oświetlenie: 0.004
+      Wysokość do ziemi: 0.004
+      Podnóżek: 0.004
+    wymagane:
+    - Sposób ustawienia
+    - Szerokość
+    - Wysokość
+    - Materiał
+    - Stopień montażu
+    - Kształt
+  materac:
+    liczba_produktow: 1533
+    zakresy:
+      Długość:
+        n: 1071
+        mediana: 200.0
+        mad: 0.0
+        p1: 195.6
+        p99: 200.0
+        min_dopuszczalne: 195.6
+        max_dopuszczalne: 200.0
+      Szerokość:
+        n: 1530
+        mediana: 130.0
+        mad: 30.0
+        p1: 80.0
+        p99: 200.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 310.0
+      Wysokość:
+        n: 1523
+        mediana: 19.0
+        mad: 3.0
+        p1: 4.0
+        p99: 30.0
+        min_dopuszczalne: 1.0
+        max_dopuszczalne: 37.0
+      Głębokość:
+        n: 1521
+        mediana: 200.0
+        mad: 0.0
+        p1: 190.0
+        p99: 200.0
+        min_dopuszczalne: 190.0
+        max_dopuszczalne: 200.0
+      Waga:
+        n: 245
+        mediana: 20.0
+        mad: 8.0
+        p1: 4.0
+        p99: 43.6
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 68.0
+    pokrycie:
+      Szerokość: 0.998
+      Wysokość: 0.993
+      Głębokość: 0.992
+      Rozmiar: 0.985
+      Cechy materaca: 0.883
+      Stopień montażu: 0.843
+      Ilość osób: 0.799
+      Twardość: 0.795
+      Antyalergiczne: 0.752
+      Długość: 0.699
+      Wypełnienie: 0.651
+      Dla kogo: 0.63
+      Kategorie: 0.629
+      Masa ciała: 0.562
+      Waga: 0.16
+      Pokrowiec zdejmowalny: 0.012
+      Styl: 0.011
+      Materiał: 0.008
+      Liczba drzwi: 0.007
+      Liczba szuflad: 0.007
+      Z pojemnikiem na pościel: 0.007
+      Tapicerowane: 0.007
+      Zagłówek: 0.007
+      Materac w zestawie: 0.007
+      Stelaż w zestawie: 0.007
+      Elementy zestawu: 0.003
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Rozmiar
+  meblosciana:
+    liczba_produktow: 1199
+    zakresy:
+      Szerokość:
+        n: 1092
+        mediana: 160.0
+        mad: 80.0
+        p1: 45.0
+        p99: 340.3
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 640.0
+      Waga:
+        n: 1062
+        mediana: 68.0
+        mad: 31.5
+        p1: 6.5
+        p99: 232.3
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 257.0
+      Głębokość:
+        n: 967
+        mediana: 40.0
+        mad: 4.0
+        p1: 26.6
+        p99: 206.0
+        min_dopuszczalne: 16.0
+        max_dopuszczalne: 206.0
+      Wysokość:
+        n: 802
+        mediana: 150.0
+        mad: 50.0
+        p1: 42.5
+        p99: 220.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 450.0
+    pokrycie:
+      Materiał: 0.947
+      Stopień montażu: 0.912
+      Szerokość: 0.911
+      Waga: 0.886
+      Głębokość: 0.807
+      Liczba szuflad: 0.71
+      Wysokość: 0.669
+      Liczba półek: 0.53
+      Liczba szafek: 0.42
+      Liczba drzwi: 0.418
+      Rodzaj frontu: 0.325
+      Typ: 0.315
+      Oświetlenie: 0.253
+      Podparcie: 0.224
+      Sposób ustawienia: 0.173
+      Podnóżek: 0.156
+      Liczba szaf: 0.127
+      Na nóżkach: 0.08
+      Liczba drążków: 0.062
+      Kształt blatu: 0.043
+      Ilość osób: 0.043
+      Podłokietniki: 0.042
+      Rozkładane: 0.03
+      Ilość uchwytów: 0.026
+      Tapicerowane: 0.023
+      Zagłówek: 0.022
+      Materiał obicia: 0.018
+      Układ mebla: 0.018
+      Właściwości obicia: 0.016
+      Wysokość siedziska: 0.015
+      Głębokość siedziska: 0.015
+      Z pojemnikiem na pościel: 0.014
+      Maksymalne obciążenie: 0.014
+      Udźwig: 0.014
+      Dekoracje: 0.013
+      Średnica: 0.013
+      Szerokość powierzchni spania: 0.013
+      Długość powierzchni spania: 0.013
+      Funkcje: 0.013
+      Szerokość siedziska: 0.013
+      Typ funkcji spania: 0.013
+      Elementy zestawu: 0.012
+      Typ oparcia: 0.012
+      Styl: 0.009
+      Rodzaj drzwi: 0.006
+      Kształt: 0.005
+      Kierunek otwierania: 0.004
+      Wypełnienie: 0.004
+      Długość: 0.003
+      Wyposażenie: 0.003
+      Rodzaj dodatku: 0.003
+      Rodzaj drewna: 0.003
+      Ilość nóg: 0.002
+      Rozmiar stołu: 0.002
+      Półka pod blatem: 0.001
+      Schowek: 0.001
+      Typ uchwytu: 0.001
+      Szerokość po rozłożeniu: 0.001
+      Ilość wkładek: 0.001
+    wymagane:
+    - Materiał
+    - Stopień montażu
+    - Szerokość
+  nadstawka:
+    liczba_produktow: 58
+    zakresy:
+      Szerokość:
+        n: 56
+        mediana: 99.0
+        mad: 39.05
+        p1: 39.9
+        p99: 194.5
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 333.3
+      Wysokość:
+        n: 56
+        mediana: 47.0
+        mad: 10.5
+        p1: 36.5
+        p99: 126.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 126.0
+      Głębokość:
+        n: 56
+        mediana: 43.6
+        mad: 7.5
+        p1: 35.0
+        p99: 106.4
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 106.4
+      Waga:
+        n: 33
+        mediana: 21.0
+        mad: 7.0
+        p1: 9.0
+        p99: 56.4
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 63.0
+    pokrycie:
+      Szerokość: 0.966
+      Wysokość: 0.966
+      Głębokość: 0.966
+      Liczba drzwi: 0.966
+      Materiał: 0.966
+      Stopień montażu: 0.966
+      Liczba szuflad: 0.914
+      Rodzaj drzwi: 0.828
+      Liczba półek: 0.828
+      Waga: 0.569
+      Oświetlenie: 0.414
+      Styl: 0.345
+      Rodzaj witryny: 0.224
+      Dekoracje: 0.069
+      Maksymalne obciążenie: 0.052
+      Podparcie: 0.034
+      Do poprawy: 0.017
+      Lustro: 0.017
+      Liczba drążków: 0.017
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Liczba drzwi
+    - Materiał
+    - Stopień montażu
+    - Liczba szuflad
+  narożnik:
+    liczba_produktow: 1635
+    zakresy:
+      Szerokość:
+        n: 1601
+        mediana: 276.0
+        mad: 20.0
+        p1: 81.0
+        p99: 391.0
+        min_dopuszczalne: 81.0
+        max_dopuszczalne: 396.0
+      Wysokość:
+        n: 1601
+        mediana: 87.0
+        mad: 8.0
+        p1: 62.0
+        p99: 107.0
+        min_dopuszczalne: 39.0
+        max_dopuszczalne: 135.0
+      Waga:
+        n: 980
+        mediana: 139.0
+        mad: 19.0
+        p1: 65.5
+        p99: 248.0
+        min_dopuszczalne: 25.0
+        max_dopuszczalne: 253.0
+      Głębokość siedziska:
+        n: 1304
+        mediana: 58.0
+        mad: 4.0
+        p1: 47.0
+        p99: 131.5
+        min_dopuszczalne: 34.0
+        max_dopuszczalne: 131.5
+      Wysokość siedziska:
+        n: 1451
+        mediana: 45.0
+        mad: 1.5
+        p1: 40.0
+        p99: 52.0
+        min_dopuszczalne: 36.0
+        max_dopuszczalne: 54.0
+      Głębokość:
+        n: 1585
+        mediana: 186.0
+        mad: 19.0
+        p1: 91.0
+        p99: 277.0
+        min_dopuszczalne: 72.0
+        max_dopuszczalne: 300.0
+      Szerokość powierzchni spania:
+        n: 1105
+        mediana: 125.0
+        mad: 5.0
+        p1: 80.0
+        p99: 261.0
+        min_dopuszczalne: 80.0
+        max_dopuszczalne: 261.0
+      Długość powierzchni spania:
+        n: 1101
+        mediana: 203.0
+        mad: 12.0
+        p1: 120.0
+        p99: 300.0
+        min_dopuszczalne: 120.0
+        max_dopuszczalne: 300.0
+      Szerokość siedziska:
+        n: 450
+        mediana: 199.0
+        mad: 27.0
+        p1: 67.5
+        p99: 313.5
+        min_dopuszczalne: 37.0
+        max_dopuszczalne: 361.0
+      Udźwig:
+        n: 113
+        mediana: 125.0
+        mad: 15.0
+        p1: 110.0
+        p99: 390.0
+        min_dopuszczalne: 35.0
+        max_dopuszczalne: 390.0
+    pokrycie:
+      Szerokość: 0.979
+      Wysokość: 0.979
+      Wypełnienie: 0.97
+      Materiał: 0.969
+      Głębokość: 0.969
+      Na nóżkach: 0.946
+      Z pojemnikiem na pościel: 0.94
+      Podparcie: 0.939
+      Układ mebla: 0.918
+      Zagłówek: 0.914
+      Ilość osób: 0.9
+      Wysokość siedziska: 0.887
+      Podłokietniki: 0.867
+      Stopień montażu: 0.857
+      Głębokość siedziska: 0.798
+      Funkcje: 0.778
+      Dekoracje: 0.701
+      Szerokość powierzchni spania: 0.676
+      Długość powierzchni spania: 0.673
+      Typ funkcji spania: 0.63
+      Waga: 0.599
+      Szerokość siedziska: 0.275
+      Tapicerowane: 0.228
+      Materiał obicia: 0.226
+      Właściwości obicia: 0.211
+      Wysokość oparcia: 0.132
+      Styl: 0.129
+      Pokrowiec zdejmowalny: 0.097
+      Typ oparcia: 0.097
+      Udźwig: 0.069
+      Kształt: 0.065
+      Wysokość z zagłówkiem: 0.053
+      Podnóżek: 0.052
+      Designerskie: 0.044
+      Ilość nóg: 0.032
+      Skórzane: 0.015
+      Długość: 0.015
+      Maksymalna głębokość: 0.005
+      Wyświetlanie sofy w wyszukiwarce: 0.004
+      TM Design: 0.004
+      Regulacja: 0.002
+      Schowek: 0.002
+      Do poprawy: 0.001
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Wypełnienie
+    - Materiał
+    - Głębokość
+    - Na nóżkach
+    - Z pojemnikiem na pościel
+    - Podparcie
+    - Układ mebla
+    - Zagłówek
+    - Ilość osób
+  nieznana:
+    liczba_produktow: 27
+    zakresy: {}
+    pokrycie:
+      Szerokość: 1.0
+      Wysokość: 1.0
+      Głębokość: 0.963
+      Stopień montażu: 0.963
+      Materiał: 0.963
+      Podparcie: 0.815
+      Waga: 0.63
+      Styl: 0.556
+      Podłokietniki: 0.556
+      Na nóżkach: 0.519
+      Dekoracje: 0.481
+      Zagłówek: 0.37
+      Ilość osób: 0.37
+      Z pojemnikiem na pościel: 0.37
+      Wypełnienie: 0.37
+      Wysokość siedziska: 0.37
+      Liczba szuflad: 0.37
+      Liczba półek: 0.37
+      Udźwig: 0.37
+      Sposób ustawienia: 0.333
+      Liczba drzwi: 0.296
+      Typ funkcji spania: 0.296
+      Głębokość siedziska: 0.296
+      Szerokość siedziska: 0.296
+      Szerokość powierzchni spania: 0.296
+      Długość powierzchni spania: 0.296
+      Funkcje: 0.296
+      Materiał obicia: 0.296
+      Właściwości obicia: 0.296
+      Tapicerowane: 0.259
+      Oświetlenie: 0.259
+      Rodzaj komody: 0.148
+      Elementy zestawu: 0.148
+      Designerskie: 0.074
+      Wyświetlanie sofy w wyszukiwarce: 0.074
+      Układ mebla: 0.074
+      Rodzaj drzwi: 0.074
+      Liczba szafek: 0.074
+      Liczba drążków: 0.074
+      Kształt: 0.074
+      Rodzaj folii: 0.074
+      Rodzaj płyty: 0.074
+      Rozkładane: 0.074
+      Kształt blatu: 0.074
+      Schowek: 0.037
+      Do poprawy: 0.037
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+    - Materiał
+  polka:
+    liczba_produktow: 650
+    zakresy:
+      Szerokość:
+        n: 641
+        mediana: 120.0
+        mad: 30.9
+        p1: 30.0
+        p99: 201.2
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 305.4
+      Wysokość:
+        n: 630
+        mediana: 25.0
+        mad: 7.0
+        p1: 1.5
+        p99: 170.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 170.0
+      Głębokość:
+        n: 639
+        mediana: 23.0
+        mad: 3.0
+        p1: 11.9
+        p99: 46.3
+        min_dopuszczalne: 5.0
+        max_dopuszczalne: 46.3
+      Waga:
+        n: 548
+        mediana: 8.5
+        mad: 3.3
+        p1: 1.1
+        p99: 34.5
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 34.5
+    pokrycie:
+      Szerokość: 0.986
+      Materiał: 0.985
+      Głębokość: 0.983
+      Wysokość: 0.969
+      Stopień montażu: 0.937
+      Waga: 0.846
+      Styl: 0.255
+      Sposób ustawienia: 0.178
+      Podparcie: 0.175
+      Na nóżkach: 0.162
+      Liczba półek: 0.129
+      Liczba drzwi: 0.085
+      Liczba szuflad: 0.066
+      Oświetlenie: 0.066
+      Udźwig: 0.045
+      Dekoracje: 0.028
+      Podnóżek: 0.022
+      Rodzaj frontu: 0.02
+      Układ mebla: 0.017
+      Maksymalne obciążenie: 0.017
+      Do poprawy: 0.014
+      Rodzaj drzwi: 0.012
+      Liczba szafek: 0.011
+      Rodzaj płyty: 0.011
+      Kształt: 0.009
+      Typ: 0.008
+      Wyposażenie: 0.006
+      Kierunek otwierania: 0.003
+      Rodzaj komody: 0.003
+      Liczba drążków: 0.003
+      Długość: 0.003
+      Rodzaj drewna: 0.003
+      Środek szafy: 0.002
+      Rodzaj folii: 0.002
+      Kształt blatu: 0.002
+      '!przepisać na pokoje -> Rodzaj biurka': 0.002
+    wymagane:
+    - Szerokość
+    - Materiał
+    - Głębokość
+    - Wysokość
+    - Stopień montażu
+  polkotapczan:
+    liczba_produktow: 77
+    zakresy:
+      Szerokość:
+        n: 75
+        mediana: 190.0
+        mad: 20.0
+        p1: 136.4
+        p99: 229.1
+        min_dopuszczalne: 70.0
+        max_dopuszczalne: 310.0
+      Wysokość:
+        n: 75
+        mediana: 96.0
+        mad: 5.0
+        p1: 83.2
+        p99: 218.0
+        min_dopuszczalne: 66.0
+        max_dopuszczalne: 218.0
+      Waga:
+        n: 73
+        mediana: 61.0
+        mad: 11.0
+        p1: 47.2
+        p99: 166.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 166.0
+      Szerokość powierzchni spania:
+        n: 75
+        mediana: 118.0
+        mad: 8.0
+        p1: 99.6
+        p99: 191.8
+        min_dopuszczalne: 70.0
+        max_dopuszczalne: 191.8
+      Długość powierzchni spania:
+        n: 75
+        mediana: 190.0
+        mad: 2.0
+        p1: 122.4
+        p99: 204.7
+        min_dopuszczalne: 122.4
+        max_dopuszczalne: 204.7
+      Głębokość:
+        n: 75
+        mediana: 89.0
+        mad: 3.0
+        p1: 46.0
+        p99: 128.8
+        min_dopuszczalne: 46.0
+        max_dopuszczalne: 128.8
+    pokrycie:
+      Materiał: 0.974
+      Szerokość: 0.974
+      Ilość osób: 0.974
+      Wysokość: 0.974
+      Szerokość powierzchni spania: 0.974
+      Długość powierzchni spania: 0.974
+      Głębokość: 0.974
+      Z pojemnikiem na pościel: 0.961
+      Waga: 0.948
+      Zagłówek: 0.844
+      Stopień montażu: 0.831
+      Podparcie: 0.766
+      Na nóżkach: 0.766
+      Podłokietniki: 0.753
+      Typ funkcji spania: 0.753
+      Funkcje: 0.74
+      Dekoracje: 0.61
+      Materiał obicia: 0.481
+      Właściwości obicia: 0.481
+      Wypełnienie: 0.403
+      Podnóżek: 0.325
+      Wysokość siedziska: 0.26
+      Głębokość siedziska: 0.208
+      Stelaż w zestawie: 0.208
+      Materac w zestawie: 0.208
+      Układ mebla: 0.208
+      Rozmiar: 0.208
+      Oświetlenie: 0.195
+      Szerokość siedziska: 0.182
+      Tapicerowane: 0.052
+      Styl: 0.026
+      Ilość nóg: 0.013
+      Designerskie: 0.013
+      Skórzane: 0.013
+      Pokrowiec zdejmowalny: 0.013
+      Typ oparcia: 0.013
+    wymagane:
+    - Materiał
+    - Szerokość
+    - Ilość osób
+    - Wysokość
+    - Szerokość powierzchni spania
+    - Długość powierzchni spania
+    - Głębokość
+    - Z pojemnikiem na pościel
+    - Waga
+  pufa:
+    liczba_produktow: 326
+    zakresy:
+      Szerokość:
+        n: 310
+        mediana: 65.0
+        mad: 20.0
+        p1: 35.5
+        p99: 149.7
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 185.0
+      Wysokość:
+        n: 310
+        mediana: 43.0
+        mad: 2.0
+        p1: 31.5
+        p99: 68.4
+        min_dopuszczalne: 31.0
+        max_dopuszczalne: 68.4
+      Głębokość:
+        n: 304
+        mediana: 60.0
+        mad: 15.0
+        p1: 34.0
+        p99: 120.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 150.0
+      Waga:
+        n: 219
+        mediana: 9.0
+        mad: 4.5
+        p1: 2.6
+        p99: 83.2
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 83.2
+      Wysokość siedziska:
+        n: 34
+        mediana: 42.0
+        mad: 3.0
+        p1: 38.0
+        p99: 62.1
+        min_dopuszczalne: 24.0
+        max_dopuszczalne: 62.1
+      Udźwig:
+        n: 30
+        mediana: 110.0
+        mad: 0.0
+        p1: 110.0
+        p99: 110.0
+        min_dopuszczalne: 110.0
+        max_dopuszczalne: 110.0
+    pokrycie:
+      Szerokość: 0.951
+      Wysokość: 0.951
+      Materiał: 0.945
+      Głębokość: 0.933
+      Podparcie: 0.847
+      Kształt: 0.837
+      Stopień montażu: 0.779
+      Na nóżkach: 0.758
+      Schowek: 0.739
+      Waga: 0.672
+      Wypełnienie: 0.607
+      Dekoracje: 0.518
+      Tapicerowane: 0.199
+      Wysokość siedziska: 0.104
+      Pokrowiec zdejmowalny: 0.101
+      Udźwig: 0.092
+      Styl: 0.086
+      Ilość nóg: 0.086
+      Średnica: 0.064
+      Z pojemnikiem na pościel: 0.064
+      Designerskie: 0.052
+      Podnóżek: 0.052
+      Głębokość siedziska: 0.037
+      Do poprawy: 0.034
+      Materiał obicia: 0.031
+      Podłokietniki: 0.028
+      Skórzane: 0.025
+      TM Design: 0.021
+      Długość: 0.021
+      Zagłówek: 0.015
+      Rozkładane: 0.009
+      Liczba szuflad: 0.009
+      Kształt blatu: 0.009
+      Maksymalne obciążenie: 0.009
+      Ilość osób: 0.006
+      Rodzaj drewna: 0.006
+      Szerokość siedziska: 0.006
+      Właściwości obicia: 0.006
+      Wyświetlanie sofy w wyszukiwarce: 0.003
+      Funkcje: 0.003
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Materiał
+    - Głębokość
+  regal:
+    liczba_produktow: 904
+    zakresy:
+      Szerokość:
+        n: 871
+        mediana: 68.5
+        mad: 21.5
+        p1: 21.0
+        p99: 172.3
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 197.5
+      Wysokość:
+        n: 871
+        mediana: 174.5
+        mad: 29.5
+        p1: 30.3
+        p99: 230.1
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 351.5
+      Głębokość:
+        n: 868
+        mediana: 39.0
+        mad: 4.0
+        p1: 17.3
+        p99: 62.2
+        min_dopuszczalne: 15.0
+        max_dopuszczalne: 63.0
+      Waga:
+        n: 755
+        mediana: 35.1
+        mad: 16.04
+        p1: 4.0
+        p99: 83.9
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 131.3
+    pokrycie:
+      Szerokość: 0.963
+      Wysokość: 0.963
+      Głębokość: 0.96
+      Stopień montażu: 0.926
+      Materiał: 0.919
+      Liczba półek: 0.884
+      Waga: 0.84
+      Liczba drzwi: 0.801
+      Liczba szuflad: 0.765
+      Sposób ustawienia: 0.74
+      Podparcie: 0.725
+      Oświetlenie: 0.595
+      Na nóżkach: 0.355
+      Styl: 0.188
+      Do poprawy: 0.119
+      Rodzaj frontu: 0.067
+      Rodzaj drzwi: 0.049
+      Układ mebla: 0.042
+      Liczba szafek: 0.034
+      Dekoracje: 0.022
+      Rodzaj płyty: 0.022
+      Udźwig: 0.021
+      Ilość nóg: 0.018
+      Podnóżek: 0.018
+      Wyposażenie: 0.014
+      Wysokość do ziemi: 0.013
+      Kierunek otwierania: 0.012
+      Liczba drążków: 0.012
+      Kształt: 0.011
+      Tapicerowane: 0.009
+      Typ: 0.008
+      Rodzaj folii: 0.007
+      Z pojemnikiem na pościel: 0.007
+      Rozmiar: 0.007
+      Zagłówek: 0.007
+      Ilość uchwytów: 0.007
+      Ilość osób: 0.006
+      Kształt blatu: 0.006
+      Środek szafy: 0.004
+      Elementy zestawu: 0.003
+      Typ uchwytu: 0.003
+      Zamykanie: 0.002
+      Rodzaj witryny: 0.002
+      Rodzaj drewna: 0.002
+      Długość: 0.002
+      Lustro: 0.001
+      Rozkładane: 0.001
+      '!przepisać na pokoje -> Rodzaj biurka': 0.001
+      Schowek: 0.001
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+    - Materiał
+  skrzynia:
+    liczba_produktow: 47
+    zakresy:
+      Szerokość:
+        n: 43
+        mediana: 73.0
+        mad: 0.0
+        p1: 35.4
+        p99: 100.0
+        min_dopuszczalne: 35.4
+        max_dopuszczalne: 100.0
+      Wysokość:
+        n: 43
+        mediana: 42.0
+        mad: 0.0
+        p1: 31.4
+        p99: 50.4
+        min_dopuszczalne: 31.4
+        max_dopuszczalne: 50.4
+      Głębokość:
+        n: 43
+        mediana: 40.0
+        mad: 0.0
+        p1: 30.1
+        p99: 59.9
+        min_dopuszczalne: 30.1
+        max_dopuszczalne: 59.9
+      Waga:
+        n: 41
+        mediana: 24.0
+        mad: 0.0
+        p1: 4.2
+        p99: 27.0
+        min_dopuszczalne: 4.2
+        max_dopuszczalne: 27.0
+    pokrycie:
+      Szerokość: 0.915
+      Wysokość: 0.915
+      Głębokość: 0.915
+      Stopień montażu: 0.915
+      Materiał: 0.872
+      Waga: 0.872
+      Liczba drzwi: 0.809
+      Rodzaj drzwi: 0.681
+      Liczba szuflad: 0.149
+      Liczba półek: 0.149
+      Podparcie: 0.128
+      Sposób ustawienia: 0.128
+      Styl: 0.106
+      Oświetlenie: 0.106
+      Rodzaj komody: 0.043
+      Do poprawy: 0.043
+      Podłokietniki: 0.043
+      Dekoracje: 0.043
+      Tapicerowane: 0.043
+      Liczba szafek: 0.043
+      Rodzaj płyty: 0.021
+      Podnóżek: 0.021
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+  sofa:
+    liczba_produktow: 965
+    zakresy:
+      Szerokość:
+        n: 936
+        mediana: 200.0
+        mad: 25.0
+        p1: 74.0
+        p99: 309.1
+        min_dopuszczalne: 50.0
+        max_dopuszczalne: 350.0
+      Waga:
+        n: 637
+        mediana: 73.0
+        mad: 22.0
+        p1: 15.5
+        p99: 140.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 205.0
+      Wysokość:
+        n: 934
+        mediana: 84.0
+        mad: 8.0
+        p1: 64.3
+        p99: 105.7
+        min_dopuszczalne: 36.0
+        max_dopuszczalne: 132.0
+      Głębokość siedziska:
+        n: 667
+        mediana: 57.0
+        mad: 4.0
+        p1: 45.7
+        p99: 99.3
+        min_dopuszczalne: 33.0
+        max_dopuszczalne: 99.3
+      Szerokość siedziska:
+        n: 293
+        mediana: 190.0
+        mad: 10.0
+        p1: 45.0
+        p99: 253.4
+        min_dopuszczalne: 45.0
+        max_dopuszczalne: 253.4
+      Wysokość siedziska:
+        n: 798
+        mediana: 44.0
+        mad: 2.0
+        p1: 35.0
+        p99: 51.0
+        min_dopuszczalne: 32.0
+        max_dopuszczalne: 56.0
+      Szerokość powierzchni spania:
+        n: 448
+        mediana: 142.5
+        mad: 11.5
+        p1: 81.5
+        p99: 200.0
+        min_dopuszczalne: 73.5
+        max_dopuszczalne: 211.5
+      Długość powierzchni spania:
+        n: 449
+        mediana: 195.0
+        mad: 5.0
+        p1: 120.0
+        p99: 221.0
+        min_dopuszczalne: 120.0
+        max_dopuszczalne: 225.0
+      Głębokość:
+        n: 929
+        mediana: 96.0
+        mad: 6.0
+        p1: 60.0
+        p99: 170.0
+        min_dopuszczalne: 60.0
+        max_dopuszczalne: 170.0
+      Udźwig:
+        n: 50
+        mediana: 110.0
+        mad: 0.0
+        p1: 110.0
+        p99: 220.0
+        min_dopuszczalne: 110.0
+        max_dopuszczalne: 220.0
+    pokrycie:
+      Materiał: 0.971
+      Szerokość: 0.97
+      Wysokość: 0.968
+      Głębokość: 0.963
+      Podłokietniki: 0.898
+      Podparcie: 0.895
+      Na nóżkach: 0.894
+      Zagłówek: 0.864
+      Stopień montażu: 0.854
+      Z pojemnikiem na pościel: 0.842
+      Ilość osób: 0.839
+      Wysokość siedziska: 0.827
+      Wypełnienie: 0.783
+      Głębokość siedziska: 0.691
+      Waga: 0.66
+      Dekoracje: 0.607
+      Funkcje: 0.522
+      Długość powierzchni spania: 0.465
+      Szerokość powierzchni spania: 0.464
+      Typ funkcji spania: 0.424
+      Szerokość siedziska: 0.304
+      Materiał obicia: 0.198
+      Styl: 0.146
+      Właściwości obicia: 0.14
+      Tapicerowane: 0.134
+      Designerskie: 0.092
+      Podnóżek: 0.074
+      Typ oparcia: 0.063
+      Pokrowiec zdejmowalny: 0.062
+      Udźwig: 0.052
+      Ilość nóg: 0.051
+      TM Design: 0.032
+      Do poprawy: 0.031
+      Skórzane: 0.02
+      Wyświetlanie sofy w wyszukiwarce: 0.013
+      Długość: 0.007
+      Wysokość z zagłówkiem: 0.006
+      Rozmiar: 0.006
+      Układ mebla: 0.006
+      Schowek: 0.006
+      Wysokość oparcia: 0.006
+      Liczba półek: 0.004
+      Maksymalna głębokość: 0.003
+      Rozkładane: 0.003
+      Liczba szuflad: 0.003
+      Liczba szafek: 0.003
+      Liczba drążków: 0.003
+      Kształt blatu: 0.002
+      Oświetlenie: 0.002
+      Szerokość po rozłożeniu: 0.001
+      Rodzaj drewna: 0.001
+      Materac w zestawie: 0.001
+      Stelaż w zestawie: 0.001
+      Sposób ustawienia: 0.001
+      Kształt: 0.001
+      Maksymalne obciążenie: 0.001
+    wymagane:
+    - Materiał
+    - Szerokość
+    - Wysokość
+    - Głębokość
+  stelaz:
+    liczba_produktow: 189
+    zakresy:
+      Długość:
+        n: 157
+        mediana: 200.0
+        mad: 0.0
+        p1: 200.0
+        p99: 220.0
+        min_dopuszczalne: 200.0
+        max_dopuszczalne: 220.0
+      Szerokość:
+        n: 187
+        mediana: 120.0
+        mad: 30.0
+        p1: 80.0
+        p99: 200.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 300.0
+      Wysokość:
+        n: 128
+        mediana: 6.0
+        mad: 1.5
+        p1: 1.8
+        p99: 45.2
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 45.2
+      Głębokość:
+        n: 185
+        mediana: 200.0
+        mad: 0.0
+        p1: 152.6
+        p99: 220.0
+        min_dopuszczalne: 152.6
+        max_dopuszczalne: 220.0
+      Waga:
+        n: 36
+        mediana: 17.4
+        mad: 4.8
+        p1: 8.7
+        p99: 51.3
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 51.3
+    pokrycie:
+      Szerokość: 0.989
+      Głębokość: 0.979
+      Rozmiar: 0.947
+      Materiał: 0.852
+      Długość: 0.831
+      Stopień montażu: 0.767
+      Wysokość: 0.677
+      Masa ciała: 0.481
+      Dla kogo: 0.481
+      Regulacja: 0.333
+      Waga: 0.196
+      Ilość osób: 0.048
+      Liczba szuflad: 0.026
+      Liczba drzwi: 0.021
+      Styl: 0.021
+      Z pojemnikiem na pościel: 0.021
+      Tapicerowane: 0.021
+      Zagłówek: 0.021
+      Materac w zestawie: 0.021
+      Stelaż w zestawie: 0.021
+      Wypełnienie: 0.021
+      Twardość: 0.021
+      Rozkładane: 0.005
+      Kształt blatu: 0.005
+      Podparcie: 0.005
+      Na nóżkach: 0.005
+      Sposób ustawienia: 0.005
+      Średnica: 0.005
+    wymagane:
+    - Szerokość
+    - Głębokość
+    - Rozmiar
+  stol:
+    liczba_produktow: 1474
+    zakresy:
+      Średnica:
+        n: 287
+        mediana: 100.0
+        mad: 10.0
+        p1: 55.7
+        p99: 140.0
+        min_dopuszczalne: 40.0
+        max_dopuszczalne: 160.0
+      Wysokość:
+        n: 1347
+        mediana: 76.0
+        mad: 1.0
+        p1: 40.5
+        p99: 89.6
+        min_dopuszczalne: 40.5
+        max_dopuszczalne: 89.6
+      Szerokość po rozłożeniu:
+        n: 679
+        mediana: 200.0
+        mad: 28.0
+        p1: 125.0
+        p99: 300.0
+        min_dopuszczalne: 32.0
+        max_dopuszczalne: 368.0
+      Długość:
+        n: 270
+        mediana: 160.0
+        mad: 20.0
+        p1: 73.5
+        p99: 280.0
+        min_dopuszczalne: 40.0
+        max_dopuszczalne: 280.0
+      Szerokość:
+        n: 1215
+        mediana: 140.0
+        mad: 28.0
+        p1: 48.7
+        p99: 240.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 308.0
+      Głębokość:
+        n: 1204
+        mediana: 90.0
+        mad: 10.0
+        p1: 47.5
+        p99: 140.0
+        min_dopuszczalne: 30.0
+        max_dopuszczalne: 150.0
+      Waga:
+        n: 1111
+        mediana: 47.4
+        mad: 18.4
+        p1: 4.6
+        p99: 143.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 157.8
+      Udźwig:
+        n: 104
+        mediana: 30.0
+        mad: 10.0
+        p1: 5.0
+        p99: 110.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 110.0
+    pokrycie:
+      Wysokość: 0.914
+      Kształt blatu: 0.9
+      Materiał: 0.896
+      Rozkładane: 0.858
+      Stopień montażu: 0.832
+      Szerokość: 0.824
+      Głębokość: 0.817
+      Ilość osób: 0.804
+      Waga: 0.756
+      Szerokość po rozłożeniu: 0.461
+      Rozmiar stołu: 0.445
+      Ilość wkładek: 0.279
+      Średnica: 0.195
+      Styl: 0.191
+      Długość: 0.183
+      Ilość nóg: 0.1
+      Podparcie: 0.091
+      Udźwig: 0.071
+      Liczba szuflad: 0.04
+      Półka pod blatem: 0.038
+      Dekoracje: 0.026
+      Liczba półek: 0.026
+      Sposób ustawienia: 0.018
+      Liczba szafek: 0.017
+      Maksymalne obciążenie: 0.014
+      Liczba drzwi: 0.01
+      Liczba drążków: 0.008
+      Oświetlenie: 0.006
+      Tapicerowane: 0.005
+      Podnóżek: 0.004
+      Do poprawy: 0.003
+      Materiał obicia: 0.003
+      Podłokietniki: 0.002
+      Wysokość do ziemi: 0.002
+      Rodzaj płyty: 0.002
+      Typ oparcia: 0.002
+      Rodzaj drewna: 0.001
+      Półka na klawiaturę: 0.001
+      Rodzaj folii: 0.001
+      Z pojemnikiem na pościel: 0.001
+      Rodzaj dodatku: 0.001
+    wymagane:
+    - Wysokość
+    - Kształt blatu
+  stolik:
+    liczba_produktow: 454
+    zakresy:
+      Średnica:
+        n: 84
+        mediana: 55.0
+        mad: 6.0
+        p1: 40.0
+        p99: 90.9
+        min_dopuszczalne: 19.0
+        max_dopuszczalne: 91.0
+      Wysokość:
+        n: 401
+        mediana: 43.0
+        mad: 3.0
+        p1: 30.0
+        p99: 77.0
+        min_dopuszczalne: 25.0
+        max_dopuszczalne: 77.0
+      Waga:
+        n: 434
+        mediana: 11.0
+        mad: 6.0
+        p1: 2.2
+        p99: 68.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 68.0
+      Szerokość:
+        n: 369
+        mediana: 60.0
+        mad: 15.0
+        p1: 30.0
+        p99: 129.8
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 150.0
+      Głębokość:
+        n: 368
+        mediana: 58.0
+        mad: 8.0
+        p1: 30.0
+        p99: 100.0
+        min_dopuszczalne: 10.0
+        max_dopuszczalne: 106.0
+    pokrycie:
+      Materiał: 0.98
+      Waga: 0.956
+      Kształt blatu: 0.936
+      Liczba szuflad: 0.927
+      Podparcie: 0.921
+      Wysokość: 0.883
+      Rozkładane: 0.852
+      Szerokość: 0.813
+      Głębokość: 0.811
+      Stopień montażu: 0.742
+      Liczba półek: 0.207
+      Średnica: 0.185
+      Liczba szafek: 0.148
+      Podnóżek: 0.123
+      Styl: 0.097
+      Liczba drzwi: 0.075
+      Udźwig: 0.064
+      Ilość osób: 0.046
+      Sposób ustawienia: 0.031
+      Maksymalne obciążenie: 0.031
+      Na nóżkach: 0.029
+      Oświetlenie: 0.024
+      Długość: 0.02
+      Schowek: 0.018
+      Kształt: 0.015
+      Tapicerowane: 0.013
+      Typ uchwytu: 0.011
+      Ilość uchwytów: 0.011
+      Rodzaj frontu: 0.009
+      Rodzaj drzwi: 0.009
+      Półka pod blatem: 0.007
+      Ilość nóg: 0.007
+      Szerokość po rozłożeniu: 0.007
+      Do poprawy: 0.002
+      Dekoracje: 0.002
+      Wypełnienie: 0.002
+      Typ: 0.002
+      Rozmiar stołu: 0.002
+      Kierunek otwierania: 0.002
+      Rodzaj płyty: 0.002
+    wymagane:
+    - Materiał
+    - Waga
+    - Kształt blatu
+    - Liczba szuflad
+    - Podparcie
+  szafa:
+    liczba_produktow: 4920
+    zakresy:
+      Szerokość:
+        n: 4332
+        mediana: 150.0
+        mad: 40.0
+        p1: 53.5
+        p99: 299.9
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 390.0
+      Wysokość:
+        n: 4332
+        mediana: 205.0
+        mad: 9.4
+        p1: 176.0
+        p99: 245.5
+        min_dopuszczalne: 148.6
+        max_dopuszczalne: 261.4
+      Głębokość:
+        n: 4333
+        mediana: 58.0
+        mad: 3.9
+        p1: 35.0
+        p99: 97.8
+        min_dopuszczalne: 34.6
+        max_dopuszczalne: 97.8
+      Waga:
+        n: 3127
+        mediana: 124.0
+        mad: 29.6
+        p1: 38.6
+        p99: 241.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 301.6
+      Wysokość do ziemi:
+        n: 30
+        mediana: 1731.0
+        mad: 0.0
+        p1: 17.0
+        p99: 1731.0
+        min_dopuszczalne: 17.0
+        max_dopuszczalne: 1731.0
+      Udźwig:
+        n: 114
+        mediana: 20.0
+        mad: 0.0
+        p1: 5.0
+        p99: 20.0
+        min_dopuszczalne: 5.0
+        max_dopuszczalne: 20.0
+      Długość:
+        n: 132
+        mediana: 62.0
+        mad: 0.0
+        p1: 45.0
+        p99: 223.4
+        min_dopuszczalne: 45.0
+        max_dopuszczalne: 223.4
+    pokrycie:
+      Głębokość: 0.881
+      Szerokość: 0.88
+      Wysokość: 0.88
+      Liczba drzwi: 0.872
+      Stopień montażu: 0.868
+      Liczba półek: 0.858
+      Rodzaj drzwi: 0.849
+      Materiał: 0.846
+      Sposób ustawienia: 0.708
+      Podparcie: 0.707
+      Liczba drążków: 0.691
+      Liczba szuflad: 0.661
+      Waga: 0.637
+      Na nóżkach: 0.371
+      Styl: 0.179
+      Rodzaj frontu: 0.129
+      Oświetlenie: 0.063
+      Elementy zestawu: 0.063
+      Do poprawy: 0.052
+      Środek szafy: 0.04
+      Lustro: 0.036
+      Rodzaj płyty: 0.03
+      Długość: 0.027
+      Układ mebla: 0.027
+      Udźwig: 0.023
+      Wyposażenie: 0.012
+      Dekoracje: 0.009
+      Wysokość do ziemi: 0.006
+      Kształt: 0.006
+      Ilość nóg: 0.005
+      Liczba szafek: 0.005
+      Kierunek otwierania: 0.004
+      Tapicerowane: 0.004
+      Typ uchwytu: 0.003
+      Podnóżek: 0.003
+      Liczba szaf: 0.002
+      Maksymalne obciążenie: 0.001
+      Rodzaj dodatku: 0.001
+      Ilość uchwytów: 0.001
+      Rodzaj folii: 0.001
+      Rodzaj witryny: 0.001
+      Rodzaj drewna: 0.001
+      Rodzaj komody: 0.0
+      Zamykanie: 0.0
+      Kształt blatu: 0.0
+      '!przepisać na pokoje -> Rodzaj biurka': 0.0
+      Zagłówek: 0.0
+      Ilość osób: 0.0
+      Długość powierzchni spania: 0.0
+      Rozmiar: 0.0
+      Z pojemnikiem na pościel: 0.0
+      Typ: 0.0
+      Rozkładane: 0.0
+    wymagane: []
+  szafka:
+    liczba_produktow: 764
+    zakresy:
+      Szerokość:
+        n: 749
+        mediana: 60.0
+        mad: 20.0
+        p1: 20.0
+        p99: 142.6
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 180.0
+      Wysokość:
+        n: 642
+        mediana: 59.5
+        mad: 11.5
+        p1: 28.7
+        p99: 192.9
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 192.9
+      Głębokość:
+        n: 746
+        mediana: 39.0
+        mad: 7.0
+        p1: 9.6
+        p99: 62.7
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 81.0
+      Waga:
+        n: 704
+        mediana: 22.9
+        mad: 7.87
+        p1: 3.5
+        p99: 70.6
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 70.6
+    pokrycie:
+      Szerokość: 0.98
+      Głębokość: 0.976
+      Materiał: 0.95
+      Stopień montażu: 0.942
+      Waga: 0.921
+      Wysokość: 0.84
+      Liczba szuflad: 0.669
+      Liczba drzwi: 0.66
+      Liczba półek: 0.657
+      Rodzaj frontu: 0.648
+      Typ: 0.611
+      Sposób ustawienia: 0.285
+      Podparcie: 0.283
+      Oświetlenie: 0.215
+      Kształt: 0.166
+      Kierunek otwierania: 0.157
+      Na nóżkach: 0.132
+      Liczba szafek: 0.103
+      Styl: 0.054
+      Do poprawy: 0.031
+      Rodzaj drzwi: 0.031
+      Podnóżek: 0.026
+      Ilość nóg: 0.022
+      Tapicerowane: 0.018
+      Udźwig: 0.016
+      Liczba drążków: 0.016
+      Układ mebla: 0.014
+      Wysokość do ziemi: 0.013
+      Dekoracje: 0.009
+      Wyposażenie: 0.009
+      Kształt blatu: 0.007
+      Ilość uchwytów: 0.007
+      Środek szafy: 0.005
+      Pokrowiec zdejmowalny: 0.003
+      Elementy zestawu: 0.001
+      Rodzaj komody: 0.001
+      Rodzaj płyty: 0.001
+      Materiał obicia: 0.001
+      Rozkładane: 0.001
+      Podłokietniki: 0.001
+    wymagane:
+    - Szerokość
+    - Głębokość
+    - Materiał
+    - Stopień montażu
+    - Waga
+  szafka_nocna:
+    liczba_produktow: 511
+    zakresy:
+      Szerokość:
+        n: 488
+        mediana: 48.0
+        mad: 6.0
+        p1: 32.0
+        p99: 66.0
+        min_dopuszczalne: 12.0
+        max_dopuszczalne: 84.0
+      Wysokość:
+        n: 488
+        mediana: 49.1
+        mad: 6.4
+        p1: 14.9
+        p99: 102.0
+        min_dopuszczalne: 10.8
+        max_dopuszczalne: 102.0
+      Głębokość:
+        n: 488
+        mediana: 40.0
+        mad: 2.1
+        p1: 28.5
+        p99: 56.4
+        min_dopuszczalne: 27.4
+        max_dopuszczalne: 56.4
+      Waga:
+        n: 403
+        mediana: 14.5
+        mad: 3.3
+        p1: 5.0
+        p99: 55.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 55.0
+    pokrycie:
+      Szerokość: 0.955
+      Wysokość: 0.955
+      Głębokość: 0.955
+      Stopień montażu: 0.924
+      Liczba szuflad: 0.916
+      Materiał: 0.906
+      Kształt blatu: 0.812
+      Waga: 0.789
+      Liczba drzwi: 0.753
+      Liczba półek: 0.751
+      Styl: 0.235
+      Sposób ustawienia: 0.178
+      Podparcie: 0.153
+      Na nóżkach: 0.141
+      Rodzaj frontu: 0.117
+      Do poprawy: 0.09
+      Oświetlenie: 0.082
+      Ilość nóg: 0.037
+      Wysokość do ziemi: 0.037
+      Układ mebla: 0.037
+      Dekoracje: 0.027
+      Wyposażenie: 0.027
+      Podnóżek: 0.027
+      Kształt: 0.022
+      Rozkładane: 0.022
+      Rodzaj drzwi: 0.02
+      Rodzaj płyty: 0.02
+      Maksymalne obciążenie: 0.02
+      Udźwig: 0.016
+      Liczba szafek: 0.016
+      Tapicerowane: 0.01
+      Ilość uchwytów: 0.01
+      Długość: 0.008
+      Typ uchwytu: 0.008
+      Rodzaj komody: 0.006
+      Rodzaj folii: 0.004
+      Środek szafy: 0.004
+      Rodzaj witryny: 0.004
+      Liczba drążków: 0.004
+      Kierunek otwierania: 0.004
+      Materiał obicia: 0.004
+      '!przepisać na pokoje -> Rodzaj biurka': 0.002
+      Rodzaj drewna: 0.002
+      Ilość osób: 0.002
+      Zagłówek: 0.002
+      Średnica: 0.002
+      Wypełnienie: 0.002
+      Typ: 0.002
+      Schowek: 0.002
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+    - Liczba szuflad
+    - Materiał
+  szafka_rtv:
+    liczba_produktow: 1149
+    zakresy:
+      Szerokość:
+        n: 1147
+        mediana: 160.0
+        mad: 20.0
+        p1: 91.0
+        p99: 220.1
+        min_dopuszczalne: 40.0
+        max_dopuszczalne: 280.0
+      Wysokość:
+        n: 1147
+        mediana: 52.0
+        mad: 6.0
+        p1: 28.0
+        p99: 81.0
+        min_dopuszczalne: 16.0
+        max_dopuszczalne: 88.0
+      Głębokość:
+        n: 1147
+        mediana: 40.8
+        mad: 1.2
+        p1: 32.0
+        p99: 55.0
+        min_dopuszczalne: 32.0
+        max_dopuszczalne: 55.0
+      Waga:
+        n: 888
+        mediana: 38.9
+        mad: 8.09
+        p1: 15.0
+        p99: 84.1
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 87.5
+      Wysokość do ziemi:
+        n: 61
+        mediana: 55.0
+        mad: 6.0
+        p1: 38.8
+        p99: 1731.0
+        min_dopuszczalne: 19.0
+        max_dopuszczalne: 1731.0
+      Udźwig:
+        n: 38
+        mediana: 5.0
+        mad: 2.0
+        p1: 3.0
+        p99: 40.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 40.0
+    pokrycie:
+      Szerokość: 0.998
+      Wysokość: 0.998
+      Głębokość: 0.998
+      Stopień montażu: 0.967
+      Podparcie: 0.966
+      Liczba drzwi: 0.956
+      Sposób ustawienia: 0.955
+      Materiał: 0.93
+      Liczba szuflad: 0.876
+      Liczba półek: 0.85
+      Waga: 0.773
+      Oświetlenie: 0.66
+      Na nóżkach: 0.549
+      Rodzaj frontu: 0.248
+      Styl: 0.216
+      Liczba szafek: 0.171
+      Kształt blatu: 0.16
+      Ilość nóg: 0.131
+      Rodzaj drzwi: 0.114
+      Do poprawy: 0.106
+      Układ mebla: 0.055
+      Dekoracje: 0.053
+      Wysokość do ziemi: 0.053
+      Podnóżek: 0.049
+      Kierunek otwierania: 0.048
+      Wyposażenie: 0.048
+      Kształt: 0.047
+      Rodzaj płyty: 0.044
+      Udźwig: 0.033
+      Typ uchwytu: 0.022
+      Długość: 0.017
+      Tapicerowane: 0.015
+      Rozkładane: 0.013
+      Ilość uchwytów: 0.012
+      Maksymalne obciążenie: 0.008
+      Rodzaj folii: 0.007
+      Rodzaj drewna: 0.005
+      Typ: 0.003
+      Rodzaj komody: 0.003
+      Elementy zestawu: 0.003
+      Liczba drążków: 0.001
+      Podłokietniki: 0.001
+      Rodzaj witryny: 0.001
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+    - Stopień montażu
+    - Podparcie
+    - Liczba drzwi
+    - Sposób ustawienia
+    - Materiał
+  toaletka:
+    liczba_produktow: 193
+    zakresy:
+      Szerokość:
+        n: 179
+        mediana: 100.3
+        mad: 11.7
+        p1: 50.0
+        p99: 158.4
+        min_dopuszczalne: 30.1
+        max_dopuszczalne: 170.5
+      Wysokość:
+        n: 179
+        mediana: 80.0
+        mad: 4.0
+        p1: 15.0
+        p99: 153.0
+        min_dopuszczalne: 15.0
+        max_dopuszczalne: 153.0
+      Głębokość:
+        n: 178
+        mediana: 40.0
+        mad: 5.0
+        p1: 18.6
+        p99: 69.2
+        min_dopuszczalne: 10.0
+        max_dopuszczalne: 70.0
+      Waga:
+        n: 148
+        mediana: 23.0
+        mad: 8.0
+        p1: 5.7
+        p99: 108.5
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 108.5
+    pokrycie:
+      Szerokość: 0.927
+      Wysokość: 0.927
+      Głębokość: 0.922
+      Stopień montażu: 0.891
+      Materiał: 0.86
+      Liczba szuflad: 0.839
+      Waga: 0.767
+      Podparcie: 0.658
+      Sposób ustawienia: 0.658
+      Liczba drzwi: 0.591
+      Liczba półek: 0.57
+      Liczba szafek: 0.539
+      Na nóżkach: 0.461
+      Kształt blatu: 0.29
+      Styl: 0.223
+      Rozkładane: 0.197
+      Do poprawy: 0.13
+      Elementy zestawu: 0.104
+      Ilość nóg: 0.098
+      Rodzaj frontu: 0.088
+      Oświetlenie: 0.052
+      Dekoracje: 0.047
+      Półka na klawiaturę: 0.047
+      Udźwig: 0.047
+      '!przepisać na pokoje -> Rodzaj biurka': 0.041
+      Podnóżek: 0.036
+      Długość: 0.031
+      Wysokość do ziemi: 0.031
+      Rodzaj płyty: 0.031
+      Półka pod blatem: 0.016
+      Kształt: 0.01
+      Wyposażenie: 0.01
+      Rodzaj komody: 0.005
+      Rodzaj folii: 0.005
+      Kierunek otwierania: 0.005
+      Ilość osób: 0.005
+      Materiał obicia: 0.005
+      Maksymalne obciążenie: 0.005
+      Szerokość po rozłożeniu: 0.005
+      Ilość wkładek: 0.005
+      Układ mebla: 0.005
+    wymagane:
+    - Szerokość
+    - Wysokość
+    - Głębokość
+  wieszak:
+    liczba_produktow: 388
+    zakresy:
+      Szerokość:
+        n: 382
+        mediana: 80.0
+        mad: 30.0
+        p1: 13.8
+        p99: 214.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 260.0
+      Wysokość:
+        n: 383
+        mediana: 170.0
+        mad: 28.5
+        p1: 8.1
+        p99: 213.7
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 341.0
+      Głębokość:
+        n: 366
+        mediana: 33.0
+        mad: 7.2
+        p1: 1.5
+        p99: 60.8
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 76.2
+      Waga:
+        n: 255
+        mediana: 12.0
+        mad: 7.6
+        p1: 0.5
+        p99: 143.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 143.0
+    pokrycie:
+      Wysokość: 0.987
+      Szerokość: 0.985
+      Stopień montażu: 0.966
+      Głębokość: 0.943
+      Materiał: 0.925
+      Sposób ustawienia: 0.832
+      Podparcie: 0.827
+      Liczba półek: 0.729
+      Waga: 0.657
+      Na nóżkach: 0.528
+      Liczba szuflad: 0.335
+      Liczba drążków: 0.332
+      Styl: 0.32
+      Liczba szafek: 0.273
+      Liczba drzwi: 0.186
+      Do poprawy: 0.113
+      Rodzaj drzwi: 0.103
+      Rodzaj frontu: 0.067
+      Oświetlenie: 0.067
+      Ilość nóg: 0.059
+      Liczba szaf: 0.057
+      Udźwig: 0.049
+      Podnóżek: 0.026
+      Elementy zestawu: 0.015
+      Kształt: 0.013
+      Długość: 0.008
+      Średnica: 0.008
+      Cleo: 0.005
+      Środek szafy: 0.005
+      Wysokość do ziemi: 0.005
+      Tapicerowane: 0.005
+      Maksymalne obciążenie: 0.005
+      Rodzaj folii: 0.003
+      Lustro: 0.003
+      Dekoracje: 0.003
+      Wyposażenie: 0.003
+      Układ mebla: 0.003
+    wymagane:
+    - Wysokość
+    - Szerokość
+    - Stopień montażu
+    - Głębokość
+    - Materiał
+  witryna:
+    liczba_produktow: 1076
+    zakresy:
+      Szerokość:
+        n: 1033
+        mediana: 89.0
+        mad: 21.0
+        p1: 30.0
+        p99: 184.0
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 215.0
+      Wysokość:
+        n: 1032
+        mediana: 192.0
+        mad: 13.0
+        p1: 30.6
+        p99: 212.1
+        min_dopuszczalne: 30.6
+        max_dopuszczalne: 270.0
+      Głębokość:
+        n: 1033
+        mediana: 40.5
+        mad: 1.5
+        p1: 29.0
+        p99: 51.0
+        min_dopuszczalne: 29.0
+        max_dopuszczalne: 51.0
+      Waga:
+        n: 794
+        mediana: 58.0
+        mad: 11.67
+        p1: 15.0
+        p99: 175.2
+        min_dopuszczalne: 0.0
+        max_dopuszczalne: 175.2
+      Wysokość do ziemi:
+        n: 31
+        mediana: 1731.0
+        mad: 0.0
+        p1: 136.1
+        p99: 1731.0
+        min_dopuszczalne: 136.1
+        max_dopuszczalne: 1731.0
+    pokrycie:
+      Szerokość: 0.96
+      Głębokość: 0.96
+      Wysokość: 0.959
+      Liczba drzwi: 0.956
+      Materiał: 0.941
+      Stopień montażu: 0.937
+      Liczba półek: 0.921
+      Liczba szuflad: 0.841
+      Oświetlenie: 0.805
+      Waga: 0.74
+      Sposób ustawienia: 0.67
+      Podparcie: 0.659
+      Na nóżkach: 0.364
+      Styl: 0.317
+      Rodzaj witryny: 0.203
+      Do poprawy: 0.198
+      Dekoracje: 0.056
+      Rodzaj drzwi: 0.054
+      Rodzaj frontu: 0.043
+      Liczba szafek: 0.03
+      Wysokość do ziemi: 0.029
+      Wyposażenie: 0.028
+      Ilość nóg: 0.023
+      Kierunek otwierania: 0.021
+      Układ mebla: 0.021
+      Podnóżek: 0.021
+      Udźwig: 0.017
+      Rodzaj komody: 0.009
+      Długość: 0.007
+      Kształt: 0.007
+      Maksymalne obciążenie: 0.007
+      Rodzaj folii: 0.005
+      Liczba drążków: 0.003
+      Rodzaj płyty: 0.003
+      Typ uchwytu: 0.003
+      Elementy zestawu: 0.002
+      Rodzaj drewna: 0.002
+      Kształt blatu: 0.001
+      Tapicerowane: 0.001
+      Podłokietniki: 0.001
+    wymagane:
+    - Szerokość
+    - Głębokość
+    - Wysokość
+    - Liczba drzwi
+    - Materiał
+    - Stopień montażu
+    - Liczba półek
+  zaglowek:
+    liczba_produktow: 4
+    zakresy: {}
+    pokrycie:
+      Szerokość: 0.75
+      Wysokość: 0.75
+      Stopień montażu: 0.75
+      Głębokość: 0.5
+      Średnica: 0.25
+      Styl: 0.25
+      Designerskie: 0.25
+      Skórzane: 0.25
+      Materiał: 0.25
+    wymagane: []
+grupy:
+  pozostale:
+    Długość:
+      n: 42
+      mediana: 72.5
+      mad: 21.0
+      p1: 34.7
+      p99: 200.3
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 200.3
+    Głębokość:
+      n: 961
+      mediana: 31.0
+      mad: 17.0
+      p1: 0.5
+      p99: 103.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 133.0
+    Szerokość:
+      n: 1058
+      mediana: 80.0
+      mad: 30.0
+      p1: 4.4
+      p99: 244.3
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 260.0
+    Udźwig:
+      n: 33
+      mediana: 10.0
+      mad: 6.0
+      p1: 2.0
+      p99: 180.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 180.0
+    Waga:
+      n: 762
+      mediana: 10.4
+      mad: 5.6
+      p1: 0.3
+      p99: 122.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 122.0
+    Wysokość:
+      n: 1044
+      mediana: 80.0
+      mad: 63.95
+      p1: 2.0
+      p99: 238.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 463.7
+    Średnica:
+      n: 53
+      mediana: 67.5
+      mad: 12.5
+      p1: 23.2
+      p99: 128.8
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 142.5
+  siedziska:
+    Długość:
+      n: 41
+      mediana: 200.0
+      mad: 3.0
+      p1: 42.0
+      p99: 204.2
+      min_dopuszczalne: 42.0
+      max_dopuszczalne: 218.0
+    Długość powierzchni spania:
+      n: 1555
+      mediana: 200.0
+      mad: 10.0
+      p1: 120.0
+      p99: 296.5
+      min_dopuszczalne: 120.0
+      max_dopuszczalne: 296.5
+    Głębokość:
+      n: 5567
+      mediana: 86.0
+      mad: 30.0
+      p1: 36.0
+      p99: 239.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 266.0
+    Głębokość siedziska:
+      n: 3552
+      mediana: 55.0
+      mad: 6.0
+      p1: 37.8
+      p99: 103.0
+      min_dopuszczalne: 19.0
+      max_dopuszczalne: 103.0
+    Maksymalne obciążenie:
+      n: 209
+      mediana: 120.0
+      mad: 0.0
+      p1: 100.0
+      p99: 196.0
+      min_dopuszczalne: 100.0
+      max_dopuszczalne: 196.0
+    Szerokość:
+      n: 5648
+      mediana: 90.0
+      mad: 45.0
+      p1: 39.0
+      p99: 370.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 370.0
+    Szerokość powierzchni spania:
+      n: 1558
+      mediana: 128.0
+      mad: 8.0
+      p1: 80.0
+      p99: 255.0
+      min_dopuszczalne: 80.0
+      max_dopuszczalne: 255.0
+    Szerokość siedziska:
+      n: 2034
+      mediana: 52.0
+      mad: 9.0
+      p1: 39.0
+      p99: 273.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 273.0
+    Udźwig:
+      n: 337
+      mediana: 110.0
+      mad: 0.0
+      p1: 110.0
+      p99: 390.0
+      min_dopuszczalne: 110.0
+      max_dopuszczalne: 390.0
+    Waga:
+      n: 4132
+      mediana: 22.8
+      mad: 17.18
+      p1: 3.2
+      p99: 225.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 225.0
+    Wysokość:
+      n: 5645
+      mediana: 86.0
+      mad: 9.0
+      p1: 39.0
+      p99: 126.0
+      min_dopuszczalne: 32.0
+      max_dopuszczalne: 140.0
+    Wysokość siedziska:
+      n: 4182
+      mediana: 46.0
+      mad: 2.0
+      p1: 37.0
+      p99: 75.0
+      min_dopuszczalne: 34.0
+      max_dopuszczalne: 75.0
+  skrzyniowe:
+    Długość:
+      n: 210
+      mediana: 62.0
+      mad: 2.0
+      p1: 40.0
+      p99: 290.0
+      min_dopuszczalne: 40.0
+      max_dopuszczalne: 290.0
+    Głębokość:
+      n: 13865
+      mediana: 42.0
+      mad: 7.0
+      p1: 14.8
+      p99: 90.4
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 90.4
+    Maksymalne obciążenie:
+      n: 103
+      mediana: 20.0
+      mad: 0.0
+      p1: 3.0
+      p99: 150.0
+      min_dopuszczalne: 3.0
+      max_dopuszczalne: 150.0
+    Szerokość:
+      n: 14063
+      mediana: 120.0
+      mad: 40.1
+      p1: 30.0
+      p99: 300.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 360.6
+    Udźwig:
+      n: 295
+      mediana: 15.0
+      mad: 10.0
+      p1: 2.0
+      p99: 110.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 110.0
+    Waga:
+      n: 10798
+      mediana: 54.0
+      mad: 30.0
+      p1: 3.0
+      p99: 224.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 234.0
+    Wysokość:
+      n: 13602
+      mediana: 125.0
+      mad: 71.0
+      p1: 10.0
+      p99: 245.5
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 551.0
+    Wysokość do ziemi:
+      n: 266
+      mediana: 1731.0
+      mad: 0.0
+      p1: 28.0
+      p99: 1731.0
+      min_dopuszczalne: 28.0
+      max_dopuszczalne: 1731.0
+  spanie:
+    Długość:
+      n: 2272
+      mediana: 200.0
+      mad: 0.0
+      p1: 160.7
+      p99: 244.0
+      min_dopuszczalne: 160.7
+      max_dopuszczalne: 244.0
+    Długość powierzchni spania:
+      n: 2287
+      mediana: 200.0
+      mad: 0.0
+      p1: 140.0
+      p99: 212.0
+      min_dopuszczalne: 140.0
+      max_dopuszczalne: 212.0
+    Głębokość:
+      n: 5490
+      mediana: 200.0
+      mad: 11.2
+      p1: 74.0
+      p99: 242.0
+      min_dopuszczalne: 74.0
+      max_dopuszczalne: 267.2
+    Głębokość siedziska:
+      n: 140
+      mediana: 200.0
+      mad: 0.0
+      p1: 55.4
+      p99: 236.9
+      min_dopuszczalne: 55.4
+      max_dopuszczalne: 236.9
+    Maksymalne obciążenie:
+      n: 485
+      mediana: 100.0
+      mad: 0.0
+      p1: 100.0
+      p99: 280.0
+      min_dopuszczalne: 100.0
+      max_dopuszczalne: 280.0
+    Szerokość:
+      n: 5585
+      mediana: 155.0
+      mad: 35.0
+      p1: 80.0
+      p99: 244.2
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 365.0
+    Szerokość powierzchni spania:
+      n: 846
+      mediana: 111.5
+      mad: 31.5
+      p1: 70.0
+      p99: 200.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 300.5
+    Szerokość siedziska:
+      n: 172
+      mediana: 160.0
+      mad: 20.0
+      p1: 120.0
+      p99: 191.6
+      min_dopuszczalne: 40.0
+      max_dopuszczalne: 280.0
+    Udźwig:
+      n: 111
+      mediana: 240.0
+      mad: 20.0
+      p1: 10.0
+      p99: 260.0
+      min_dopuszczalne: 10.0
+      max_dopuszczalne: 360.0
+    Waga:
+      n: 2809
+      mediana: 72.0
+      mad: 30.0
+      p1: 7.0
+      p99: 191.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 252.0
+    Wysokość:
+      n: 5492
+      mediana: 81.0
+      mad: 37.0
+      p1: 4.0
+      p99: 190.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 303.0
+    Wysokość siedziska:
+      n: 134
+      mediana: 53.0
+      mad: 9.5
+      p1: 34.0
+      p99: 66.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 110.0
+  stoly:
+    Długość:
+      n: 640
+      mediana: 120.0
+      mad: 30.0
+      p1: 40.4
+      p99: 260.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 300.0
+    Głębokość:
+      n: 3497
+      mediana: 67.0
+      mad: 17.0
+      p1: 20.0
+      p99: 130.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 169.0
+    Maksymalne obciążenie:
+      n: 68
+      mediana: 40.0
+      mad: 20.0
+      p1: 8.3
+      p99: 116.5
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 160.0
+    Szerokość:
+      n: 3521
+      mediana: 110.0
+      mad: 30.0
+      p1: 36.2
+      p99: 220.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 290.0
+    Szerokość po rozłożeniu:
+      n: 697
+      mediana: 200.0
+      mad: 30.0
+      p1: 76.0
+      p99: 300.0
+      min_dopuszczalne: 20.0
+      max_dopuszczalne: 380.0
+    Udźwig:
+      n: 228
+      mediana: 20.0
+      mad: 10.0
+      p1: 3.5
+      p99: 110.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 110.0
+    Waga:
+      n: 3283
+      mediana: 28.5
+      mad: 15.5
+      p1: 2.8
+      p99: 124.9
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 124.9
+    Wysokość:
+      n: 3816
+      mediana: 75.0
+      mad: 5.0
+      p1: 30.0
+      p99: 120.0
+      min_dopuszczalne: 30.0
+      max_dopuszczalne: 120.0
+    Wysokość do ziemi:
+      n: 53
+      mediana: 76.0
+      mad: 23.0
+      p1: 40.5
+      p99: 1731.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 1731.0
+    Średnica:
+      n: 637
+      mediana: 80.0
+      mad: 20.0
+      p1: 35.2
+      p99: 140.0
+      min_dopuszczalne: 0.0
+      max_dopuszczalne: 200.0

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# Dane wejściowe i wyjściowe zostają lokalnie — eksporty mają po 16 MB,
+# a baza zawiera decyzje zespołu. W repo tylko opis katalogu.
+dane/*
+!dane/README.md
+
+# Klucz Gemini i inne sekrety.
+.env

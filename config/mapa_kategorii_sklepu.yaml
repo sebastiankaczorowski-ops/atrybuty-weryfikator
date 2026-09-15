@@ -1,0 +1,85 @@
+# Mapowanie taksonomii sklepu (kolumna `type` z BigQuery) na klucze kategorii
+# używane przez reguły. Kategoria ze sklepu ma zawsze pierwszeństwo przed
+# klasyfikatorem z nazwy — ten zostaje tylko dla produktów spoza eksportu
+# kategorii i dla pustego `type`.
+#
+# Kilka typów sklepu celowo wpada w jeden nasz klucz: reguły wymiarowe dla
+# "Krzesła" i "Krzesła ogrodowe" są takie same, więc rozdzielanie ich tylko
+# rozdrobniłoby próbkę statystyczną. Podtyp (`subtype`) zapisujemy osobno
+# i można po nim filtrować w kolejce.
+
+mapa:
+  Szafy: szafa
+  Garderoby do przedpokoju: wieszak
+  Akcesoria do szaf: akcesorium
+  Nadstawki na szafy: nadstawka
+
+  Łóżka: lozko
+  Łóżka kontynentalne: lozko
+  Łóżka i szafki nocne: lozko
+  Akcesoria do łóżek: akcesorium
+  Materace: materac
+  Stelaże: stelaz
+  Zagłówki i wezgłowia: zaglowek
+  Wersalki: polkotapczan
+  Szafki Nocne: szafka_nocna
+
+  Komody: komoda
+  Witryny: witryna
+  Nadstawki witryny: nadstawka
+  Regały: regal
+  Półki i szafki wiszące: polka
+  Szafki RTV: szafka_rtv
+  Szafki łazienkowe: szafka
+  Szafki na buty: szafka
+  Szafki kuchenne: kuchnia
+  Kuchnie: kuchnia
+  Skrzynie i schowki: skrzynia
+  Kontenerki biurowe: kontenerek
+  Meblościanki: meblosciana
+  Zestawy mebli: meblosciana
+  Meble ogrodowe: meblosciana
+  Komplety wypoczynkowe: sofa
+
+  Narożniki: narożnik
+  Sofy i kanapy: sofa
+  Szezlongi i leżanki: sofa
+  Fotele: fotel
+  Pufy: pufa
+  Podnóżki: pufa
+  Krzesła: krzeslo
+  Krzesła ogrodowe: krzeslo
+  Hokery i krzesła barowe: hoker
+  Taborety i stołki: hoker
+  Ławki: lawka
+
+  Stoły do jadalni: stol
+  Stoły i stoliki ogrodowe: stol
+  Zestawy stołów i krzeseł: stol
+  Ławy i stoliki kawowe: lawa
+  Ławy: lawa
+  Ławostoły: lawostol
+  Stoliki pomocnicze: stolik
+  Biurka: biurko
+  Biurka dziecięce: biurko
+  Toaletki i konsole: toaletka
+
+  Lustra: lustro
+  Lustra prostokątne: lustro
+  Wieszaki na ubrania: wieszak
+
+  Akcesoria: akcesorium
+  Blaty: akcesorium
+  Oświetlenie: akcesorium
+  Przewijaki: akcesorium
+  Parawany: akcesorium
+  Inne: akcesorium
+
+  # typy pojedyncze, dopisane po pierwszym imporcie eksportu z BigQuery
+  Listwy/Cokoły/Korony: akcesorium
+  Barierki: akcesorium
+  Krzesła obrotowe: krzeslo
+  Fotele uszak: fotel
+  Stoły i stoliki: stol
+  Wieszaki ścienne: wieszak
+  Biurka narożne: biurko

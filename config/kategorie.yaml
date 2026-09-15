@@ -1,0 +1,180 @@
+# Mapa kategorii produktowych.
+#
+# Dopóki eksport nie zawiera kolumny `kategoria`, kategoria jest wyznaczana
+# z nazwy produktu. Reguła: przeszukujemy CAŁĄ nazwę (nie tylko pierwsze słowo,
+# bo bywa nim przymiotnik: "Nowoczesna szafka RTV..."), po kolei od góry tej
+# listy. Wygrywa PIERWSZE dopasowanie, więc kolejność ma znaczenie:
+# bardziej szczegółowe kategorie muszą być wyżej niż ogólne.
+#
+# `wzorce` to formy podstawowe — dopasowanie jest na znormalizowanej nazwie
+# (małe litery, bez ogonków) i obejmuje typowe końcówki fleksyjne.
+#
+# Gdy w eksporcie pojawi się kolumna `kategoria`, ta mapa przestaje być
+# używana do klasyfikacji, a zostaje wyłącznie jako mapowanie nazw kategorii
+# sklepu na nasze klucze (pole `zrodlowe` przy kategorii).
+
+kategorie:
+  # --- szczegółowe warianty, muszą być PRZED ogólnymi ---
+  - klucz: lozko_dzieciece
+    nazwa: Łóżeczko dziecięce
+    wzorce: [lozeczko, lozko dzieciece, lozko pietrowe]
+  - klucz: polkotapczan
+    nazwa: Półkotapczan / tapczan
+    wzorce: [polkotapczan, tapczan, wersalka]
+  - klucz: lozko
+    nazwa: Łóżko
+    wzorce: [lozko, stelaz do lozka]
+  - klucz: materac
+    nazwa: Materac
+    wzorce: [materac, topper, nakladka na materac]
+  - klucz: stelaz
+    nazwa: Stelaż
+    wzorce: [stelaz]
+  - klucz: zaglowek
+    nazwa: Zagłówek / wezgłowie
+    wzorce: [zaglowek, wezglowie]
+
+  - klucz: narożnik
+    nazwa: Narożnik
+    wzorce: [naroznik]
+  - klucz: sofa
+    nazwa: Sofa / kanapa
+    wzorce: [sofa, kanapa, szezlong, leżanka, lezanka]
+  - klucz: fotel
+    nazwa: Fotel
+    wzorce: [fotel, uszak]
+  - klucz: pufa
+    nazwa: Pufa / podnóżek
+    wzorce: [pufa, puf, podnozek]
+
+  - klucz: hoker
+    nazwa: Hoker / stołek barowy
+    wzorce: [hoker, krzeslo barowe, stolek barowy, taboret]
+  - klucz: krzeslo
+    nazwa: Krzesło
+    wzorce: [krzeslo]
+  - klucz: lawka
+    nazwa: Ławka / siedzisko
+    wzorce: [lawka, laweczka, siedzisko]
+
+  - klucz: lawostol
+    nazwa: Ławostół
+    wzorce: [lawostol]
+  - klucz: lawa
+    nazwa: Ława
+    wzorce: [lawa]
+  - klucz: stolik
+    nazwa: Stolik
+    wzorce: [stolik]
+  - klucz: biurko
+    nazwa: Biurko
+    wzorce: [biurko]
+  - klucz: toaletka
+    nazwa: Toaletka
+    wzorce: [toaletka]
+  - klucz: konsola
+    nazwa: Konsola
+    wzorce: [konsola]
+  - klucz: stol
+    nazwa: Stół
+    wzorce: [stol]
+
+  - klucz: szafa
+    nazwa: Szafa / garderoba
+    wzorce: [szafa, garderoba, szafy]
+  - klucz: witryna
+    nazwa: Witryna
+    wzorce: [witryna, gablota]
+  - klucz: kredens
+    nazwa: Kredens
+    wzorce: [kredens]
+  - klucz: bielizniarka
+    nazwa: Bieliźniarka
+    wzorce: [bielizniarka]
+  - klucz: komoda
+    nazwa: Komoda
+    wzorce: [komoda]
+  - klucz: szafka_nocna
+    nazwa: Szafka nocna
+    wzorce: [szafka nocna, stolik nocny]
+  - klucz: szafka_rtv
+    nazwa: Szafka RTV
+    wzorce: [szafka rtv, komoda rtv, stolik rtv, stolik pod tv]
+  - klucz: szafka
+    nazwa: Szafka
+    wzorce: [szafka, bok, slupek]
+  - klucz: kuchnia
+    nazwa: Meble kuchenne
+    wzorce: [szafka kuchenna, szafka dolna, szafka gorna, zabudowa, wyspa, cargo]
+  - klucz: regal
+    nazwa: Regał
+    wzorce: [regal, etazerka]
+  - klucz: polka
+    nazwa: Półka
+    wzorce: [polka, polki]
+  - klucz: meblosciana
+    nazwa: Meblościanka / zestaw
+    wzorce: [meblosciana, meblosciank, zestaw mebli, zestaw, komplet, segment]
+
+  - klucz: lustro
+    nazwa: Lustro
+    wzorce: [lustro]
+  - klucz: wieszak
+    nazwa: Wieszak / przedpokój
+    wzorce: [wieszak, panel z wieszakami, przedpokoj]
+  - klucz: kontenerek
+    nazwa: Kontenerek
+    wzorce: [kontenerek, kontener]
+  - klucz: skrzynia
+    nazwa: Skrzynia
+    wzorce: [skrzynia]
+  - klucz: nadstawka
+    nazwa: Nadstawka
+    wzorce: [nadstawka]
+
+  # --- elementy i akcesoria: NIE są meblami, inne reguły walidacji ---
+  - klucz: akcesorium
+    nazwa: Akcesorium / element
+    wzorce:
+      - uchwyt
+      - blat
+      - front
+      - cokol
+      - blenda
+      - listwa
+      - wieniec
+      - korpus
+      - lacznik
+      - przegroda
+      - barierka
+      - noga
+      - nozki
+      - szuflada
+      - wklad
+      - oswietlenie
+      - poduszka
+      - pokrowiec
+      - zlewozmywak
+      - szablon
+      - kosz
+      - element
+      - modul
+      - baza
+      - stojak
+      - przewijak
+      - panel
+
+# Kategorie traktowane jako "nie-mebel" — wyłączone z reguł wymiarowych
+# i z warstwy wizyjnej (L3), bo zdjęcie detalu nic nie rozstrzyga.
+niemeblowe: [akcesorium]
+
+# Grupy nadrzędne — używane, gdy w kategorii jest za mało produktów,
+# żeby policzyć sensowny rozkład (próg `min_probka` w schema.yaml).
+grupy:
+  siedziska: [narożnik, sofa, fotel, krzeslo, hoker, pufa, lawka]
+  spanie: [lozko, lozko_dzieciece, polkotapczan, materac, stelaz, zaglowek]
+  stoly: [stol, stolik, lawa, lawostol, biurko, toaletka, konsola]
+  skrzyniowe: [szafa, witryna, kredens, komoda, szafka, szafka_nocna, szafka_rtv,
+               bielizniarka, regal, polka, meblosciana, kontenerek, skrzynia, nadstawka,
+               kuchnia]
+  pozostale: [lustro, wieszak, akcesorium, nieznana]

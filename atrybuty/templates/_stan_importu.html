@@ -1,0 +1,44 @@
+{# Stan importu — odpytywany co 2 s, dopóki przebieg trwa. #}
+{% if stan.trwa %}
+  <h2 style="display:flex;align-items:center;gap:8px">
+    <span class="kolo"></span> Przeliczanie…
+  </h2>
+  <p class="pod" style="margin:0">
+    <code>{{ stan.plik }}</code> · etap: {{ stan.etap }}
+    {% if sekundy %}· {{ sekundy }} s{% endif %}
+  </p>
+{% elif stan.blad %}
+  <h2 style="color:var(--crit)">Import się nie udał</h2>
+  <p class="pod" style="margin:0;color:var(--crit)">{{ stan.blad }}</p>
+  <p class="pod">Plik został zapisany, więc możesz poprawić dane u źródła
+  i spróbować ponownie. Poprzedni przebieg został nietknięty.</p>
+{% elif stan.wynik %}
+  {% set w = stan.wynik %}
+  <h2 style="color:var(--ok)">Gotowe — przebieg #{{ w.przebieg }}</h2>
+  <table style="margin-top:10px">
+    <tbody>
+      <tr><td>Produktów wczytanych</td><td class="n">{{ w.produktow }}</td></tr>
+      <tr><td>Kategoria ze sklepu / z nazwy</td>
+          <td class="n">{{ w.kategoria_ze_sklepu }} / {{ w.kategoria_z_nazwy }}</td></tr>
+      <tr><td>Bez danych — wyłączone z analizy (<a href="/braki">/braki</a>)</td>
+          <td class="n">{{ w.bez_danych }}</td></tr>
+      <tr><td>Findingów</td><td class="n">{{ w.findingow }}</td></tr>
+      <tr><td>Grup decyzyjnych</td><td class="n">{{ w.grup }}</td></tr>
+      <tr><td>Gotowe do jednego kliknięcia (0 zł)</td><td class="n">{{ w.auto }}</td></tr>
+      <tr><td>Kandydaci do Gemini</td><td class="n">{{ w.do_wizji }}</td></tr>
+      <tr><td>Do oceny człowieka</td><td class="n">{{ w.do_czlowieka }}</td></tr>
+    </tbody>
+  </table>
+  <p style="margin-top:12px"><a href="/anomalie">Przejdź do kolejki weryfikacji →</a></p>
+{% else %}
+  <h2>Ostatni przebieg</h2>
+  {% if ostatni %}
+    <p class="pod" style="margin:0">
+      #{{ ostatni.id }} z {{ ostatni.utworzono[:16].replace('T',' ') }} ·
+      {{ ostatni.liczba_produktow }} produktów · {{ ostatni.liczba_findingow }} findingów ·
+      <code>{{ ostatni.plik.split('/')[-1] }}</code>
+    </p>
+  {% else %}
+    <p class="pod" style="margin:0">Brak danych — wgraj pierwszy plik.</p>
+  {% endif %}
+{% endif %}

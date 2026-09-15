@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kolejka weryfikacji — atrybuty OXM</title>
+<script src="/static/htmx.min.js"></script>
+<style>
+:root{
+  --bg:#f6f8f7; --surface:#fff; --surface-2:#edf1ef;
+  --ink:#15201d; --ink-2:#3c4c47; --muted:#6b7c76;
+  --line:#d9e1dd; --line-strong:#b9c7c1;
+  --accent:#0e5e52; --accent-soft:#d7e8e3;
+  --crit:#9a2b2b; --crit-soft:#f5dedc;
+  --warn:#8a5a0b; --warn-soft:#f6e7cc;
+  --ok:#3a6b2e; --ok-soft:#dfebd6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9em}
+a{color:var(--accent)}
+header{background:var(--surface);border-bottom:1px solid var(--line);
+       padding:14px 20px;display:flex;flex-wrap:wrap;gap:16px;align-items:baseline}
+header h1{font-size:16px;margin:0;font-weight:600}
+header .zrodlo{color:var(--muted);font-size:12.5px}
+header nav{margin-left:auto;font-size:13.5px}
+a.panel{font-family:"IBM Plex Mono",monospace;font-size:12px;white-space:nowrap;
+        background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:2px;
+        text-decoration:none;font-weight:600}
+a.panel:hover{text-decoration:underline}
+.kafle{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);
+       border-bottom:1px solid var(--line)}
+.kafel{background:var(--surface);padding:10px 16px;min-width:130px;flex:1 1 130px}
+.kafel b{display:block;font-family:"IBM Plex Mono",monospace;font-size:19px;
+         font-variant-numeric:tabular-nums}
+.kafel span{font-size:11.5px;color:var(--muted)}
+.kafel.akt{background:var(--accent-soft)}
+main{padding:16px 20px 60px;max-width:1500px;margin:0 auto}
+form.filtry{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+            padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+select,input[type=text],input[type=search]{font:inherit;padding:5px 8px;border:1px solid var(--line-strong);
+       border-radius:2px;background:var(--bg);color:var(--ink);max-width:230px}
+button{font:inherit;padding:5px 12px;border:1px solid var(--line-strong);border-radius:2px;
+       background:var(--bg);color:var(--ink-2);cursor:pointer}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.mini{padding:3px 9px;font-size:12px}
+label.przel{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--ink-2)}
+.pasek{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:10px;
+       color:var(--muted);font-size:12.5px}
+table{width:100%;border-collapse:collapse;background:var(--surface);
+      border:1px solid var(--line);border-radius:3px;overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+         background:var(--surface-2);font-weight:600;position:sticky;top:0}
+tbody tr:hover{background:var(--surface-2)}
+.sev{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.sev.krytyczna{background:var(--crit-soft);color:var(--crit)}
+.sev.srednia{background:var(--warn-soft);color:var(--warn)}
+.sev.info{background:var(--surface-2);color:var(--muted)}
+.mini-foto{width:54px;height:42px;object-fit:cover;border:1px solid var(--line);border-radius:2px;background:var(--surface-2)}
+.brakfoto{width:54px;height:42px;display:grid;place-items:center;border:1px dashed var(--line-strong);
+          border-radius:2px;font-size:10px;color:var(--muted)}
+.zmiana{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.stara{background:var(--crit-soft);color:var(--crit);padding:1px 6px;border-radius:2px}
+.nowa{background:var(--ok-soft);color:var(--ok);padding:1px 6px;border-radius:2px;font-weight:600}
+.dowod{color:var(--muted);font-size:12.5px;margin-top:3px}
+.grupa-licznik{background:var(--accent-soft);color:var(--accent);border-radius:2px;
+               padding:1px 6px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.akcje{display:flex;gap:4px;flex-wrap:wrap}
+.zrobione{color:var(--ok);font-weight:600;font-size:12.5px}
+.werdykt{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.werdykt.niezgodne{background:var(--crit-soft);color:var(--crit)}
+.werdykt.zgodne{background:var(--ok-soft);color:var(--ok)}
+.werdykt.nie_widac{background:var(--surface-2);color:var(--muted)}
+.wizja{margin-top:4px;font-size:12.5px;color:var(--ink-2);border-left:2px solid var(--accent);
+       padding-left:8px}
+.wizja.blad{border-left-color:var(--crit);color:var(--crit)}
+.meta-wizji{color:var(--muted);font-size:11.5px;margin-left:4px;white-space:nowrap}
+.po-wizji{margin-top:5px}
+
+/* Przycisk sprawdzenia zdjęciem: w spoczynku, w trakcie i po. Bez tego
+   klikający nie wie, czy trafił — zapytanie do modelu trwa 1-3 sekundy. */
+.wizja-btn{border-color:var(--accent);color:var(--accent);
+           display:inline-flex;align-items:center;gap:6px}
+.wizja-btn .trwa{display:none;align-items:center;gap:6px}
+tr.htmx-request .wizja-btn{background:var(--accent);border-color:var(--accent);
+                           color:#fff;cursor:progress}
+tr.htmx-request .wizja-btn .etykieta{display:none}
+tr.htmx-request .wizja-btn .trwa{display:inline-flex}
+tr.htmx-request{background:var(--surface-2)}
+
+/* Każdy przycisk akcji gaśnie i blokuje się na czas zapytania — inaczej
+   łatwo kliknąć dwa razy i wysłać dwie decyzje. */
+form.htmx-request button{opacity:.6;pointer-events:none}
+tr.htmx-request button:not(.wizja-btn){opacity:.45;pointer-events:none}
+
+.kolo{width:11px;height:11px;border:2px solid currentColor;border-top-color:transparent;
+      border-radius:50%;display:inline-block;animation:obrot .7s linear infinite;flex:none}
+@keyframes obrot{to{transform:rotate(360deg)}}
+
+/* Szkielet w miejscu, gdzie za chwilę pojawi się werdykt. */
+.szkielet{display:none;margin-top:4px;border-left:2px solid var(--accent);padding-left:8px;
+          gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+tr.htmx-request .szkielet{display:flex}
+.szkielet .pasek-ladowania{flex:1 1 auto;max-width:260px;height:9px;border-radius:2px;
+  background:linear-gradient(90deg,var(--surface-2) 25%,var(--line) 37%,var(--surface-2) 63%);
+  background-size:400% 100%;animation:migot 1.3s ease-in-out infinite}
+@keyframes migot{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
+/* Werdykt wjeżdża widocznie, żeby było jasne, że coś przyszło. */
+.wizja{animation:wejscie .45s ease-out}
+@keyframes wejscie{
+  from{opacity:0;transform:translateY(-3px);background:var(--accent-soft)}
+  to{opacity:1;transform:none;background:transparent}
+}
+.zrobione{animation:wejscie .45s ease-out}
+
+@media (prefers-reduced-motion: reduce){
+  .kolo,.szkielet .pasek-ladowania,.wizja,.zrobione{animation:none}
+  .szkielet .pasek-ladowania{background:var(--surface-2)}
+}
+.strony{display:flex;gap:6px;align-items:center;margin-top:14px;font-size:13px}
+.pusto{padding:40px;text-align:center;color:var(--muted);background:var(--surface);
+       border:1px solid var(--line);border-radius:3px}
+@media (max-width:760px){ .kol-foto,.kol-kat{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Kolejka weryfikacji atrybutów</h1>
+  <nav><a href="/braki">braki danych</a> · <a href="/reguly">reguły</a> · <a href="/import">wgraj plik</a></nav>
+  {% if przebieg %}
+  <span class="zrodlo">przebieg #{{ przebieg['id'] }} · {{ przebieg['liczba_produktow'] }} produktów ·
+    {{ przebieg['liczba_findingow'] }} findingów · {{ przebieg['utworzono'][:16].replace('T',' ') }}</span>
+  {% endif %}
+</header>
+
+<div class="kafle">
+  <a class="kafel {{ 'akt' if not fl.routing and fl.status=='otwarte' }}" href="/anomalie">
+    <b>{{ stat.otwarte }}</b><span>otwarte findingi</span></a>
+  <a class="kafel" href="/anomalie?grupuj=1"><b>{{ stat.grupy }}</b><span>grup decyzyjnych</span></a>
+  <a class="kafel {{ 'akt' if fl.waga=='krytyczna' }}" href="/anomalie?waga=krytyczna">
+    <b>{{ stat.krytyczne }}</b><span>krytyczne</span></a>
+  <a class="kafel {{ 'akt' if fl.routing=='auto' }}" href="/anomalie?routing=auto">
+    <b>{{ stat.auto }}</b><span>jedno kliknięcie · 0 zł</span></a>
+  <a class="kafel {{ 'akt' if fl.routing=='do_wizji' }}" href="/anomalie?routing=do_wizji">
+    <b>{{ stat.do_wizji }}</b><span>kandydaci do Gemini</span></a>
+  <a class="kafel {{ 'akt' if fl.routing=='do_czlowieka' }}" href="/anomalie?routing=do_czlowieka">
+    <b>{{ stat.do_czlowieka }}</b><span>do oceny człowieka</span></a>
+  <a class="kafel {{ 'akt' if fl.werdykt=='niezgodne' }}" href="/anomalie?werdykt=niezgodne">
+    <b>{{ stat.wizja_niezgodne }}</b><span>Gemini: niezgodne ze zdjęciem</span></a>
+  <div class="kafel"><b>{{ stat.zdecydowane }}</b><span>rozstrzygnięte</span></div>
+</div>
+
+<main>
+<form class="filtry" method="get" action="/anomalie">
+  <select name="kategoria">
+    <option value="">— kategoria —</option>
+    {% for k, n in slowniki.kategorie %}
+      <option value="{{ k }}" {{ 'selected' if fl.kategoria==k }}>{{ nazwy_kat.get(k,k) }} ({{ n }})</option>
+    {% endfor %}
+  </select>
+  <select name="producent">
+    <option value="">— producent —</option>
+    {% for k, n in slowniki.producenci %}
+      <option value="{{ k }}" {{ 'selected' if fl.producent==k }}>{{ k }} ({{ n }})</option>
+    {% endfor %}
+  </select>
+  <select name="regula">
+    <option value="">— reguła —</option>
+    {% for k, n in slowniki.reguly %}
+      <option value="{{ k }}" {{ 'selected' if fl.regula==k }}>{{ k }} ({{ n }})</option>
+    {% endfor %}
+  </select>
+  <select name="atrybut">
+    <option value="">— atrybut —</option>
+    {% for k, n in slowniki.atrybuty %}
+      <option value="{{ k }}" {{ 'selected' if fl.atrybut==k }}>{{ k }} ({{ n }})</option>
+    {% endfor %}
+  </select>
+  <select name="waga">
+    <option value="">— waga —</option>
+    {% for w in ['krytyczna','srednia','info'] %}
+      <option value="{{ w }}" {{ 'selected' if fl.waga==w }}>{{ w }}</option>
+    {% endfor %}
+  </select>
+  <select name="routing">
+    <option value="">— routing —</option>
+    <option value="auto" {{ 'selected' if fl.routing=='auto' }}>jedno kliknięcie</option>
+    <option value="do_wizji" {{ 'selected' if fl.routing=='do_wizji' }}>do Gemini</option>
+    <option value="do_czlowieka" {{ 'selected' if fl.routing=='do_czlowieka' }}>do człowieka</option>
+  </select>
+  <select name="werdykt">
+    <option value="">— werdykt Gemini —</option>
+    <option value="niezgodne" {{ 'selected' if fl.werdykt=='niezgodne' }}>niezgodne ({{ stat.wizja_niezgodne }})</option>
+    <option value="zgodne" {{ 'selected' if fl.werdykt=='zgodne' }}>zgodne ({{ stat.wizja_zgodne }})</option>
+    <option value="nie_widac" {{ 'selected' if fl.werdykt=='nie_widac' }}>nie widać ({{ stat.wizja_nie_widac }})</option>
+    <option value="brak" {{ 'selected' if fl.werdykt=='brak' }}>bez werdyktu</option>
+  </select>
+  <select name="ma_zdjecie">
+    <option value="">— zdjęcie —</option>
+    <option value="tak" {{ 'selected' if fl.ma_zdjecie=='tak' }}>ma zdjęcie</option>
+    <option value="nie" {{ 'selected' if fl.ma_zdjecie=='nie' }}>bez zdjęcia</option>
+  </select>
+  <select name="status">
+    <option value="otwarte" {{ 'selected' if fl.status=='otwarte' }}>otwarte</option>
+    <option value="zdecydowane" {{ 'selected' if fl.status=='zdecydowane' }}>rozstrzygnięte</option>
+    <option value="wszystkie" {{ 'selected' if fl.status=='wszystkie' }}>wszystkie</option>
+  </select>
+  <input type="search" name="szukaj" placeholder="nazwa albo ID" value="{{ fl.szukaj }}">
+  <label class="przel"><input type="checkbox" name="grupuj" value="1" {{ 'checked' if fl.grupuj }}>
+    grupuj identyczne</label>
+  <button class="p" type="submit">Filtruj</button>
+  <a href="/anomalie"><button type="button">Wyczyść</button></a>
+</form>
+
+<div class="pasek">
+  <span>{{ ile }} {{ 'grup' if fl.grupuj else 'findingów' }} po filtrach</span>
+  {% if fl.grupuj %}<span>· jedna decyzja rozstrzyga całą grupę</span>{% endif %}
+</div>
+
+{% if not wiersze %}
+  <div class="pusto">Nic nie pasuje do tych filtrów.</div>
+{% else %}
+<table>
+<thead>
+<tr>
+  <th class="kol-foto"></th>
+  <th>Produkt</th>
+  <th class="kol-kat">Kategoria</th>
+  <th>Atrybut i propozycja</th>
+  <th>Reguła</th>
+  <th>Akcje</th>
+</tr>
+</thead>
+<tbody>
+{% for w in wiersze %}
+<tr id="w-{{ loop.index }}">
+  <td class="kol-foto">
+    {% if w.zdjecie %}
+      <a href="{{ w.zdjecie }}" target="_blank" rel="noopener">
+        <img class="mini-foto" src="{{ w.zdjecie }}" alt="" loading="lazy"></a>
+    {% else %}<div class="brakfoto">brak</div>{% endif %}
+  </td>
+  <td>
+    <a href="/produkt/{{ w.produkt_id }}" target="_blank"><code>{{ w.produkt_id }}</code></a>
+    {{ w.nazwa }}
+    <div class="dowod">{{ w.producent }}{% if w.kolekcja %} · {{ w.kolekcja }}{% endif %}
+      · <a class="panel" href="{{ link_panelu(w.produkt_id) }}" target="_blank"
+           rel="noopener" title="Edytuj w panelu sklepu">edytuj w panelu ↗</a>
+    </div>
+  </td>
+  <td class="kol-kat">{{ nazwy_kat.get(w.kategoria, w.kategoria) }}</td>
+  <td>
+    <div class="zmiana">
+      <b>{{ w.atrybut }}</b>
+      {% if w.stara_wartosc %}<span class="stara">{{ w.stara_wartosc }}</span>{% else %}<span class="dowod">(puste)</span>{% endif %}
+      {% if w.proponowana_wartosc %}→ <span class="nowa">{{ w.proponowana_wartosc }}</span>{% endif %}
+      {% if w.ile_w_grupie and w.ile_w_grupie > 1 %}
+        <span class="grupa-licznik">×{{ w.ile_w_grupie }} identycznych</span>{% endif %}
+    </div>
+    <div class="dowod">{{ w.dowod }}</div>
+    <div id="wizja-{{ loop.index }}">
+      <div class="szkielet">
+        <span class="kolo"></span> Gemini ogląda zdjęcie…
+        <span class="pasek-ladowania"></span>
+      </div>
+      {% if w.werdykt_wizji and w.werdykt_wizji != 'blad' %}
+        <div class="wizja">
+          <span class="werdykt {{ w.werdykt_wizji }}">Gemini: {{ w.werdykt_wizji.replace('_',' ') }}</span>
+          {% if w.wizja_wartosc and w.werdykt_wizji == 'niezgodne' %}
+            → <span class="nowa">{{ w.wizja_wartosc }}</span>{% endif %}
+          {{ w.wizja_uzasadnienie }}
+          {% if w.wizja_pewnosc %}<span class="meta-wizji">pewność {{ '%.0f'|format(w.wizja_pewnosc * 100) }}%</span>{% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </td>
+  <td>
+    <span class="sev {{ w.waga }}">{{ w.waga }}</span>
+    <div class="dowod"><code>{{ w.regula_id }}</code> · {{ w.warstwa }} · {{ '%.0f'|format(w.pewnosc*100) }}%</div>
+  </td>
+  <td>
+    <div class="akcje" id="akcje-{{ loop.index }}">
+      {% set zakres = 'grupa' if (fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1) else 'pojedynczo' %}
+      {% if w.zdjecie and w.atrybut in pytania_wizji
+            and (not w.werdykt_wizji or w.werdykt_wizji == 'blad') %}
+      <form hx-post="/wizja/sprawdz" hx-target="#wizja-{{ loop.index }}" hx-swap="innerHTML"
+            hx-indicator="#w-{{ loop.index }}"
+            hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
+        <input type="hidden" name="nr" value="{{ loop.index }}">
+        <button class="mini wizja-btn" type="submit"
+                title="Jedno zapytanie do Gemini, ok. $0.0007">
+          <span class="etykieta">Sprawdź zdjęciem</span>
+          <span class="trwa"><span class="kolo"></span>Sprawdzam…</span>
+        </button>
+      </form>
+      {% endif %}
+      {% if w.werdykt_wizji == 'niezgodne' and w.wizja_wartosc %}
+      <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
+        <input type="hidden" name="nowa" value="{{ w.wizja_wartosc }}">
+        <input type="hidden" name="regula_id" value="L3-WIZJA">
+        <input type="hidden" name="zakres" value="pojedynczo">
+        <input type="hidden" name="status" value="zastosowana">
+        <button class="p mini" type="submit">Ze zdjęcia: {{ w.wizja_wartosc }}</button>
+      </form>
+      {% endif %}
+      {% if w.proponowana_wartosc %}
+      <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
+        <input type="hidden" name="nowa" value="{{ w.proponowana_wartosc }}">
+        <input type="hidden" name="regula_id" value="{{ w.regula_id }}">
+        <input type="hidden" name="grupa" value="{{ w.grupa }}">
+        <input type="hidden" name="zakres" value="{{ zakres }}">
+        <input type="hidden" name="status" value="zastosowana">
+        <button class="p mini" type="submit">
+          Zastosuj{% if zakres == 'grupa' %} ×{{ w.ile_w_grupie }}{% endif %}</button>
+      </form>
+      {% endif %}
+      <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
+        <input type="hidden" name="regula_id" value="{{ w.regula_id }}">
+        <input type="hidden" name="grupa" value="{{ w.grupa }}">
+        <input type="hidden" name="zakres" value="{{ zakres }}">
+        <input type="hidden" name="status" value="falszywy_alarm">
+        <button class="mini" type="submit">Fałszywy alarm</button>
+      </form>
+      <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
+        <input type="hidden" name="regula_id" value="{{ w.regula_id }}">
+        <input type="hidden" name="zakres" value="pojedynczo">
+        <input type="hidden" name="status" value="odlozona">
+        <input type="text" name="nowa" placeholder="własna wartość" style="width:120px">
+        <button class="mini" type="submit">Zapisz</button>
+      </form>
+    </div>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<div class="strony">
+  {% if strona > 1 %}<a href="/anomalie?{{ fl.jako_query(strona=strona-1) }}">← poprzednia</a>{% endif %}
+  <span>strona {{ strona }} z {{ stron }}</span>
+  {% if strona < stron %}<a href="/anomalie?{{ fl.jako_query(strona=strona+1) }}">następna →</a>{% endif %}
+</div>
+{% endif %}
+</main>
+</body>
+</html>

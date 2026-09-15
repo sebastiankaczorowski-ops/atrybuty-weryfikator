@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Braki danych — kontrola atrybutów OXM</title>
+<style>
+:root{
+  --bg:#f6f8f7; --surface:#fff; --surface-2:#edf1ef;
+  --ink:#15201d; --ink-2:#3c4c47; --muted:#6b7c76;
+  --line:#d9e1dd; --line-strong:#b9c7c1;
+  --accent:#0e5e52; --accent-soft:#d7e8e3;
+  --crit:#9a2b2b; --crit-soft:#f5dedc;
+  --warn:#8a5a0b; --warn-soft:#f6e7cc;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9em}
+a{color:var(--accent)}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px;
+       display:flex;flex-wrap:wrap;gap:16px;align-items:baseline}
+header h1{font-size:16px;margin:0;font-weight:600}
+header .zrodlo{color:var(--muted);font-size:12.5px}
+header nav{margin-left:auto;display:flex;gap:14px;font-size:13.5px}
+.kafle{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border-bottom:1px solid var(--line)}
+.kafel{background:var(--surface);padding:10px 16px;min-width:150px;flex:1 1 150px;
+       text-decoration:none;color:inherit}
+.kafel b{display:block;font-family:"IBM Plex Mono",monospace;font-size:19px;
+         font-variant-numeric:tabular-nums}
+.kafel span{font-size:11.5px;color:var(--muted)}
+.kafel.akt{background:var(--accent-soft)}
+main{padding:16px 20px 60px;max-width:1400px;margin:0 auto}
+.wyjasnienie{background:var(--surface-2);border-radius:3px;padding:13px 16px;
+             font-size:13.5px;color:var(--ink-2);max-width:82ch;margin-bottom:14px}
+form.filtry{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+            padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+select,input[type=search]{font:inherit;padding:5px 8px;border:1px solid var(--line-strong);
+       border-radius:2px;background:var(--bg);color:var(--ink);max-width:250px}
+button{font:inherit;padding:5px 12px;border:1px solid var(--line-strong);border-radius:2px;
+       background:var(--bg);color:var(--ink-2);cursor:pointer}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.pasek{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;margin-bottom:10px;
+       color:var(--muted);font-size:12.5px}
+table{width:100%;border-collapse:collapse;background:var(--surface);
+      border:1px solid var(--line);border-radius:3px;overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+         background:var(--surface-2);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--surface-2)}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.znacznik{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.znacznik.pusty{background:var(--crit-soft);color:var(--crit)}
+.znacznik.szczatkowy{background:var(--warn-soft);color:var(--warn)}
+.znacznik.bez_wymiarow{background:var(--surface-2);color:var(--muted)}
+.mini-foto{width:50px;height:38px;object-fit:cover;border:1px solid var(--line);border-radius:2px}
+.brakfoto{width:50px;height:38px;display:grid;place-items:center;border:1px dashed var(--line-strong);
+          border-radius:2px;font-size:10px;color:var(--muted)}
+a.panel{font-family:"IBM Plex Mono",monospace;font-size:12px;white-space:nowrap;
+        background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:2px;
+        text-decoration:none;font-weight:600}
+.dowod{color:var(--muted);font-size:12.5px;margin-top:3px}
+.strony{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:13px}
+.rozbicie{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;
+          margin-bottom:18px}
+.rozbicie section{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+                  padding:13px 15px}
+.rozbicie h2{font-size:13px;margin:0 0 8px;text-transform:uppercase;letter-spacing:.07em;
+             color:var(--muted)}
+.rozbicie ol{margin:0;padding-left:20px;font-size:13.5px;display:flex;flex-direction:column;gap:3px}
+.pusto{padding:40px;text-align:center;color:var(--muted);background:var(--surface);
+       border:1px solid var(--line);border-radius:3px}
+@media(max-width:760px){.kol-foto,.kol-kat{display:none}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Braki danych u źródła</h1>
+  <span class="zrodlo">{{ stat.razem }} produktów z brakami · {{ stat.wylaczone }} wyłączonych z analizy</span>
+  <nav>
+    <a href="/anomalie">kolejka weryfikacji</a>
+    <a href="/reguly">reguły</a>
+    <a href="/import">wgraj plik</a>
+  </nav>
+</header>
+
+<div class="kafle">
+  <a class="kafel {{ 'akt' if not rodzaj }}" href="/braki">
+    <b>{{ stat.razem }}</b><span>do zaciągnięcia ze źródła</span></a>
+  <a class="kafel {{ 'akt' if rodzaj=='pusty' }}" href="/braki?rodzaj=pusty">
+    <b>{{ stat.pusty }}</b><span>bez żadnych atrybutów</span></a>
+  <a class="kafel {{ 'akt' if rodzaj=='szczatkowy' }}" href="/braki?rodzaj=szczatkowy">
+    <b>{{ stat.szczatkowy }}</b><span>szczątkowe — mniej niż {{ min_atrybutow }} atrybuty</span></a>
+  <a class="kafel {{ 'akt' if rodzaj=='bez_wymiarow' }}" href="/braki?rodzaj=bez_wymiarow">
+    <b>{{ stat.bez_wymiarow }}</b><span>bez wymiarów (wciąż analizowane)</span></a>
+  <div class="kafel"><b>{{ stat.ok }}</b><span>z kompletem podstaw</span></div>
+</div>
+
+<main>
+
+<div class="wyjasnienie">
+  <b>Pusty</b> (zero atrybutów) i <b>szczątkowy</b> (mniej niż {{ min_atrybutow }} atrybuty)
+  są wyłączone z kolejki weryfikacji i nie generują findingów — zgłaszanie „brak Szerokości”
+  przy produkcie, który nie ma <em>żadnego</em> atrybutu, nic nie wnosi: to nie błąd
+  do poprawienia ręcznie, tylko dane, których nie ma u źródła.
+  <b>Bez wymiarów</b> to inny przypadek — produkt ma dość danych, żeby reguły miały co
+  sprawdzać, a sam brak wymiaru jest normalnym findingiem, więc zostaje w analizie
+  i widnieje tu tylko informacyjnie. Listę wyeksportuj i wróć z nią do źródła.
+</div>
+
+<div class="rozbicie">
+  <section>
+    <h2>Najwięcej braków — producenci</h2>
+    <ol>
+      {% for p, n in stat.producenci[:8] %}
+        <li><a href="/braki?producent={{ p|urlencode }}{% if rodzaj %}&rodzaj={{ rodzaj }}{% endif %}">{{ p }}</a> — {{ n }}</li>
+      {% endfor %}
+    </ol>
+  </section>
+  <section>
+    <h2>Najwięcej braków — kategorie</h2>
+    <ol>
+      {% for k, n in stat.kategorie[:8] %}
+        <li><a href="/braki?kategoria={{ k }}{% if rodzaj %}&rodzaj={{ rodzaj }}{% endif %}">{{ nazwy_kat.get(k, k) }}</a> — {{ n }}</li>
+      {% endfor %}
+    </ol>
+  </section>
+</div>
+
+<form class="filtry" method="get" action="/braki">
+  <select name="rodzaj">
+    <option value="">— rodzaj braku —</option>
+    <option value="pusty" {{ 'selected' if rodzaj=='pusty' }}>bez atrybutów</option>
+    <option value="szczatkowy" {{ 'selected' if rodzaj=='szczatkowy' }}>szczątkowe</option>
+    <option value="bez_wymiarow" {{ 'selected' if rodzaj=='bez_wymiarow' }}>bez wymiarów</option>
+  </select>
+  <select name="producent">
+    <option value="">— producent —</option>
+    {% for p, n in stat.producenci %}
+      <option value="{{ p }}" {{ 'selected' if producent==p }}>{{ p }} ({{ n }})</option>
+    {% endfor %}
+  </select>
+  <select name="kategoria">
+    <option value="">— kategoria —</option>
+    {% for k, n in stat.kategorie %}
+      <option value="{{ k }}" {{ 'selected' if kategoria==k }}>{{ nazwy_kat.get(k, k) }} ({{ n }})</option>
+    {% endfor %}
+  </select>
+  <input type="search" name="szukaj" placeholder="nazwa albo ID" value="{{ szukaj }}">
+  <button class="p" type="submit">Filtruj</button>
+  <a href="/braki"><button type="button">Wyczyść</button></a>
+  <a href="/braki/eksport?{{ query }}"><button type="button">Pobierz CSV ({{ ile }})</button></a>
+</form>
+
+<div class="pasek"><span>{{ ile }} produktów po filtrach</span></div>
+
+{% if not wiersze %}
+  <div class="pusto">Nic nie pasuje do tych filtrów.</div>
+{% else %}
+<table>
+  <thead>
+    <tr>
+      <th class="kol-foto"></th>
+      <th>Produkt</th>
+      <th class="kol-kat">Kategoria</th>
+      <th>Atrybutów</th>
+      <th>Rodzaj braku</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for w in wiersze %}
+    <tr>
+      <td class="kol-foto">
+        {% if w.zdjecie %}<img class="mini-foto" src="{{ w.zdjecie }}" alt="" loading="lazy">
+        {% else %}<div class="brakfoto">brak</div>{% endif %}
+      </td>
+      <td>
+        <code>{{ w.id }}</code> {{ w.nazwa }}
+        <div class="dowod">{{ w.producent }}{% if w.kolekcja %} · {{ w.kolekcja }}{% endif %}
+          · <a class="panel" href="{{ link_panelu(w.id) }}" target="_blank" rel="noopener">edytuj w panelu ↗</a></div>
+      </td>
+      <td class="kol-kat">{{ nazwy_kat.get(w.kategoria, w.kategoria) }}</td>
+      <td class="n">{{ w.ile_atrybutow }}</td>
+      <td><span class="znacznik {{ w.kompletnosc }}">{{ w.kompletnosc }}</span></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="strony">
+  {% if strona > 1 %}<a href="/braki?{{ query }}&strona={{ strona - 1 }}">← poprzednia</a>{% endif %}
+  <span>strona {{ strona }} z {{ stron }}</span>
+  {% if strona < stron %}<a href="/braki?{{ query }}&strona={{ strona + 1 }}">następna →</a>{% endif %}
+</div>
+{% endif %}
+
+</main>
+</body>
+</html>

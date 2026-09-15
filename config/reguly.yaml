@@ -1,0 +1,78 @@
+# Reguły edytowalne z poziomu podstrony /reguly.
+#
+# UWAGA: ten plik jest NADPISYWANY przez aplikację przy każdej zmianie w UI,
+# więc komentarze poza tym nagłówkiem nie przetrwają. Rzeczy, które chcesz
+# opisać własnymi słowami, trzymaj w slowniki.yaml.
+#
+# klucze_do_usuniecia — klucze atrybutów, których w bazie być nie powinno
+# sprzecznosci       — "jeśli atrybut ma wartość X, to atrybut Y nie może istnieć"
+# relacje            — nierówności między atrybutami liczbowymi tego samego produktu
+# wylaczone          — identyfikatory reguł (także wbudowanych), które mają nie działać
+klucze_do_usuniecia:
+  Do poprawy:
+    powod: 'Ślad po zepsutej migracji: wartości to nazwy podparcia ("stojące (podparcie)"), a nie osobna
+      cecha produktu.
+
+      '
+    propozycja: przenieś do "Podparcie"
+sprzecznosci:
+- id: SPR-DRZWI
+  gdy:
+    Liczba drzwi: bez drzwi
+  nie_moze_miec:
+  - Rodzaj drzwi
+  - Kierunek otwierania
+  opis: Produkt bez drzwi nie może mieć rodzaju drzwi ani kierunku otwierania
+- id: SPR-SZUFLADY
+  gdy:
+    Liczba szuflad: bez szuflad
+  nie_moze_miec: []
+  nazwa_zawiera:
+  - szuflad
+  opis: Produkt oznaczony jako "bez szuflad", a nazwa mówi o szufladzie
+- id: SPR-DRAZEK
+  gdy:
+    Liczba drążków: brak drążków
+  nie_moze_miec: []
+  nazwa_zawiera:
+  - drazk
+  opis: Produkt oznaczony jako "brak drążków", a nazwa mówi o drążku
+- id: SPR-WISZACE
+  gdy:
+    Podparcie: wiszące
+  nie_moze_miec: []
+  nazwa_zawiera:
+  - stojac
+  opis: Podparcie "wiszące", a nazwa mówi o meblu stojącym
+relacje:
+- id: REL-WYS-ZIEMIA
+  lewa: Wysokość do ziemi
+  operator: <=
+  prawa: Wysokość
+  opis: Wysokość do ziemi nie może przekraczać wysokości całkowitej
+- id: REL-GLEB-SIEDZ
+  lewa: Głębokość siedziska
+  operator: <
+  prawa: Głębokość
+  opis: Głębokość siedziska musi być mniejsza od głębokości mebla
+- id: REL-WYS-SIEDZ
+  lewa: Wysokość siedziska
+  operator: <
+  prawa: Wysokość
+  opis: Wysokość siedziska musi być mniejsza od wysokości mebla
+- id: REL-SPANIE-SZER
+  lewa: Szerokość powierzchni spania
+  operator: <=
+  prawa: Szerokość
+  opis: Powierzchnia spania nie może być szersza niż mebel
+- id: REL-SPANIE-DL
+  lewa: Długość powierzchni spania
+  operator: <=
+  prawa: Długość
+  opis: Powierzchnia spania nie może być dłuższa niż mebel
+- id: REL-SIEDZ-SZER
+  lewa: Szerokość siedziska
+  operator: <
+  prawa: Szerokość
+  opis: Siedzisko węższe od mebla
+wylaczone: []

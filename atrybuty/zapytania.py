@@ -1,0 +1,248 @@
+"""Zapytania do kolejki weryfikacji — filtrowanie i grupowanie findingów."""
+from __future__ import annotations
+
+import json
+import sqlite3
+from dataclasses import dataclass, field
+
+from .model import PROG_DO_WIZJI, WIDOCZNE_NA_ZDJECIU
+
+
+@dataclass
+class Filtr:
+    kategoria: str = ""
+    producent: str = ""
+    regula: str = ""
+    warstwa: str = ""
+    waga: str = ""
+    atrybut: str = ""
+    status: str = "otwarte"        # otwarte | zdecydowane | wszystkie
+    routing: str = ""              # auto | do_wizji | do_czlowieka
+    ma_zdjecie: str = ""           # tak | nie
+    werdykt: str = ""              # zgodne | niezgodne | nie_widac | brak
+    szukaj: str = ""
+    grupuj: bool = True
+    limit: int = 50
+    offset: int = 0
+
+    def jako_query(self, **nadpisz) -> str:
+        from urllib.parse import urlencode
+        d = {k: v for k, v in self.__dict__.items() if v not in ("", False, 0)}
+        d.update(nadpisz)
+        d = {k: ("1" if v is True else v) for k, v in d.items() if v not in ("", False)}
+        return urlencode(d)
+
+
+BAZA_SQL = """
+SELECT f.*, p.nazwa, p.producent, p.kategoria, p.zdjecie, p.kolekcja,
+       d.status AS status_decyzji, d.nowa_wartosc AS decyzja_wartosc,
+       w.werdykt AS werdykt_wizji, w.wartosc_ze_zdjecia AS wizja_wartosc,
+       w.pewnosc AS wizja_pewnosc, w.uzasadnienie AS wizja_uzasadnienie
+FROM findingi f
+JOIN produkty p ON p.id = f.produkt_id
+LEFT JOIN decyzje d
+       ON d.produkt_id = f.produkt_id
+      AND d.atrybut = f.atrybut
+      AND d.hasz_starej = f.hasz_starej
+LEFT JOIN werdykty_wizji w
+       ON w.produkt_id = f.produkt_id AND w.atrybut = f.atrybut
+WHERE f.przebieg_id = :przebieg
+"""
+
+
+def _warunki(fl: Filtr) -> tuple[str, dict]:
+    sql, par = "", {}
+    if fl.kategoria:
+        sql += " AND p.kategoria = :kategoria"; par["kategoria"] = fl.kategoria
+    if fl.producent:
+        sql += " AND p.producent = :producent"; par["producent"] = fl.producent
+    if fl.regula:
+        sql += " AND f.regula_id = :regula"; par["regula"] = fl.regula
+    if fl.warstwa:
+        sql += " AND f.warstwa = :warstwa"; par["warstwa"] = fl.warstwa
+    if fl.waga:
+        sql += " AND f.waga = :waga"; par["waga"] = fl.waga
+    if fl.atrybut:
+        sql += " AND f.atrybut = :atrybut"; par["atrybut"] = fl.atrybut
+    if fl.ma_zdjecie == "tak":
+        sql += " AND p.zdjecie <> ''"
+    elif fl.ma_zdjecie == "nie":
+        sql += " AND p.zdjecie = ''"
+    if fl.status == "otwarte":
+        sql += " AND d.status IS NULL"
+    elif fl.status == "zdecydowane":
+        sql += " AND d.status IS NOT NULL"
+    if fl.szukaj:
+        sql += " AND (p.nazwa LIKE :szukaj OR p.id = :dokladnie)"
+        par["szukaj"] = f"%{fl.szukaj}%"; par["dokladnie"] = fl.szukaj
+    if fl.werdykt == "brak":
+        sql += " AND w.werdykt IS NULL"
+    elif fl.werdykt:
+        sql += " AND w.werdykt = :werdykt"; par["werdykt"] = fl.werdykt
+
+    # routing = bramka kosztowa
+    if fl.routing == "auto":
+        sql += " AND f.pewnosc >= :prog AND f.proponowana_wartosc IS NOT NULL"
+        par["prog"] = PROG_DO_WIZJI
+    elif fl.routing == "do_wizji":
+        lista = ",".join(f"'{a}'" for a in sorted(WIDOCZNE_NA_ZDJECIU))
+        sql += (f" AND f.pewnosc < :prog AND p.zdjecie <> '' AND f.atrybut IN ({lista})")
+        par["prog"] = PROG_DO_WIZJI
+    elif fl.routing == "do_czlowieka":
+        lista = ",".join(f"'{a}'" for a in sorted(WIDOCZNE_NA_ZDJECIU))
+        sql += (f" AND NOT (f.pewnosc >= :prog AND f.proponowana_wartosc IS NOT NULL)"
+                f" AND NOT (f.pewnosc < :prog AND p.zdjecie <> '' AND f.atrybut IN ({lista}))")
+        par["prog"] = PROG_DO_WIZJI
+    return sql, par
+
+
+def policz(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> int:
+    sql, par = _warunki(fl)
+    par["przebieg"] = przebieg
+    kolumna = "COUNT(DISTINCT f.grupa)" if fl.grupuj else "COUNT(*)"
+    q = (f"SELECT {kolumna} FROM findingi f JOIN produkty p ON p.id=f.produkt_id "
+         "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
+         "AND d.hasz_starej=f.hasz_starej "
+         "LEFT JOIN werdykty_wizji w ON w.produkt_id=f.produkt_id AND w.atrybut=f.atrybut "
+         f"WHERE f.przebieg_id=:przebieg{sql}")
+    return int(con.execute(q, par).fetchone()[0])
+
+
+def lista(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> list[dict]:
+    sql, par = _warunki(fl)
+    par |= {"przebieg": przebieg, "limit": fl.limit, "offset": fl.offset}
+
+    if fl.grupuj:
+        q = (BAZA_SQL + sql +
+             " GROUP BY f.grupa"
+             " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
+             " COUNT(*) DESC LIMIT :limit OFFSET :offset")
+        q = q.replace("SELECT f.*,", "SELECT f.*, COUNT(*) AS ile_w_grupie,")
+    else:
+        q = (BAZA_SQL + sql +
+             " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
+             " f.pewnosc DESC LIMIT :limit OFFSET :offset")
+        q = q.replace("SELECT f.*,", "SELECT f.*, 1 AS ile_w_grupie,")
+
+    return [dict(r) for r in con.execute(q, par)]
+
+
+def czlonkowie_grupy(con: sqlite3.Connection, przebieg: int, grupa: str) -> list[dict]:
+    q = (BAZA_SQL + " AND f.grupa = :grupa AND d.status IS NULL")
+    return [dict(r) for r in con.execute(q, {"przebieg": przebieg, "grupa": grupa})]
+
+
+@dataclass
+class Slowniki:
+    kategorie: list[tuple[str, int]] = field(default_factory=list)
+    producenci: list[tuple[str, int]] = field(default_factory=list)
+    reguly: list[tuple[str, int]] = field(default_factory=list)
+    atrybuty: list[tuple[str, int]] = field(default_factory=list)
+
+
+def slowniki_filtrow(con: sqlite3.Connection, przebieg: int) -> Slowniki:
+    def zbierz(q: str) -> list[tuple[str, int]]:
+        return [(r[0], r[1]) for r in con.execute(q, {"przebieg": przebieg}) if r[0]]
+
+    return Slowniki(
+        kategorie=zbierz("SELECT p.kategoria, COUNT(*) FROM findingi f JOIN produkty p "
+                         "ON p.id=f.produkt_id WHERE f.przebieg_id=:przebieg "
+                         "GROUP BY 1 ORDER BY 2 DESC"),
+        producenci=zbierz("SELECT p.producent, COUNT(*) FROM findingi f JOIN produkty p "
+                          "ON p.id=f.produkt_id WHERE f.przebieg_id=:przebieg "
+                          "GROUP BY 1 ORDER BY 2 DESC LIMIT 40"),
+        reguly=zbierz("SELECT regula_id, COUNT(*) FROM findingi WHERE przebieg_id=:przebieg "
+                      "GROUP BY 1 ORDER BY 2 DESC"),
+        atrybuty=zbierz("SELECT atrybut, COUNT(*) FROM findingi WHERE przebieg_id=:przebieg "
+                        "GROUP BY 1 ORDER BY 2 DESC LIMIT 40"),
+    )
+
+
+def statystyki(con: sqlite3.Connection, przebieg: int) -> dict:
+    baza = Filtr(grupuj=False)
+    return {
+        "otwarte": policz(con, przebieg, Filtr(grupuj=False, status="otwarte")),
+        "zdecydowane": policz(con, przebieg, Filtr(grupuj=False, status="zdecydowane")),
+        "auto": policz(con, przebieg, Filtr(grupuj=False, routing="auto", status="otwarte")),
+        "do_wizji": policz(con, przebieg, Filtr(grupuj=False, routing="do_wizji", status="otwarte")),
+        "do_czlowieka": policz(con, przebieg, Filtr(grupuj=False, routing="do_czlowieka", status="otwarte")),
+        "grupy": policz(con, przebieg, Filtr(grupuj=True, status="otwarte")),
+        "krytyczne": policz(con, przebieg, Filtr(grupuj=False, waga="krytyczna", status="otwarte")),
+        "wizja_niezgodne": policz(con, przebieg,
+                                  Filtr(grupuj=False, werdykt="niezgodne", status="otwarte")),
+        "wizja_zgodne": policz(con, przebieg,
+                               Filtr(grupuj=False, werdykt="zgodne", status="otwarte")),
+        "wizja_nie_widac": policz(con, przebieg,
+                                  Filtr(grupuj=False, werdykt="nie_widac", status="otwarte")),
+    }
+
+
+def produkt(con: sqlite3.Connection, pid: str) -> dict | None:
+    r = con.execute("SELECT * FROM produkty WHERE id=?", (pid,)).fetchone()
+    if not r:
+        return None
+    d = dict(r)
+    d["atrybuty"] = json.loads(d["atrybuty"] or "{}")
+    d["atrybuty_surowe"] = json.loads(d["atrybuty_surowe"] or "{}")
+    return d
+
+
+# --- produkty bez danych --------------------------------------------------
+
+SQL_BRAKI = """
+SELECT id, nazwa, producent, kolekcja, kategoria, zdjecie, kompletnosc, atrybuty
+FROM produkty
+WHERE kompletnosc IN ('pusty','szczatkowy','bez_wymiarow')
+"""
+
+
+def braki(con: sqlite3.Connection, producent: str = "", kategoria: str = "",
+          rodzaj: str = "", szukaj: str = "", limit: int = 100, offset: int = 0
+          ) -> tuple[list[dict], int]:
+    """Produkty, których nie ma sensu analizować — trzeba je zaciągnąć ze źródła."""
+    sql, par = "", {}
+    if producent:
+        sql += " AND producent = :producent"; par["producent"] = producent
+    if kategoria:
+        sql += " AND kategoria = :kategoria"; par["kategoria"] = kategoria
+    if rodzaj:
+        sql += " AND kompletnosc = :rodzaj"; par["rodzaj"] = rodzaj
+    if szukaj:
+        sql += " AND (nazwa LIKE :szukaj OR id = :dokladnie)"
+        par["szukaj"] = f"%{szukaj}%"; par["dokladnie"] = szukaj
+
+    ile = int(con.execute(
+        "SELECT COUNT(*) FROM produkty WHERE kompletnosc IN "
+        f"('pusty','szczatkowy','bez_wymiarow'){sql}", par).fetchone()[0])
+
+    q = SQL_BRAKI + sql + " ORDER BY producent, kolekcja, nazwa LIMIT :limit OFFSET :offset"
+    par |= {"limit": limit, "offset": offset}
+    wiersze = []
+    for r in con.execute(q, par):
+        d = dict(r)
+        d["ile_atrybutow"] = len(json.loads(d.pop("atrybuty") or "{}"))
+        wiersze.append(d)
+    return wiersze, ile
+
+
+def braki_statystyki(con: sqlite3.Connection) -> dict:
+    lic = {r[0]: r[1] for r in con.execute(
+        "SELECT kompletnosc, COUNT(*) FROM produkty GROUP BY 1")}
+    wg_producenta = [(r[0], r[1]) for r in con.execute(
+        "SELECT producent, COUNT(*) n FROM produkty "
+        "WHERE kompletnosc IN ('pusty','szczatkowy','bez_wymiarow') "
+        "GROUP BY 1 ORDER BY n DESC")]
+    wg_kategorii = [(r[0], r[1]) for r in con.execute(
+        "SELECT kategoria, COUNT(*) n FROM produkty "
+        "WHERE kompletnosc IN ('pusty','szczatkowy','bez_wymiarow') "
+        "GROUP BY 1 ORDER BY n DESC")]
+    return {
+        "pusty": lic.get("pusty", 0),
+        "szczatkowy": lic.get("szczatkowy", 0),
+        "bez_wymiarow": lic.get("bez_wymiarow", 0),
+        "ok": lic.get("ok", 0),
+        "wylaczone": lic.get("pusty", 0) + lic.get("szczatkowy", 0),
+        "razem": lic.get("pusty", 0) + lic.get("szczatkowy", 0) + lic.get("bez_wymiarow", 0),
+        "producenci": wg_producenta,
+        "kategorie": wg_kategorii,
+    }

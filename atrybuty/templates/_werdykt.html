@@ -1,0 +1,43 @@
+{# Fragment wstawiany przez HTMX po sprawdzeniu findingu zdjęciem.
+   Zawiera werdykt i — gdy model widzi co innego — gotowy przycisk poprawki. #}
+{% if blad %}
+  <div class="wizja blad">Nie udało się sprawdzić: {{ blad }}</div>
+{% else %}
+  <div class="wizja">
+    <span class="werdykt {{ w.werdykt }}">Gemini: {{ w.werdykt.replace('_', ' ') }}</span>
+    {% if w.wartosc_ze_zdjecia and w.werdykt == 'niezgodne' %}
+      → <span class="nowa">{{ w.wartosc_ze_zdjecia }}</span>
+    {% endif %}
+    {{ w.uzasadnienie }}
+    <span class="meta-wizji">
+      pewność {{ '%.0f'|format((w.pewnosc or 0) * 100) }}%
+      · {{ model_krotki }}
+      {% if w.z_cache %}· z cache, 0 zł{% else %}· ${{ '%.4f'|format(koszt) }}{% endif %}
+    </span>
+
+    {% if w.werdykt == 'niezgodne' and w.wartosc_ze_zdjecia %}
+      <form hx-post="/decyzja" hx-target="#wizja-{{ nr }}" hx-swap="innerHTML" class="po-wizji"
+            hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ atrybut }}">
+        <input type="hidden" name="stara" value="{{ stara or '' }}">
+        <input type="hidden" name="nowa" value="{{ w.wartosc_ze_zdjecia }}">
+        <input type="hidden" name="regula_id" value="L3-WIZJA">
+        <input type="hidden" name="zakres" value="pojedynczo">
+        <input type="hidden" name="status" value="zastosowana">
+        <button class="p mini" type="submit">Zastosuj „{{ w.wartosc_ze_zdjecia }}”</button>
+      </form>
+    {% elif w.werdykt == 'zgodne' %}
+      <form hx-post="/decyzja" hx-target="#wizja-{{ nr }}" hx-swap="innerHTML" class="po-wizji"
+            hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ atrybut }}">
+        <input type="hidden" name="stara" value="{{ stara or '' }}">
+        <input type="hidden" name="regula_id" value="L3-WIZJA">
+        <input type="hidden" name="zakres" value="pojedynczo">
+        <input type="hidden" name="status" value="falszywy_alarm">
+        <button class="mini" type="submit">Zdjęcie potwierdza — zamknij</button>
+      </form>
+    {% endif %}
+  </div>
+{% endif %}

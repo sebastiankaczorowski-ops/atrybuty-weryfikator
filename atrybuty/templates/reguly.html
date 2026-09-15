@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reguły — kontrola atrybutów OXM</title>
+<style>
+:root{
+  --bg:#f6f8f7; --surface:#fff; --surface-2:#edf1ef;
+  --ink:#15201d; --ink-2:#3c4c47; --muted:#6b7c76;
+  --line:#d9e1dd; --line-strong:#b9c7c1;
+  --accent:#0e5e52; --accent-soft:#d7e8e3;
+  --crit:#9a2b2b; --crit-soft:#f5dedc;
+  --warn:#8a5a0b; --warn-soft:#f6e7cc;
+  --ok:#3a6b2e; --ok-soft:#dfebd6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9em}
+a{color:var(--accent)}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px;
+       display:flex;flex-wrap:wrap;gap:18px;align-items:baseline}
+header h1{font-size:16px;margin:0;font-weight:600}
+header nav{margin-left:auto;display:flex;gap:14px;font-size:13.5px}
+main{padding:18px 20px 70px;max-width:1280px;margin:0 auto;display:flex;
+     flex-direction:column;gap:26px}
+h2{font-size:15px;margin:0 0 2px;font-weight:600}
+.pod{color:var(--muted);font-size:13px;margin:0 0 10px;max-width:75ch}
+.komunikat{padding:9px 13px;border-radius:3px;font-size:13.5px}
+.komunikat.ok{background:var(--ok-soft);color:var(--ok)}
+.komunikat.zle{background:var(--crit-soft);color:var(--crit)}
+table{width:100%;border-collapse:collapse;background:var(--surface);
+      border:1px solid var(--line);border-radius:3px;overflow:hidden}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+         background:var(--surface-2);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+tr.nieaktywna td{opacity:.5}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;
+     white-space:nowrap}
+.sev{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.sev.krytyczna{background:var(--crit-soft);color:var(--crit)}
+.sev.srednia{background:var(--warn-soft);color:var(--warn)}
+.sev.info{background:var(--surface-2);color:var(--muted)}
+.zrodlo{font-size:11.5px;color:var(--muted)}
+.szcz{color:var(--muted);font-size:12.5px;margin-top:3px}
+.skut{font-weight:600}
+.skut.dobra{color:var(--ok)} .skut.slaba{color:var(--crit)} .skut.brak{color:var(--muted);font-weight:400}
+button{font:inherit;padding:4px 10px;border:1px solid var(--line-strong);border-radius:2px;
+       background:var(--bg);color:var(--ink-2);cursor:pointer}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.mini{padding:2px 8px;font-size:12px}
+form.inline{display:inline}
+.dodaj{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:16px 18px}
+.dodaj h3{margin:0 0 4px;font-size:14px}
+.pola{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-top:10px}
+.pole{display:flex;flex-direction:column;gap:3px}
+.pole label{font-size:11.5px;color:var(--muted)}
+input[type=text],select{font:inherit;padding:5px 8px;border:1px solid var(--line-strong);
+       border-radius:2px;background:var(--bg);color:var(--ink);min-width:150px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:3px}
+details>summary{padding:12px 16px;cursor:pointer;font-weight:600;font-size:14px}
+details[open]>summary{border-bottom:1px solid var(--line)}
+details .tresc{padding:16px 18px}
+.plik{color:var(--muted);font-size:12.5px}
+@media(max-width:720px){ .kol-szt,.kol-warstwa{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Reguły</h1>
+  <span class="plik">{{ katalog|length }} reguł · edytowalne w <code>config/reguly.yaml</code></span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/braki">braki danych</a>
+    <a href="/import">wgraj plik</a>
+  </nav>
+</header>
+
+<main>
+
+{% if komunikat %}<div class="komunikat {{ 'zle' if blad else 'ok' }}">{{ komunikat }}</div>{% endif %}
+
+<section>
+  <h2>Co system potrafi wykryć</h2>
+  <p class="pod">Liczby pochodzą z ostatniego przebiegu. „Skuteczność” to udział
+  decyzji „zastosuj” wśród rozstrzygniętych — reguła poniżej 60% przy sensownej
+  próbce jest do przestrojenia albo wyłączenia. Wyłączona reguła nie trafia do
+  kolejki przy następnym imporcie.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Reguła</th>
+        <th class="kol-warstwa">Warstwa</th>
+        <th class="kol-szt">Findingów</th>
+        <th>Rozstrzygnięte</th>
+        <th>Skuteczność</th>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in katalog %}
+      <tr class="{{ '' if r.aktywna else 'nieaktywna' }}">
+        <td>
+          <code>{{ r.id }}</code> <span class="sev {{ r.waga }}">{{ r.waga }}</span>
+          {% if not r.aktywna %}<span class="sev info">wyłączona</span>{% endif %}
+          <div class="szcz">{{ r.opis }}</div>
+          {% if r.szczegoly %}<div class="szcz"><code>{{ r.szczegoly }}</code></div>{% endif %}
+        </td>
+        <td class="kol-warstwa">{{ r.warstwa }}<div class="zrodlo">{{ r.zrodlo }}</div></td>
+        <td class="n kol-szt">{{ r.findingow }}</td>
+        <td class="n">{{ r.zastosowanych }} / {{ r.rozstrzygnietych }}</td>
+        <td class="n">
+          {% if r.skutecznosc is none %}
+            <span class="skut brak">—</span>
+          {% else %}
+            <span class="skut {{ 'dobra' if r.skutecznosc >= 0.6 else 'slaba' }}">
+              {{ '%.0f'|format(r.skutecznosc * 100) }}%</span>
+          {% endif %}
+        </td>
+        <td>
+          <form class="inline" method="post" action="/reguly/przelacz">
+            <input type="hidden" name="rid" value="{{ r.id }}">
+            <input type="hidden" name="aktywna" value="{{ '0' if r.aktywna else '1' }}">
+            <button class="mini" type="submit">{{ 'Wyłącz' if r.aktywna else 'Włącz' }}</button>
+          </form>
+          {% if r.zrodlo != 'wbudowana' %}
+          <form class="inline" method="post" action="/reguly/usun"
+                onsubmit="return confirm('Usunąć regułę {{ r.id }} na stałe?')">
+            <input type="hidden" name="rid" value="{{ r.id }}">
+            <button class="mini" type="submit">Usuń</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Dodaj regułę</h2>
+  <p class="pod">Wbudowanych reguł nie da się dodać z tego miejsca — to logika
+  w kodzie detektorów. Dodawać można trzy rodzaje opisane danymi: sprzeczność,
+  relację liczbową i klucz do usunięcia. Zmiana zadziała przy następnym imporcie.</p>
+
+  <details>
+    <summary>Sprzeczność — „jeśli atrybut ma wartość X, to nie może mieć Y”</summary>
+    <div class="tresc">
+      <form method="post" action="/reguly/dodaj-sprzecznosc">
+        <div class="pola">
+          <div class="pole"><label>Identyfikator</label>
+            <input type="text" name="rid" placeholder="SPR-OSWIETLENIE" required></div>
+          <div class="pole"><label>Gdy atrybut</label>
+            <select name="atrybut">
+              {% for a in atrybuty_enum %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+            </select></div>
+          <div class="pole"><label>ma wartość</label>
+            <input type="text" name="wartosc" placeholder="brak" required></div>
+          <div class="pole"><label>to nie może mieć atrybutów (po przecinku)</label>
+            <input type="text" name="nie_moze_miec" placeholder="Rodzaj oświetlenia, Barwa światła"></div>
+          <div class="pole"><label>albo nazwa zawiera (po przecinku, bez ogonków)</label>
+            <input type="text" name="nazwa_zawiera" placeholder="led, podswietl"></div>
+          <div class="pole"><label>Opis</label>
+            <input type="text" name="opis" placeholder="Produkt bez oświetlenia nie może mieć…" style="min-width:260px"></div>
+          <button class="p" type="submit">Dodaj sprzeczność</button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  <details style="margin-top:10px">
+    <summary>Relacja liczbowa — „ten wymiar musi być mniejszy od tamtego”</summary>
+    <div class="tresc">
+      <form method="post" action="/reguly/dodaj-relacje">
+        <div class="pola">
+          <div class="pole"><label>Identyfikator</label>
+            <input type="text" name="rid" placeholder="REL-SIEDZ-SZER" required></div>
+          <div class="pole"><label>Atrybut</label>
+            <select name="lewa">
+              {% for a in atrybuty_liczbowe %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+            </select></div>
+          <div class="pole"><label>operator</label>
+            <select name="operator"><option value="&lt;=">&le;</option><option value="&lt;">&lt;</option></select></div>
+          <div class="pole"><label>Atrybut</label>
+            <select name="prawa">
+              {% for a in atrybuty_liczbowe %}<option value="{{ a }}">{{ a }}</option>{% endfor %}
+            </select></div>
+          <div class="pole"><label>Opis</label>
+            <input type="text" name="opis" placeholder="Szerokość siedziska musi być mniejsza…" style="min-width:260px"></div>
+          <button class="p" type="submit">Dodaj relację</button>
+        </div>
+      </form>
+    </div>
+  </details>
+
+  <details style="margin-top:10px">
+    <summary>Klucz do usunięcia — atrybut, którego w bazie być nie powinno</summary>
+    <div class="tresc">
+      <form method="post" action="/reguly/dodaj-klucz">
+        <div class="pola">
+          <div class="pole"><label>Nazwa klucza</label>
+            <input type="text" name="klucz" placeholder="Do poprawy" required style="min-width:200px"></div>
+          <div class="pole"><label>Dlaczego</label>
+            <input type="text" name="powod" placeholder="Ślad po migracji" style="min-width:280px"></div>
+          <div class="pole"><label>Propozycja</label>
+            <input type="text" name="propozycja" placeholder="przenieś do „Podparcie”"></div>
+          <button class="p" type="submit">Dodaj klucz</button>
+        </div>
+      </form>
+    </div>
+  </details>
+</section>
+
+</main>
+</body>
+</html>
