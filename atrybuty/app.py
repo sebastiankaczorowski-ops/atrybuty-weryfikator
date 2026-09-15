@@ -124,6 +124,21 @@ def decyzja(request: Request,
         f'<div class="zrobione">✓ {komunikat}</div>', status_code=200)
 
 
+@app.get("/grupa", response_class=HTMLResponse)
+def grupa_podglad(request: Request, grupa: str = "", nr: str = ""):
+    """Fragment HTMX: co dokładnie siedzi w tej grupie findingów."""
+    if not grupa:                      # pusty klucz = „zwiń"
+        return HTMLResponse("")
+    con = _con()
+    przebieg = _przebieg(con)
+    czlonkowie = zapytania.podglad_grupy(con, przebieg, grupa) if przebieg else []
+    ile = zapytania.policz_grupe(con, przebieg, grupa) if przebieg else 0
+    con.close()
+    return szablony.TemplateResponse(request, "_grupa.html", {
+        "request": request, "czlonkowie": czlonkowie, "ile": ile,
+        "grupa": grupa, "nr": nr, "nazwy_kat": kategorie.nazwy_kategorii()})
+
+
 @app.get("/produkt/{pid}", response_class=HTMLResponse)
 def produkt(request: Request, pid: str):
     con = _con()

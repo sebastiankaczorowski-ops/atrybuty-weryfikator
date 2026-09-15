@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
-from . import config
+from . import config, zdjecia as zdjecia_mod
 from .model import WIDOCZNE_NA_ZDJECIU
 
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -91,6 +91,14 @@ PYTANIA: dict[str, str] = {
     "Rodzaj frontu": "Jakie są fronty tego mebla: pełne, ryflowane, przeszklone, z lustrem, ażurowe?",
     "Dekoracje": "Jakie zdobienia widać na tym meblu?",
     "Styl": "W jakim stylu utrzymany jest ten mebel?",
+    # Wymiary da się odczytać TYLKO z rysunku technicznego — dobór ujęcia
+    # (zdjecia.UJECIE_DLA_ATRYBUTU) pilnuje, żeby model dostał właśnie jego.
+    "Szerokość": "Jaka szerokość mebla jest podana na rysunku technicznym? "
+                 "Odczytaj liczbę z wymiarowania, w centymetrach.",
+    "Wysokość": "Jaka wysokość mebla jest podana na rysunku technicznym? "
+                "Odczytaj liczbę z wymiarowania, w centymetrach.",
+    "Głębokość": "Jaka głębokość mebla jest podana na rysunku technicznym? "
+                 "Odczytaj liczbę z wymiarowania, w centymetrach.",
 }
 
 
@@ -216,9 +224,10 @@ class Odpowiedz:
 
 
 def _tresc_pytania(pytanie: str, atrybut: str, wartosc_w_bazie: str,
-                   dozwolone: list[str]) -> str:
+                   dozwolone: list[str], ujecie: str = "") -> str:
     lista = ", ".join(f"„{d}”" for d in dozwolone) if dozwolone else "(wartość opisowa)"
-    return (f"Pytanie: {pytanie}\n"
+    return ((f"Rodzaj zdjęcia: {ujecie}\n" if ujecie else "")
+            + f"Pytanie: {pytanie}\n"
             f"Atrybut w bazie: {atrybut}\n"
             f"Wartość zapisana w bazie: {wartosc_w_bazie or '(pusta)'}\n"
             f"Dozwolone wartości: {lista}\n\n"
@@ -227,7 +236,7 @@ def _tresc_pytania(pytanie: str, atrybut: str, wartosc_w_bazie: str,
 
 def zapytaj(zdjecie: bytes, pytanie: str, atrybut: str, wartosc_w_bazie: str,
             dozwolone: list[str], model: str = MODEL_WOLUMEN,
-            timeout: int = 60, prob: int = 3) -> Odpowiedz:
+            timeout: int = 60, prob: int = 3, ujecie: str = "") -> Odpowiedz:
     ciało = {
         "systemInstruction": {"parts": [{"text": INSTRUKCJA}]},
         "contents": [{
@@ -235,7 +244,7 @@ def zapytaj(zdjecie: bytes, pytanie: str, atrybut: str, wartosc_w_bazie: str,
             "parts": [
                 {"inline_data": {"mime_type": "image/jpeg",
                                  "data": base64.b64encode(zdjecie).decode("ascii")}},
-                {"text": _tresc_pytania(pytanie, atrybut, wartosc_w_bazie, dozwolone)},
+                {"text": _tresc_pytania(pytanie, atrybut, wartosc_w_bazie, dozwolone, ujecie)},
             ],
         }],
         "generationConfig": {
@@ -321,7 +330,7 @@ def kandydaci(con: sqlite3.Connection, przebieg: int, limit: int | None = None,
     obslugiwane = ",".join(f"'{a}'" for a in sorted(obslugiwane_atrybuty()))
     q = f"""
       SELECT f.produkt_id, f.atrybut, f.stara_wartosc, f.regula_id, f.pewnosc,
-             p.nazwa, p.producent, p.kategoria, p.zdjecie
+             p.nazwa, p.producent, p.kategoria, p.zdjecie, p.zdjecia
       FROM findingi f JOIN produkty p ON p.id = f.produkt_id
       LEFT JOIN werdykty_wizji w
              ON w.produkt_id = f.produkt_id AND w.atrybut = f.atrybut
@@ -342,6 +351,25 @@ def kandydaci(con: sqlite3.Connection, przebieg: int, limit: int | None = None,
     if limit:
         q += " LIMIT :limit"; par["limit"] = limit
     return [dict(r) for r in con.execute(q, par)]
+
+
+def wybierz_zdjecie(poz: dict, atrybut: str) -> tuple[str, str]:
+    """Które ujęcie wysłać do modelu. Zwraca (url, opis ujęcia).
+
+    Do liczenia szuflad idzie wnętrze, do wymiarów rysunek techniczny.
+    Wcześniej model dostawał zdjęcie główne — często aranżację — i słusznie
+    odpowiadał „nie widać".
+    """
+    import json as _json
+    surowe = poz.get("zdjecia")
+    galeria = []
+    if surowe:
+        galeria = [zdjecia_mod.Zdjecie(e, u) for e, u in _json.loads(surowe)]
+    wybrane = zdjecia_mod.wybierz(galeria, atrybut, poz.get("zdjecie") or "")
+    if not wybrane:
+        return "", ""
+    opis = wybrane.etykieta or "zdjęcie główne"
+    return wybrane.url, opis
 
 
 def _dozwolone(atrybut: str) -> list[str]:
@@ -379,7 +407,11 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
             podsumowanie["pominietych"] += 1
             continue
 
-        h = hasz_zapytania(poz["zdjecie"], pytanie, poz["stara_wartosc"] or "", model)
+        url, ujecie = wybierz_zdjecie(poz, poz["atrybut"])
+        if not url:
+            podsumowanie["pominietych"] += 1
+            continue
+        h = hasz_zapytania(url, pytanie, poz["stara_wartosc"] or "", model)
         z_cache = con.execute(
             "SELECT odpowiedz, tokenow_wejscia, tokenow_wyjscia FROM cache_wizji WHERE hasz=?",
             (h,)).fetchone()
@@ -390,10 +422,10 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
             podsumowanie["z_cache"] += 1
         else:
             try:
-                zdjecie = pobierz_zdjecie(poz["zdjecie"], katalog_zdjec)
+                zdjecie = pobierz_zdjecie(url, katalog_zdjec)
                 odp = zapytaj(zdjecie, pytanie, poz["atrybut"],
                               poz["stara_wartosc"] or "", _dozwolone(poz["atrybut"]),
-                              model=model)
+                              model=model, ujecie=ujecie)
             except Exception as e:                       # noqa: BLE001
                 podsumowanie["bledow"] += 1
                 echo(f"  [{i}/{len(pozycje)}] BŁĄD {poz['produkt_id']} {poz['atrybut']}: {e}")

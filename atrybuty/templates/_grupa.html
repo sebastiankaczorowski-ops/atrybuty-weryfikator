@@ -1,0 +1,57 @@
+{# Podgląd grupy: te same problemy na innych produktach. #}
+<div class="grupa-podglad">
+  <div class="grupa-naglowek">
+    <b>{{ ile }}</b> otwartych produktów z tym samym problemem{%
+      if czlonkowie|length < ile %} <span class="dowod">(pokazuję pierwsze
+      {{ czlonkowie|length }})</span>{% endif %}
+    <button class="mini" type="button"
+            hx-get="/grupa?grupa=&amp;nr={{ nr }}" hx-target="#grupa-{{ nr }}"
+            hx-swap="innerHTML">zwiń</button>
+  </div>
+  {% if czlonkowie %}
+  <table class="grupa-tab">
+    {% for c in czlonkowie %}
+    <tr>
+      <td class="kol-foto">
+        {% if c.zdjecie %}
+          <a href="{{ c.zdjecie }}" target="_blank" rel="noopener">
+            <img class="mini-foto" src="{{ c.zdjecie }}" alt="" loading="lazy"></a>
+        {% else %}<div class="brakfoto">brak</div>{% endif %}
+      </td>
+      <td>
+        <a href="/produkt/{{ c.produkt_id }}" target="_blank"><code>{{ c.produkt_id }}</code></a>
+        {{ c.nazwa }}
+        <div class="dowod">{{ c.producent }}{% if c.kolekcja %} · {{ c.kolekcja }}{% endif %}
+          · {{ nazwy_kat.get(c.kategoria, c.kategoria) }}
+          · <a class="panel" href="{{ link_panelu(c.produkt_id) }}" target="_blank"
+               rel="noopener">edytuj w panelu ↗</a>
+        </div>
+      </td>
+      <td class="kol-zmiana">
+        {% if c.stara_wartosc %}<span class="stara">{{ c.stara_wartosc }}</span>
+        {% else %}<span class="dowod">(puste)</span>{% endif %}
+        {% if c.proponowana_wartosc %}→ <span class="nowa">{{ c.proponowana_wartosc }}</span>{% endif %}
+      </td>
+      <td class="kol-akcja">
+        <form hx-post="/decyzja" hx-target="this" hx-swap="outerHTML">
+          <input type="hidden" name="produkt_id" value="{{ c.produkt_id }}">
+          <input type="hidden" name="atrybut" value="{{ c.atrybut }}">
+          <input type="hidden" name="stara" value="{{ c.stara_wartosc or '' }}">
+          <input type="hidden" name="nowa" value="{{ c.proponowana_wartosc or '' }}">
+          <input type="hidden" name="regula_id" value="{{ c.regula_id or '' }}">
+          <input type="hidden" name="zakres" value="pojedynczo">
+          <button class="mini" type="submit" name="status" value="falszywy_alarm"
+                  title="Wyłącz sam ten produkt z grupy">to nie ten ✗</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <div class="dowod grupa-stopka">
+    Klucz grupy: <code>{{ grupa }}</code>. „to nie ten" zamyka pojedynczy
+    produkt jako fałszywy alarm — reszta grupy zostaje otwarta.
+  </div>
+  {% else %}
+  <div class="dowod">Nic otwartego — grupa została już rozstrzygnięta.</div>
+  {% endif %}
+</div>

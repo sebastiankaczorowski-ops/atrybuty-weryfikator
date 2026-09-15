@@ -34,6 +34,8 @@ class Produkt:
     liczby: dict[str, float] = field(default_factory=dict)      # atrybuty liczbowe
     zrodlo_kategorii: str = "nazwa"                             # nazwa | sklep
     podtyp: str = ""                               # podkategoria sklepu, do filtrowania
+    kody: dict[str, str] = field(default_factory=dict)   # kod produktu/producenta/EAN
+    zdjecia: list = field(default_factory=list)          # [(etykieta, url)]
     kompletnosc: str = "ok"                        # ok | bez_wymiarow | szczatkowy | pusty
 
     @property
@@ -101,8 +103,13 @@ PROG_AUTO = 0.85          # powyżej: propozycja gotowa do jednego kliknięcia
 PROG_DO_WIZJI = 0.85      # poniżej: kandydat do warstwy wizyjnej
 
 # Atrybuty, które da się rozstrzygnąć ze zdjęcia. Reszta omija L3 —
-# wagi, udźwigu ani klasy płyty nie widać, więc nie ma po co za to płacić.
+# wagi ani klasy płyty nie widać, więc nie ma po co za to płacić.
+#
+# Wymiary doszły po eksporcie z 15.09: produkty mają rysunki techniczne,
+# a na nich wymiary są po prostu napisane. Bez rysunku i tak wypadną,
+# bo dobór ujęcia nie znajdzie dla nich nic sensownego.
 WIDOCZNE_NA_ZDJECIU = {
+    "Szerokość", "Wysokość", "Głębokość",
     "Liczba drzwi", "Liczba szuflad", "Liczba półek", "Liczba szafek",
     "Liczba drążków", "Materiał", "Oświetlenie", "Rodzaj drzwi",
     "Kształt blatu", "Podparcie", "Tapicerowane", "Zagłówek",

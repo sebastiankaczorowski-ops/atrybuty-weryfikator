@@ -53,14 +53,22 @@ Testy: `python -m pytest tests/ -q`
 |---|---|
 | kategoria ze sklepu / zgadnięta z nazwy | 31 707 / 522 |
 | produkty bez danych (wyłączone, /braki) | 1 854 |
-| findingów | 15 652 |
-| grup decyzyjnych | 2 364 |
-| gotowe do jednego kliknięcia (0 zł) | 4 150 |
-| kandydaci do Gemini (L3) | 412 |
+| findingów | 17 575 |
+| grup decyzyjnych | 2 400 |
+| gotowe do jednego kliknięcia (0 zł) | 4 672 |
+| kandydaci do Gemini (L3) | 1 262 |
+| produkty dopasowane do feedu producenta (L4) | 467 |
 
-Grupowanie to najważniejsza liczba w tej tabeli: 15 652 findingi to 2 364
-realne decyzje, bo ponad tysiąc produktów z `drewno, drewno` rozstrzyga się
+Grupowanie to najważniejsza liczba w tej tabeli: 17 575 findingów to 2 400
+realnych decyzji, bo ponad tysiąc produktów z `drewno, drewno` rozstrzyga się
 jednym kliknięciem, nie tysiącem.
+
+Licznik `×N identycznych` w kolejce jest klikalny: rozwija listę wszystkich
+produktów z tym samym problemem — ze zdjęciem, kategorią i linkiem do panelu.
+Zanim ktoś rozstrzygnie grupę hurtem, widzi, co w niej siedzi, i może
+pojedynczy produkt wypiąć jako fałszywy alarm („to nie ten"), zostawiając
+resztę grupy otwartą. Grupa łączy po (reguła, atrybut, wartość), a nie po
+wyglądzie mebla, więc czasem wpada do niej produkt z innej bajki.
 
 ## Struktura
 

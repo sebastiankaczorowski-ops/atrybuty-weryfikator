@@ -14,7 +14,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from . import config, db, detektory, kategorie, normalizacja, schema_gen, wizja, zrodla
+from . import (config, db, detektory, kategorie, normalizacja, schema_gen, wizja,
+               zdjecia as zdjecia_mod, zrodla)
 from .model import Finding, Produkt, oszacuj_kompletnosc
 
 csv.field_size_limit(10_000_000)
@@ -41,6 +42,12 @@ BAZA = _sciezka_bazy()
 # eksportu z BigQuery — obie drogi zostają.
 KOLUMNY_KATEGORII = ("typ", "kategoria", "kategorie", "category", "kategoria_glowna")
 KOLUMNY_PODTYPU = ("podtyp", "subtype")
+
+# Kody produktu z eksportu 15.09 — to one odblokowują pewne dopasowanie
+# do feedów producentów (wcześniej zostawało zgadywanie po nazwie).
+KOLUMNY_KODOW = ("kod produktu", "kod producenta", "kod EAN", "nasz kod EAN",
+                 "unikatowy kod produktu", "sku", "ean")
+KOLUMNY_ZDJEC = ("zdjecia", "zdjęcia", "images")
 
 
 def wczytaj_kategorie(sciezka: str | Path) -> dict[str, dict]:
@@ -72,6 +79,8 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
         pola = czytnik.fieldnames or []
         kol_kat = next((k for k in pola if k.lower() in KOLUMNY_KATEGORII), None)
         kol_podtyp = next((k for k in pola if k.lower() in KOLUMNY_PODTYPU), None)
+        kol_kody = [k for k in pola if k.lower() in KOLUMNY_KODOW]
+        kol_zdjecia = next((k for k in pola if k.lower() in KOLUMNY_ZDJEC), None)
 
         for wiersz in czytnik:
             surowe = normalizacja.parsuj_atrybuty(wiersz.get("atrybuty", ""))
@@ -92,6 +101,10 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
                 # ale zapamiętujemy, że mapa wymaga uzupełnienia
                 kat = kategorie.z_nazwy(wiersz.get("nazwa", ""))
 
+            kody = {k: (wiersz.get(k) or "").strip() for k in kol_kody
+                    if (wiersz.get(k) or "").strip()}
+            galeria = zdjecia_mod.parsuj(wiersz.get(kol_zdjecia, "")) if kol_zdjecia else []
+
             produkty.append(Produkt(
                 id=pid,
                 nazwa=(wiersz.get("nazwa") or "").strip(),
@@ -100,6 +113,7 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
                 zdjecie=(wiersz.get("zdjecie") or "").strip(),
                 styl=(wiersz.get("style") or "").strip(),
                 kategoria=kat, zrodlo_kategorii=zrodlo, podtyp=podtyp,
+                kody=kody, zdjecia=galeria,
                 atrybuty=znorm, atrybuty_surowe=surowe, liczby=liczby,
                 kompletnosc=oszacuj_kompletnosc(znorm)))
             findingi += f_norm

@@ -66,7 +66,17 @@ tbody tr:hover{background:var(--surface-2)}
 .nowa{background:var(--ok-soft);color:var(--ok);padding:1px 6px;border-radius:2px;font-weight:600}
 .dowod{color:var(--muted);font-size:12.5px;margin-top:3px}
 .grupa-licznik{background:var(--accent-soft);color:var(--accent);border-radius:2px;
-               padding:1px 6px;font-size:11.5px;font-weight:600;white-space:nowrap}
+               padding:1px 6px;font-size:11.5px;font-weight:600;white-space:nowrap;
+               border:1px solid transparent;cursor:pointer;font-family:inherit}
+.grupa-licznik:hover{border-color:var(--accent)}
+.grupa-licznik.htmx-request{opacity:.55}
+.grupa-podglad{margin-top:7px;border-left:2px solid var(--accent);padding:6px 0 4px 8px}
+.grupa-naglowek{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:4px}
+.grupa-tab{width:100%;border-collapse:collapse}
+.grupa-tab td{border-top:1px solid var(--line);padding:4px 6px 4px 0;vertical-align:top}
+.grupa-tab .kol-zmiana{white-space:nowrap;font-size:12.5px}
+.grupa-tab .kol-akcja{text-align:right;white-space:nowrap}
+.grupa-stopka{margin-top:5px}
 .akcje{display:flex;gap:4px;flex-wrap:wrap}
 .zrobione{color:var(--ok);font-weight:600;font-size:12.5px}
 .werdykt{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
@@ -259,9 +269,14 @@ tr.htmx-request .szkielet{display:flex}
       {% if w.stara_wartosc %}<span class="stara">{{ w.stara_wartosc }}</span>{% else %}<span class="dowod">(puste)</span>{% endif %}
       {% if w.proponowana_wartosc %}→ <span class="nowa">{{ w.proponowana_wartosc }}</span>{% endif %}
       {% if w.ile_w_grupie and w.ile_w_grupie > 1 %}
-        <span class="grupa-licznik">×{{ w.ile_w_grupie }} identycznych</span>{% endif %}
+        <button class="grupa-licznik" type="button"
+                hx-get="/grupa?grupa={{ w.grupa|urlencode }}&nr={{ loop.index }}"
+                hx-target="#grupa-{{ loop.index }}" hx-swap="innerHTML"
+                title="Pokaż pozostałe produkty z tym samym problemem">
+          ×{{ w.ile_w_grupie }} identycznych ▾</button>{% endif %}
     </div>
     <div class="dowod">{{ w.dowod }}</div>
+    <div id="grupa-{{ loop.index }}"></div>
     <div id="wizja-{{ loop.index }}">
       <div class="szkielet">
         <span class="kolo"></span> Gemini ogląda zdjęcie…

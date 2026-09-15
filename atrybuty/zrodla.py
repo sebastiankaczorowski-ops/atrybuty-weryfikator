@@ -527,8 +527,8 @@ def podglad(con: sqlite3.Connection, zid: int, katalog_danych: Path, ile: int = 
 def _nasze_klucze(con: sqlite3.Connection) -> set[str]:
     """Wszystkie kody, jakie da się wyciągnąć z nazw i id naszych produktów."""
     out: set[str] = set()
-    for r in con.execute("SELECT id, nazwa FROM produkty"):
-        out |= klucze_produktu(r["nazwa"], r["id"])
+    for r in con.execute("SELECT id, nazwa, kody FROM produkty"):
+        out |= klucze_produktu(r["nazwa"], r["id"], json.loads(r["kody"] or "{}"))
     return out
 
 
@@ -537,9 +537,17 @@ def _nasze_klucze(con: sqlite3.Connection) -> set[str]:
 RE_KOD = re.compile(r"\b[A-Z0-9][A-Z0-9/-]{3,}\b")
 
 
-def klucze_produktu(nazwa: str, pid: str) -> set[str]:
-    """Kandydaci na klucz dopasowania: kody z nazwy produktu oraz jego id."""
+def klucze_produktu(nazwa: str, pid: str, kody: dict | None = None) -> set[str]:
+    """Kandydaci na klucz dopasowania.
+
+    Od eksportu z 15.09 mamy wprost `kod producenta`, `kod produktu` i EAN —
+    i to one dają pewne dopasowanie. Kody wyłuskane z nazwy zostają jako
+    zapas dla starszych plików.
+    """
     out = {norm(pid)}
+    for wartosc in (kody or {}).values():
+        if wartosc and len(str(wartosc).strip()) >= 3:
+            out.add(norm(str(wartosc)))
     for kod in RE_KOD.findall((nazwa or "").upper()):
         if any(c.isdigit() for c in kod):
             out.add(norm(kod))
@@ -595,7 +603,7 @@ def dopasuj(con: sqlite3.Connection) -> dict[str, dict]:
             continue
 
         produkty = [dict(r) for r in con.execute(
-            "SELECT id, nazwa, producent, kolekcja FROM produkty"
+            "SELECT id, nazwa, producent, kolekcja, kody FROM produkty"
             + (" WHERE producent = ?" if z["producent"] else ""),
             (z["producent"],) if z["producent"] else ())]
 
@@ -624,7 +632,7 @@ def _dopasuj_po_kodzie(z: dict, pozycje: list[dict], produkty: list[dict],
     for r in produkty:
         if r["id"] in out:
             continue
-        for k in klucze_produktu(r["nazwa"], r["id"]):
+        for k in klucze_produktu(r["nazwa"], r["id"], json.loads(r.get("kody") or "{}")):
             if k in indeks:
                 out[r["id"]] = _opis(z, indeks[k]["dane"], "kod", indeks[k]["nazwa"])
                 break

@@ -132,6 +132,30 @@ def czlonkowie_grupy(con: sqlite3.Connection, przebieg: int, grupa: str) -> list
     return [dict(r) for r in con.execute(q, {"przebieg": przebieg, "grupa": grupa})]
 
 
+def podglad_grupy(con: sqlite3.Connection, przebieg: int, grupa: str,
+                  limit: int = 200) -> list[dict]:
+    """Wszystkie produkty z tym samym problemem — do podglądu na jeden klik.
+
+    W kolejce widać tylko reprezentanta grupy i licznik „×N identycznych".
+    Zanim ktoś rozstrzygnie całą grupę jednym kliknięciem, chce zobaczyć, co
+    dokładnie w niej siedzi — bo grupa łączy po (reguła, atrybut, wartość),
+    a nie po wyglądzie mebla i czasem wpada do niej produkt z innej bajki.
+    """
+    q = (BAZA_SQL + " AND f.grupa = :grupa AND d.status IS NULL"
+         " ORDER BY p.producent, p.nazwa LIMIT :limit")
+    return [dict(r) for r in con.execute(
+        q, {"przebieg": przebieg, "grupa": grupa, "limit": limit})]
+
+
+def policz_grupe(con: sqlite3.Connection, przebieg: int, grupa: str) -> int:
+    """Ile otwartych findingów w grupie — bo podgląd pokazuje najwyżej `limit`."""
+    q = ("SELECT COUNT(*) FROM findingi f "
+         "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
+         "AND d.hasz_starej=f.hasz_starej "
+         "WHERE f.przebieg_id=:przebieg AND f.grupa=:grupa AND d.status IS NULL")
+    return int(con.execute(q, {"przebieg": przebieg, "grupa": grupa}).fetchone()[0])
+
+
 @dataclass
 class Slowniki:
     kategorie: list[tuple[str, int]] = field(default_factory=list)

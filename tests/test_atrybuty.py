@@ -712,3 +712,67 @@ def test_dopasowanie_po_nazwie_ma_nizsza_pewnosc():
     from atrybuty import zrodla
     assert zrodla._pewnosc({"sposob": "kod"}, 0.82) == 0.82
     assert zrodla._pewnosc({"sposob": "nazwa"}, 0.82) < 0.82
+
+
+# --- podgląd grupy „te same problemy" -------------------------------------
+
+def _klient_z_grupa(tmp_path, monkeypatch):
+    """Trzy produkty z tym samym findingiem — jeden klucz grupy."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+
+    baza = tmp_path / "g.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    import atrybuty.app as app_mod
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+
+    con = db.polacz(baza)
+    wizja.przygotuj_baze(con)
+    produkty, findingi = [], []
+    for i in (1, 2, 3):
+        produkty.append(Produkt(
+            id=str(i), nazwa=f"Komoda {i}", producent="BRW", kolekcja="K",
+            zdjecie="", styl="", kategoria="komoda",
+            atrybuty={"Materiał": "plyta"}))
+        findingi.append(Finding(str(i), "Materiał", "L1-SLOWNIK", "L1", "srednia",
+                                0.9, "plyta", "Płyta meblowa", "poza słownikiem",
+                                grupa="L1-SLOWNIK|Materiał|plyta"))
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    con.close()
+
+    from fastapi.testclient import TestClient
+    return TestClient(app_mod.app)
+
+
+def test_podglad_grupy_pokazuje_pozostale_produkty(tmp_path, monkeypatch):
+    klient = _klient_z_grupa(tmp_path, monkeypatch)
+    odp = klient.get("/grupa", params={"grupa": "L1-SLOWNIK|Materiał|plyta", "nr": "1"})
+    assert odp.status_code == 200
+    for i in (1, 2, 3):
+        assert f"Komoda {i}" in odp.text
+    assert "3</b> otwartych" in odp.text
+
+
+def test_podglad_grupy_pomija_rozstrzygniete(tmp_path, monkeypatch):
+    from atrybuty import db
+    import atrybuty.app as app_mod
+
+    klient = _klient_z_grupa(tmp_path, monkeypatch)
+    con = db.polacz(app_mod.BAZA)
+    db.zapisz_decyzje(con, "2", "Materiał", "plyta", "falszywy_alarm", None, None)
+    con.close()
+
+    odp = klient.get("/grupa", params={"grupa": "L1-SLOWNIK|Materiał|plyta"})
+    assert "Komoda 2" not in odp.text and "Komoda 3" in odp.text
+
+
+def test_zwiniecie_grupy_zwraca_pusto(tmp_path, monkeypatch):
+    klient = _klient_z_grupa(tmp_path, monkeypatch)
+    assert klient.get("/grupa", params={"grupa": ""}).text == ""
+
+
+def test_kolejka_linkuje_do_podgladu_grupy(tmp_path, monkeypatch):
+    klient = _klient_z_grupa(tmp_path, monkeypatch)
+    odp = klient.get("/anomalie")
+    assert "identycznych" in odp.text and "hx-get=\"/grupa?grupa=" in odp.text
