@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from . import (config, db, eksport, importer, kategorie, reguly as reguly_mod,
-               wizja, zapytania)
+               wizja, zapytania, zrodla as zrodla_mod)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
 from .pipeline import BAZA
 
@@ -35,7 +35,8 @@ szablony.env.globals["link_panelu"] = config.link_produktu
 
 def _con():
     con = db.polacz(BAZA)
-    wizja.przygotuj_baze(con)   # tabele werdyktów istnieją też przed pierwszym L3
+    wizja.przygotuj_baze(con)       # tabele werdyktów istnieją też przed pierwszym L3
+    zrodla_mod.przygotuj_baze(con)  # to samo dla źródeł producenckich
     return con
 
 
@@ -47,7 +48,7 @@ def _przebieg(con) -> int:
 @app.get("/", response_class=HTMLResponse)
 def start():
     """Pusta baza = pierwsze uruchomienie. Wtedy sensowny start to import,
-    a nie kolejka, w ktorej nic nie ma."""
+    a nie kolejka, w której nic nie ma."""
     con = _con()
     jest_przebieg = bool(db.ostatni_przebieg(con))
     con.close()
@@ -137,6 +138,149 @@ def produkt(request: Request, pid: str):
     return szablony.TemplateResponse(request, "produkt.html", {
         "request": request, "p": p, "findingi": findingi,
         "nazwy_kat": kategorie.nazwy_kategorii()})
+
+
+@app.get("/zrodla", response_class=HTMLResponse)
+def strona_zrodel(request: Request, komunikat: str = "", blad: str = ""):
+    con = _con()
+    producenci = [r[0] for r in con.execute(
+        "SELECT DISTINCT producent FROM produkty WHERE producent<>'' ORDER BY 1")]
+    kontekst = {
+        "request": request,
+        "zrodla": zrodla_mod.lista_zrodel(con),
+        "stat": zrodla_mod.statystyki(con),
+        "producenci": producenci,
+        "pola_docelowe": zrodla_mod.POLA_DOCELOWE,
+        "podglad": None, "wybrane": None,
+        "raport": zrodla_mod.raport_dopasowania(con),
+        "komunikat": komunikat, "blad": bool(blad),
+    }
+    con.close()
+    return szablony.TemplateResponse(request, "zrodla.html", kontekst)
+
+
+@app.get("/zrodla/{zid}", response_class=HTMLResponse)
+def podglad_zrodla(request: Request, zid: int):
+    """Pobiera feed i pokazuje, co w nim jest — bez zapisywania pozycji."""
+    con = _con()
+    wybrane = zrodla_mod.zrodlo(con, zid)
+    podglad = None
+    komunikat, blad = "", False
+    if not wybrane:
+        komunikat, blad = "Nie ma takiego źródła.", True
+    else:
+        try:
+            podglad = zrodla_mod.podglad(con, zid, importer.KATALOG_DANYCH)
+        except zrodla_mod.BladZrodla as e:
+            komunikat, blad = f"Nie udało się odczytać źródła: {e}", True
+        except Exception as e:                               # noqa: BLE001
+            komunikat, blad = f"Nie udało się odczytać źródła: {e}", True
+
+    producenci = [r[0] for r in con.execute(
+        "SELECT DISTINCT producent FROM produkty WHERE producent<>'' ORDER BY 1")]
+    kontekst = {
+        "request": request,
+        "zrodla": zrodla_mod.lista_zrodel(con),
+        "stat": zrodla_mod.statystyki(con),
+        "producenci": producenci,
+        "pola_docelowe": zrodla_mod.POLA_DOCELOWE,
+        "podglad": podglad, "wybrane": wybrane,
+        "raport": zrodla_mod.raport_dopasowania(con),
+        "komunikat": komunikat, "blad": blad,
+    }
+    con.close()
+    return szablony.TemplateResponse(request, "zrodla.html", kontekst)
+
+
+def _wroc_zrodla(blad: str | None, ok: str, zid: int | None = None) -> RedirectResponse:
+    from urllib.parse import urlencode
+    baza = f"/zrodla/{zid}" if zid else "/zrodla"
+    q = urlencode({"komunikat": blad or ok, "blad": "1" if blad else ""})
+    return RedirectResponse(f"{baza}?{q}", status_code=303)
+
+
+@app.post("/zrodla/dodaj")
+async def dodaj_zrodlo(nazwa: str = Form(...), producent: str = Form(""),
+                       url: str = Form(""), plik: UploadFile | None = File(None)):
+    nazwa_pliku = ""
+    if plik is not None and plik.filename:
+        zapisany = importer.zapisz_plik(plik.filename, await plik.read())
+        nazwa_pliku = zapisany.name
+    if not url.strip() and not nazwa_pliku:
+        return _wroc_zrodla("Podaj URL feedu albo wgraj plik.", "")
+
+    con = _con()
+    zid = zrodla_mod.dodaj_zrodlo(con, nazwa, producent, url, nazwa_pliku)
+    con.close()
+    return _wroc_zrodla(None, f"Dodano źródło „{nazwa}”. Podejrzyj je, żeby ustawić mapowanie.", zid)
+
+
+@app.post("/zrodla/{zid}/mapowanie")
+async def zapisz_mapowanie(request: Request, zid: int):
+    """Mapowanie przychodzi jako pola pole__<nazwa docelowa>."""
+    formularz = await request.form()
+    mapowanie = {k[len("pole__"):]: v.strip()
+                 for k, v in formularz.items()
+                 if k.startswith("pole__") and isinstance(v, str) and v.strip()}
+    if not mapowanie.get("klucz"):
+        return _wroc_zrodla("Bez pola „klucz” nie ma jak połączyć feedu z produktami.", "", zid)
+
+    con = _con()
+    zrodla_mod.zapisz_mapowanie(con, zid, mapowanie)
+    try:
+        wynik = zrodla_mod.odswiez(con, zid, importer.KATALOG_DANYCH)
+        komunikat = (f"Zapisano mapowanie. Pobrano {wynik['zapisanych']} pozycji "
+                     f"z {wynik['rekordow']} rekordów. Przelicz dane na /import, "
+                     f"żeby powstały findingi L4.")
+        blad = None
+    except zrodla_mod.BladZrodla as e:
+        komunikat, blad = "", f"Mapowanie zapisane, ale pobranie się nie udało: {e}"
+    con.close()
+    return _wroc_zrodla(blad, komunikat, zid)
+
+
+@app.post("/zrodla/{zid}/odswiez")
+def odswiez_zrodlo(zid: int):
+    con = _con()
+    try:
+        wynik = zrodla_mod.odswiez(con, zid, importer.KATALOG_DANYCH)
+        if wynik["brak_klucza"]:
+            odp = _wroc_zrodla("Źródło nie ma ustawionego pola „klucz” — "
+                               "wejdź w podgląd i zmapuj pola.", "", zid)
+        else:
+            odp = _wroc_zrodla(None, f"Pobrano {wynik['zapisanych']} pozycji "
+                                     f"z {wynik['rekordow']} rekordów.")
+    except zrodla_mod.BladZrodla as e:
+        odp = _wroc_zrodla(f"Nie udało się pobrać: {e}", "")
+    except Exception as e:                                   # noqa: BLE001
+        odp = _wroc_zrodla(f"Nie udało się pobrać: {e}", "")
+    con.close()
+    return odp
+
+
+@app.post("/zrodla/{zid}/strategia")
+def ustaw_strategie(zid: int, strategia: str = Form(...)):
+    con = _con()
+    zrodla_mod.ustaw_strategie(con, zid, strategia)
+    con.close()
+    return _wroc_zrodla(None, "Strategia zapisana. Przelicz dane na /import, "
+                              "żeby findingi L4 powstały na nowo.", zid)
+
+
+@app.post("/zrodla/{zid}/przelacz")
+def przelacz_zrodlo(zid: int, aktywne: str = Form(...)):
+    con = _con()
+    zrodla_mod.przelacz_zrodlo(con, zid, aktywne == "1")
+    con.close()
+    return _wroc_zrodla(None, "Zmiana zapisze się w findingach przy następnym imporcie.")
+
+
+@app.post("/zrodla/{zid}/usun")
+def usun_zrodlo(zid: int):
+    con = _con()
+    zrodla_mod.usun_zrodlo(con, zid)
+    con.close()
+    return _wroc_zrodla(None, "Źródło usunięte wraz z pobranymi pozycjami.")
 
 
 @app.get("/import", response_class=HTMLResponse)

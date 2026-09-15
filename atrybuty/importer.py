@@ -16,7 +16,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-from . import config, db, detektory, kategorie, schema_gen
+from . import config, db, detektory, kategorie, schema_gen, zrodla
 from .model import PROG_DO_WIZJI, WIDOCZNE_NA_ZDJECIU
 from .pipeline import BAZA, wczytaj_csv
 
@@ -37,11 +37,15 @@ def zajety() -> bool:
     return bool(STAN["trwa"])
 
 
+# Rozszerzenia, które wolno wgrać: eksport sklepu (csv) i feedy producenckie.
+DOZWOLONE_ROZSZERZENIA = (".csv", ".xml", ".json", ".tsv", ".txt")
+
+
 def zapisz_plik(nazwa: str, zawartosc: bytes) -> Path:
     """Zapisuje wgrany plik obok pozostałych danych, ze stemplem czasu."""
     KATALOG_DANYCH.mkdir(parents=True, exist_ok=True)
-    bezpieczna = Path(nazwa).name.replace(" ", "_") or "products.csv"
-    if not bezpieczna.lower().endswith(".csv"):
+    bezpieczna = Path(nazwa).name.replace(" ", "_") or "plik.csv"
+    if not bezpieczna.lower().endswith(DOZWOLONE_ROZSZERZENIA):
         bezpieczna += ".csv"
     stempel = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     sciezka = KATALOG_DANYCH / f"{stempel}__{bezpieczna}"
@@ -77,9 +81,13 @@ def _przebieg(plik: Path, plik_kategorii: Path | None, regeneruj_schema: bool) -
         STAN["etap"] = "zapis do bazy"
         con = db.polacz(BAZA)
         przebieg = db.zapisz_przebieg(con, str(plik), produkty, findingi)
+        STAN["etap"] = "porównanie z feedami producentów"
+        l4 = zrodla.dopisz_findingi_l4(con, przebieg)
         con.close()
 
         STAN["wynik"] = _podsumowanie(przebieg, produkty, findingi)
+        STAN["wynik"]["l4"] = l4
+        STAN["wynik"]["findingow"] += l4
         STAN["etap"] = "gotowe"
     except Exception as e:                                   # noqa: BLE001
         STAN["blad"] = f"{e}"
@@ -97,7 +105,7 @@ def _podsumowanie(przebieg: int, produkty: list, findingi: list) -> dict:
     do_wizji = sum(1 for f in findingi
                    if f.pewnosc < PROG_DO_WIZJI and f.atrybut in WIDOCZNE_NA_ZDJECIU
                    and zdjecia.get(f.produkt_id))
-    zrodla = Counter(p.zrodlo_kategorii for p in produkty)
+    zrodla_kat = Counter(p.zrodlo_kategorii for p in produkty)
     return {
         "przebieg": przebieg,
         "produktow": len(produkty),
@@ -106,8 +114,8 @@ def _podsumowanie(przebieg: int, produkty: list, findingi: list) -> dict:
         "auto": auto,
         "do_wizji": do_wizji,
         "do_czlowieka": len(findingi) - auto - do_wizji,
-        "kategoria_ze_sklepu": zrodla.get("sklep", 0),
-        "kategoria_z_nazwy": zrodla.get("nazwa", 0),
+        "kategoria_ze_sklepu": zrodla_kat.get("sklep", 0),
+        "kategoria_z_nazwy": zrodla_kat.get("nazwa", 0),
         "nieprzypisane": sum(1 for p in produkty if p.kategoria == kategorie.NIEZNANA),
         "bez_danych": kompl.get("pusty", 0) + kompl.get("szczatkowy", 0),
         "ok": kompl.get("ok", 0),

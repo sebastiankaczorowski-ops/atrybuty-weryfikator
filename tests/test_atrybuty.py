@@ -563,3 +563,152 @@ def test_pusta_baza_prowadzi_do_importu(tmp_path, monkeypatch):
     for sciezka in ("/", "/anomalie"):
         odp = klient.get(sciezka, follow_redirects=False)
         assert odp.status_code in (303, 307) and odp.headers["location"] == "/import"
+
+
+# --- źródła producenckie (L4) ---------------------------------------------
+
+FEED_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<offers>
+  <offer id="26">
+    <name><![CDATA[Rimini RI01 Kredens]]></name>
+    <collection><![CDATA[Rimini]]></collection>
+    <sku><![CDATA[RI01]]></sku>
+    <attrs>
+      <attr name="Szerokość (cm)"><![CDATA[154]]></attr>
+      <attr name="Wysokość (cm)"><![CDATA[91]]></attr>
+      <attr name="Waga (kg)"><![CDATA[70]]></attr>
+    </attrs>
+    <imges><imge>a.jpg</imge><imge>b.jpg</imge></imges>
+  </offer>
+  <offer id="27">
+    <name><![CDATA[Rimini RI02 Regał]]></name>
+    <collection><![CDATA[Rimini]]></collection>
+    <sku><![CDATA[RI02]]></sku>
+    <attrs>
+      <attr name="Szerokość (cm)"><![CDATA[90]]></attr>
+      <attr name="Wysokość (cm)"><![CDATA[179]]></attr>
+      <attr name="Waga (kg)"><![CDATA[23]]></attr>
+    </attrs>
+  </offer>
+</offers>"""
+
+
+def test_rekord_to_najplytszy_powtarzajacy_sie_tag():
+    """W tym feedzie <attr> występuje częściej niż <offer>, ale produktem
+    jest <offer> — wybór „najczęstszego” dawał 10 126 atrybutów zamiast
+    560 produktów."""
+    from atrybuty import zrodla
+    rek, tag = zrodla.rekordy_xml(FEED_XML.encode())
+    assert tag == "offer" and len(rek) == 2
+
+
+def test_pary_nazwa_wartosc_staja_sie_polami():
+    """<attr name="Szerokość (cm)">154</attr> ma dać pole o tej nazwie,
+    a nie bezużyteczne attrs.attr[1]."""
+    from atrybuty import zrodla
+    rek, _ = zrodla.rekordy_xml(FEED_XML.encode())
+    assert rek[0]["attrs.attr:Szerokość (cm)"] == "154"
+    assert rek[0]["sku"] == "RI01"
+    assert rek[0]["imges.imge"] == "a.jpg" and rek[0]["imges.imge[2]"] == "b.jpg"
+
+
+def test_zgadywanie_mapowania_woli_sku_nad_id():
+    from atrybuty import zrodla
+    rek, _ = zrodla.rekordy_xml(FEED_XML.encode())
+    m = zrodla.zgadnij_mapowanie(zrodla.opisz_pola(rek))
+    assert m["klucz"] == "sku"
+    assert m["Szerokość"] == "attrs.attr:Szerokość (cm)"
+
+
+def test_nazwa_do_porownania_wycina_kod_i_kolekcje():
+    from atrybuty import zrodla
+    assert zrodla._nazwa_do_porownania("Rimini RI01 Kredens", "Rimini") == "kredens"
+    assert zrodla._nazwa_do_porownania("Kredens Rimini", "Rimini") == "kredens"
+
+
+def _zrodlo_testowe(tmp_path, monkeypatch, produkty):
+    from atrybuty import db, zrodla
+    plik = tmp_path / "feed.xml"
+    plik.write_text(FEED_XML, encoding="utf-8")
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    con.executemany(
+        "INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,atrybuty,liczby)"
+        " VALUES (?,?,?,?,'ok',?,?)", produkty)
+    con.commit()
+    zid = zrodla.dodaj_zrodlo(con, "Test feed", "Livin Hill", plik="feed.xml")
+    zrodla.zapisz_mapowanie(con, zid, {
+        "klucz": "sku", "nazwa": "name", "kolekcja": "collection",
+        "Szerokość": "attrs.attr:Szerokość (cm)", "Waga": "attrs.attr:Waga (kg)"})
+    zrodla.odswiez(con, zid, tmp_path)
+    return con
+
+
+def test_dopasowanie_po_nazwie_gdy_kod_nie_pasuje(tmp_path, monkeypatch):
+    """Nasze „Kredens Rimini” i feedowe „Rimini RI01 Kredens” to ten sam mebel,
+    choć nasza nazwa nie zawiera kodu producenta."""
+    from atrybuty import zrodla
+    con = _zrodlo_testowe(tmp_path, monkeypatch, [
+        ("1", "Kredens Rimini", "Livin Hill", "Rimini", '{"Szerokość":"140"}',
+         '{"Szerokość":140.0}')])
+    dop = zrodla.dopasuj(con)
+    assert dop["1"]["sposob"] == "nazwa"
+    assert dop["1"]["dane"]["Szerokość"] == "154"
+    con.close()
+
+
+def test_rozjazd_wymiaru_daje_finding(tmp_path, monkeypatch):
+    from atrybuty import zrodla
+    con = _zrodlo_testowe(tmp_path, monkeypatch, [
+        ("1", "Kredens Rimini", "Livin Hill", "Rimini", '{"Szerokość":"140"}',
+         '{"Szerokość":140.0}')])
+    con.execute("INSERT INTO przebiegi (id,plik,utworzono,liczba_produktow,"
+                "liczba_findingow) VALUES (1,'x','2026-09-15',1,0)")
+    con.commit()
+    assert zrodla.dopisz_findingi_l4(con, 1) >= 1
+    r = con.execute("SELECT * FROM findingi WHERE regula_id='L4-ROZJAZD'").fetchone()
+    assert r["proponowana_wartosc"] == "154" and r["stara_wartosc"] == "140"
+    # dowód musi pokazywać, z CZYM porównaliśmy — inaczej nie da się odróżnić
+    # błędu w danych od pomyłki dopasowania
+    assert "Rimini RI01 Kredens" in r["dowod"]
+    con.close()
+
+
+def test_zgodny_wymiar_nie_daje_findingu(tmp_path, monkeypatch):
+    from atrybuty import zrodla
+    con = _zrodlo_testowe(tmp_path, monkeypatch, [
+        ("1", "Kredens Rimini", "Livin Hill", "Rimini", '{"Szerokość":"154"}',
+         '{"Szerokość":154.0}')])
+    con.execute("INSERT INTO przebiegi (id,plik,utworzono,liczba_produktow,"
+                "liczba_findingow) VALUES (1,'x','2026-09-15',1,0)")
+    con.commit()
+    zrodla.dopisz_findingi_l4(con, 1)
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE atrybut='Szerokość'"
+                       ).fetchone()[0] == 0
+    con.close()
+
+
+def test_dwa_podobne_meble_zostaja_bez_dopasowania(tmp_path, monkeypatch):
+    """Gdy w kolekcji są dwie pozycje pasujące tak samo dobrze, nie zgadujemy."""
+    from atrybuty import db, zrodla
+    feed = FEED_XML.replace("Rimini RI02 Regał", "Rimini RI02 Kredens")
+    plik = tmp_path / "feed.xml"
+    plik.write_text(feed, encoding="utf-8")
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    con.execute("INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,"
+                "atrybuty,liczby) VALUES ('1','Kredens Rimini','Livin Hill','Rimini',"
+                "'ok','{}','{}')")
+    con.commit()
+    zid = zrodla.dodaj_zrodlo(con, "Test", "Livin Hill", plik="feed.xml")
+    zrodla.zapisz_mapowanie(con, zid, {"klucz": "sku", "nazwa": "name",
+                                       "kolekcja": "collection"})
+    zrodla.odswiez(con, zid, tmp_path)
+    assert "1" not in zrodla.dopasuj(con)
+    con.close()
+
+
+def test_dopasowanie_po_nazwie_ma_nizsza_pewnosc():
+    from atrybuty import zrodla
+    assert zrodla._pewnosc({"sposob": "kod"}, 0.82) == 0.82
+    assert zrodla._pewnosc({"sposob": "nazwa"}, 0.82) < 0.82

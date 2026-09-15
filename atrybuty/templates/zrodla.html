@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Źródła producenckie — kontrola atrybutów OXM</title>
+<script src="/static/htmx.min.js"></script>
+<style>
+:root{
+  --bg:#f6f8f7; --surface:#fff; --surface-2:#edf1ef;
+  --ink:#15201d; --ink-2:#3c4c47; --muted:#6b7c76;
+  --line:#d9e1dd; --line-strong:#b9c7c1;
+  --accent:#0e5e52; --accent-soft:#d7e8e3;
+  --crit:#9a2b2b; --crit-soft:#f5dedc;
+  --warn:#8a5a0b; --warn-soft:#f6e7cc;
+  --ok:#3a6b2e; --ok-soft:#dfebd6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9em}
+a{color:var(--accent)}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px;
+       display:flex;flex-wrap:wrap;gap:16px;align-items:baseline}
+header h1{font-size:16px;margin:0;font-weight:600}
+header .zrodlo{color:var(--muted);font-size:12.5px}
+header nav{margin-left:auto;display:flex;gap:14px;font-size:13.5px}
+main{padding:18px 20px 70px;max-width:1240px;margin:0 auto;display:flex;
+     flex-direction:column;gap:24px}
+h2{font-size:15px;margin:0 0 3px;font-weight:600}
+.pod{color:var(--muted);font-size:13px;margin:0 0 12px;max-width:84ch}
+section.karta{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+              padding:16px 18px}
+.komunikat{padding:9px 13px;border-radius:3px;font-size:13.5px}
+.komunikat.ok{background:var(--ok-soft);color:var(--ok)}
+.komunikat.zle{background:var(--crit-soft);color:var(--crit)}
+.pola{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.pole{display:flex;flex-direction:column;gap:4px}
+.pole label{font-size:11.5px;color:var(--muted)}
+input[type=text],input[type=url],input[type=file],select{font:inherit;padding:6px 8px;
+  border:1px solid var(--line-strong);border-radius:2px;background:var(--bg);color:var(--ink);
+  min-width:190px}
+button{font:inherit;padding:6px 13px;border:1px solid var(--line-strong);border-radius:2px;
+       background:var(--bg);color:var(--ink-2);cursor:pointer}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.mini{padding:3px 9px;font-size:12px}
+form.inline{display:inline}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+         background:var(--surface-2);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.znacznik{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.znacznik.ok{background:var(--ok-soft);color:var(--ok)}
+.znacznik.zle{background:var(--crit-soft);color:var(--crit)}
+.znacznik.nieaktywne{background:var(--surface-2);color:var(--muted)}
+.mapowanie{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.mapowanie .wiersz{display:flex;flex-direction:column;gap:3px}
+.mapowanie label{font-size:12px;color:var(--ink-2);font-weight:600}
+.mapowanie small{color:var(--muted);font-size:11.5px}
+.przyklady{color:var(--muted);font-size:12px}
+.kolo{width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;
+      border-radius:50%;display:inline-block;animation:obrot .7s linear infinite}
+@keyframes obrot{to{transform:rotate(360deg)}}
+.czekam{display:none}
+.htmx-request .czekam{display:inline-flex;align-items:center;gap:6px}
+.htmx-request .etykieta{display:none}
+@media (prefers-reduced-motion: reduce){ .kolo{animation:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Źródła producenckie</h1>
+  <span class="zrodlo">{{ stat.zrodel }} źródeł · {{ stat.pozycji }} pozycji ·
+    {{ raport.dopasowanych }} produktów dopasowanych</span>
+  <nav>
+    <a href="/anomalie">kolejka weryfikacji</a>
+    <a href="/braki">braki danych</a>
+    <a href="/reguly">reguły</a>
+    <a href="/import">wgraj plik</a>
+  </nav>
+</header>
+
+<main>
+
+{% if komunikat %}<div class="komunikat {{ 'zle' if blad else 'ok' }}">{{ komunikat }}</div>{% endif %}
+
+<section class="karta">
+  <h2>Po co to jest</h2>
+  <p class="pod">Feed producenta to <b>niezależne źródło prawdy</b> dla rzeczy,
+  których nie widać na zdjęciu — wagi, wymiarów, udźwigu. Po dopasowaniu pozycji
+  do naszych produktów system porównuje wartości i zgłasza rozjazdy jako findingi
+  <code>L4-ROZJAZD</code>, a braki po naszej stronie jako <code>L4-UZUPELNIA</code>
+  z gotową propozycją.</p>
+  <p class="pod" style="margin:0">Każdy feed ma inny format, więc nie zgaduję
+  struktury: po dodaniu źródła kliknij <b>Podejrzyj</b> — narzędzie pobierze plik,
+  wykryje powtarzający się rekord i pokaże dostępne pola z przykładami. Wtedy
+  wskazujesz, które pole jest kodem produktu, a które szerokością.</p>
+</section>
+
+<section class="karta">
+  <h2>Dodaj źródło</h2>
+  <form method="post" action="/zrodla/dodaj" enctype="multipart/form-data">
+    <div class="pola">
+      <div class="pole"><label>Nazwa</label>
+        <input type="text" name="nazwa" placeholder="Livinhill — feed produktowy" required></div>
+      <div class="pole"><label>Producent w naszej bazie (zawęża dopasowanie)</label>
+        <select name="producent">
+          <option value="">— dowolny —</option>
+          {% for p in producenci %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+        </select></div>
+      <div class="pole"><label>URL feedu</label>
+        <input type="url" name="url" placeholder="https://..." style="min-width:320px"></div>
+      <div class="pole"><label>…albo plik (XML / CSV / JSON)</label>
+        <input type="file" name="plik" accept=".xml,.csv,.json,text/xml,text/csv,application/json"></div>
+      <button class="p" type="submit">Dodaj</button>
+    </div>
+  </form>
+</section>
+
+{% if zrodla %}
+<section class="karta">
+  <h2>Zarejestrowane źródła</h2>
+  <table>
+    <thead>
+      <tr><th>Źródło</th><th>Producent</th><th>Pozycji</th><th>Ostatnie pobranie</th><th>Akcje</th></tr>
+    </thead>
+    <tbody>
+    {% for z in zrodla %}
+      <tr>
+        <td>
+          <b>{{ z.nazwa }}</b>
+          {% if not z.aktywne %}<span class="znacznik nieaktywne">wyłączone</span>{% endif %}
+          {% if z.blad %}<span class="znacznik zle">błąd</span>{% endif %}
+          {% if z.mapowanie.get('klucz') %}<span class="znacznik ok">zmapowane</span>{% endif %}
+          <div class="przyklady">
+            {% if z.url %}<code>{{ z.url[:70] }}{{ '…' if z.url|length > 70 }}</code>
+            {% else %}<code>{{ z.plik }}</code>{% endif %}
+            {% if z.format %} · {{ z.format }}{% if z.sciezka_rekordu %} &lt;{{ z.sciezka_rekordu }}&gt;{% endif %}{% endif %}
+          </div>
+          {% if z.blad %}<div class="przyklady" style="color:var(--crit)">{{ z.blad }}</div>{% endif %}
+        </td>
+        <td>{{ z.producent or '—' }}
+          <form method="post" action="/zrodla/{{ z.id }}/strategia" style="margin-top:4px">
+            <select name="strategia" onchange="this.form.submit()" style="min-width:140px">
+              <option value="auto" {{ 'selected' if (z.strategia or 'auto')=='auto' }}>dopasuj: auto</option>
+              <option value="klucz" {{ 'selected' if z.strategia=='klucz' }}>tylko po kodzie</option>
+              <option value="nazwa" {{ 'selected' if z.strategia=='nazwa' }}>tylko po nazwie</option>
+            </select>
+          </form>
+        </td>
+        <td class="n">{{ z.liczba_pozycji }}</td>
+        <td>{{ (z.ostatnie_pobranie or '')[:16].replace('T',' ') or '—' }}</td>
+        <td>
+          <a href="/zrodla/{{ z.id }}"><button class="mini" type="button">Podejrzyj i zmapuj</button></a>
+          <form class="inline" method="post" action="/zrodla/{{ z.id }}/odswiez">
+            <button class="mini" type="submit">Odśwież</button></form>
+          <form class="inline" method="post" action="/zrodla/{{ z.id }}/przelacz">
+            <input type="hidden" name="aktywne" value="{{ '0' if z.aktywne else '1' }}">
+            <button class="mini" type="submit">{{ 'Wyłącz' if z.aktywne else 'Włącz' }}</button></form>
+          <form class="inline" method="post" action="/zrodla/{{ z.id }}/usun"
+                onsubmit="return confirm('Usunąć źródło {{ z.nazwa }} wraz z pobranymi pozycjami?')">
+            <button class="mini" type="submit">Usuń</button></form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% if raport.dopasowanych %}
+  <p class="pod" style="margin-top:12px"><b>Dopasowanie:</b>
+    {{ raport.dopasowanych }} produktów —
+    {{ raport.wg_sposobu.get('kod', 0) }} po kodzie producenta,
+    {{ raport.wg_sposobu.get('nazwa', 0) }} po nazwie.
+    Dopasowanie po nazwie dostaje niższą pewność i zawsze pokazuje w dowodzie,
+    z czym porównało — bo wątpliwy bywa nie wymiar, tylko to, czy to ten sam mebel.
+    Produkty, dla których pasowały dwie pozycje naraz, zostają nietknięte.</p>
+  {% endif %}
+  <p class="pod" style="margin-top:12px">Findingi L4 powstają przy imporcie
+  eksportu ze sklepu. Po zmianie mapowania albo odświeżeniu źródła przelicz
+  dane na <a href="/import">/import</a>, żeby porównanie objęło nowe wartości.</p>
+</section>
+{% endif %}
+
+{% if podglad %}
+<section class="karta">
+  <h2>{{ wybrane.nazwa }} — co jest w feedzie</h2>
+  <p class="pod">Format: <b>{{ podglad.format }}</b>{% if podglad.tag %},
+    rekord: <code>&lt;{{ podglad.tag }}&gt;</code>{% endif %} ·
+    znalezionych rekordów: <b>{{ podglad.rekordow }}</b></p>
+
+  <form method="post" action="/zrodla/{{ wybrane.id }}/mapowanie">
+    <div class="mapowanie">
+      {% for docelowe, opis in pola_docelowe.items() %}
+      <div class="wiersz">
+        <label>{{ docelowe }}</label>
+        <small>{{ opis }}</small>
+        <select name="pole__{{ docelowe }}">
+          <option value="">— nie mapuj —</option>
+          {% for p in podglad.pola %}
+            <option value="{{ p.nazwa }}"
+              {{ 'selected' if podglad.mapowanie.get(docelowe) == p.nazwa }}>
+              {{ p.nazwa }} ({{ '%.0f'|format(p.wypelnienie * 100) }}%{{ ', liczba' if p.wyglada_na_liczbe }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+    <p style="margin-top:14px">
+      <button class="p" type="submit">Zapisz mapowanie i pobierz pozycje</button>
+    </p>
+  </form>
+
+  <h2 style="margin-top:18px">Pola wykryte w feedzie</h2>
+  <p class="pod">Procent mówi, w ilu rekordach pole jest wypełnione — pole
+  wypełnione u 12% produktów nie nadaje się na klucz dopasowania.</p>
+  <table>
+    <thead><tr><th>Pole</th><th>Wypełnienie</th><th>Przykładowe wartości</th></tr></thead>
+    <tbody>
+      {% for p in podglad.pola[:60] %}
+      <tr>
+        <td><code>{{ p.nazwa }}</code>{% if p.wyglada_na_liczbe %}
+          <span class="znacznik ok">liczba</span>{% endif %}</td>
+        <td class="n">{{ '%.0f'|format(p.wypelnienie * 100) }}%</td>
+        <td class="przyklady">{{ p.przyklady | join(' · ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+</main>
+</body>
+</html>

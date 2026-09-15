@@ -41,6 +41,7 @@ Podstrony:
 | `/braki` | produkty bez danych — do ponownego zaciągnięcia ze źródła, z eksportem CSV |
 | `/reguly` | katalog reguł ze skutecznością — podgląd, dodawanie, usuwanie, wyłączanie |
 | `/import` | wgranie nowego eksportu z przeglądarki, postęp na żywo, historia przebiegów |
+| `/zrodla` | feedy producentów: rejestracja, wykrycie pól, mapowanie, dopasowanie do produktów |
 
 Wdrożenie na Mac Mini (Docker + GitHub): **[WDROZENIE.md](WDROZENIE.md)**.
 
@@ -84,6 +85,7 @@ atrybuty/
   reguly.py       katalog reguł + operacje z podstrony /reguly
   importer.py     wgranie pliku z przeglądarki, przebieg w tle
   wizja.py        warstwa L3: pytania, klient Gemini, cache, kalibracja
+  zrodla.py       warstwa L4: feedy producentów, mapowanie, dopasowanie
   eksport.py      plik poprawek + plik cofający
 ```
 
@@ -105,8 +107,8 @@ wymuszony `response_schema` z obowiązkową opcją `nie_widac`, zdjęcie skalowa
 do 512 px przed wysłaniem, cache po haszu (zdjęcie + pytanie + wartość + model).
 Flash do wolumenu, Pro do spornych. Szczegóły niżej.
 
-**L4 — źródła zewnętrzne (do zrobienia).** Feedy i katalogi producentów jako
-referencja wymiarów i wag.
+**L4 — źródła zewnętrzne.** Feedy producentów jako referencja wymiarów i wag —
+czyli tego, czego nie widać na zdjęciu. Szczegóły niżej.
 
 ## Bramka kosztowa
 
@@ -169,6 +171,37 @@ Werdykty widać też w filtrze „werdykt Gemini" i na kaflu z niezgodnościami.
 Koszt liczony jest na bieżąco z `usageMetadata` i pokazywany po przebiegu.
 Cache sprawia, że kolejne wgranie eksportu nie płaci za niezmienione produkty.
 
+## Feedy producentów (L4)
+
+Każdy feed ma inny format, więc narzędzie nie zgaduje struktury: pobiera plik,
+**samo wykrywa powtarzający się rekord** (najpłytszy, nie najczęstszy — w feedzie
+Livin Hill `<attr>` występuje 10 126 razy wewnątrz 560 `<offer>`), rozwija pary
+`<attr name="Szerokość (cm)">154</attr>` w nazwane pola i pokazuje wszystko
+z procentem wypełnienia i przykładami. Mapowanie ustawiasz raz, w UI.
+
+Dopasowanie do naszych produktów ma dwie strategie:
+
+| strategia | kiedy działa | pewność findingu |
+|---|---|---|
+| po kodzie | nasze nazwy zawierają SKU producenta | pełna |
+| po nazwie | „Rimini RI01 Kredens” vs nasze „Kredens Rimini” | obniżona |
+
+Dopasowanie po nazwie jest zawężone do producenta i kolekcji, wymaga progu
+podobieństwa **i** marginesu nad drugim kandydatem — gdy w kolekcji są dwie
+równie pasujące pozycje (dwie różne komody Rimini), produkt zostaje **bez
+dopasowania**, zamiast trafić losowo.
+
+Każdy finding L4 pokazuje w dowodzie, z czym dokładnie porównano
+(`Livin Hill — feed → „Rimini RI01 Kredens"`). Bez tego nie da się odróżnić
+błędu w naszych danych od pomyłki samego dopasowania — a przy dopasowaniu po
+nazwie to drugie zdarza się realnie.
+
+Wynik na feedzie Livin Hill (560 pozycji, 527 naszych produktów tego
+producenta): 73 dopasowania, z tego 4 po kodzie i 69 po nazwie → 44 findingi.
+Niskie pokrycie bierze się stąd, że nasze nazwy nie zawierają SKU producenta —
+**gdyby dało się dociągnąć SKU do eksportu ze sklepu, ta warstwa zaczęłaby
+działać na pełnej skali i z pełną pewnością.**
+
 ## Produkty bez danych
 
 Produkt z zerem albo dwoma atrybutami nie jest „produktem z błędami" — nie da
@@ -208,7 +241,8 @@ warto trzymać w commicie i po regeneracji sprawdzić diff.
 ## Do zrobienia
 
 - [x] L3: integracja z Gemini (`wizja.py`) — zostaje kalibracja na próbce
-- [ ] L4: feedy producentów
+- [x] L4: feedy producentów (`zrodla.py`)
+- [ ] SKU producenta w eksporcie ze sklepu — odblokowuje pewne dopasowanie L4
 - [ ] potwierdzenie formatu pliku importu w panelu sklepu
 - [ ] przeniesienie na Mac Mini (Docker + deploy z GitHuba, jak `terminowosc`)
 - [ ] wskaźnik jakości danych per producent

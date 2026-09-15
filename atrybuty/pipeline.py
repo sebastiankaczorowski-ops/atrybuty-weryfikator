@@ -14,7 +14,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from . import config, db, detektory, kategorie, normalizacja, schema_gen, wizja
+from . import config, db, detektory, kategorie, normalizacja, schema_gen, wizja, zrodla
 from .model import Finding, Produkt, oszacuj_kompletnosc
 
 csv.field_size_limit(10_000_000)
@@ -130,8 +130,12 @@ def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
     BAZA.parent.mkdir(parents=True, exist_ok=True)
     con = db.polacz(BAZA)
     przebieg = db.zapisz_przebieg(con, str(sciezka), produkty, findingi)
+    # L4 dopiero teraz: dopasowanie do feedów potrzebuje produktów w bazie
+    l4 = zrodla.dopisz_findingi_l4(con, przebieg)
     con.close()
     print(f"Zapisano przebieg #{przebieg} do {BAZA}")
+    if l4:
+        print(f"Findingów z feedów producentów (L4): {l4}")
     _podsumowanie(produkty, findingi)
 
 
@@ -143,8 +147,8 @@ def _podsumowanie(produkty: list[Produkt], findingi: list[Finding]) -> None:
         print(f"  {n:6d}  {kategorie.nazwy_kategorii().get(kat, kat)}")
     nieznane = sum(1 for p in produkty if p.kategoria == "nieznana")
     print(f"  nieprzypisane: {nieznane} ({nieznane / max(1, len(produkty)):.1%})")
-    zrodla = Counter(p.zrodlo_kategorii for p in produkty)
-    print("  źródło kategorii: " + ", ".join(f"{k}={v}" for k, v in zrodla.most_common()))
+    zrodla_kat = Counter(p.zrodlo_kategorii for p in produkty)
+    print("  źródło kategorii: " + ", ".join(f"{k}={v}" for k, v in zrodla_kat.most_common()))
 
     kompl = Counter(p.kompletnosc for p in produkty)
     print("\nKompletność danych:")
