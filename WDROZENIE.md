@@ -22,24 +22,32 @@ docker compose up -d --build
 docker compose logs -f atrybuty
 ```
 
-Aplikacja stoi na `http://127.0.0.1:8084`. Pierwszy ekran to `/import` —
-wgraj tam eksport ze sklepu i poczekaj kilkanaście sekund na przeliczenie.
+### Dostęp po LAN
 
-### Dostęp z zewnątrz (Tailscale)
+Kontener nasłuchuje na wszystkich interfejsach, więc z dowolnego komputera
+w sieci biurowej wchodzi się po adresie IP Mac Mini:
 
-Kontener słucha tylko na localhost hosta, więc na zewnątrz wystawiamy go tak
-samo jak dashboard:
-
-```bash
-tailscale serve --bg --https=8443 8084
+```
+http://<IP-Mac-Mini>:8084
 ```
 
-Port 8443, bo 443 zajmuje `manager-dashboard`. Adres:
-`https://mac-mini-sebastian.tail45922d.ts.net:8443`
+IP sprawdzisz na Mac Mini: `ipconfig getifaddr en0` (Wi-Fi) albo
+`ipconfig getifaddr en1` (Ethernet). Warto zarezerwować je na stałe
+w routerze, żeby adres nie zmieniał się po restarcie.
 
-Jeśli narzędzie ma być dostępne dla zespołu po LAN, zamiast tego zmień
-mapowanie portu w `docker-compose.yml` na `"8084:8084"` — wtedy wchodzi się po
-adresie IP Mac Mini w sieci biurowej.
+Pierwszy ekran to `/import` — wgraj tam eksport ze sklepu, zaznacz
+„przelicz zakresy per kategoria" (świeża instalacja nie ma jeszcze policzonych
+progów) i poczekaj kilkanaście sekund.
+
+**Aplikacja nie ma logowania.** Każdy w sieci biurowej może zatwierdzać
+poprawki i wywoływać płatne zapytania do Gemini przyciskiem „Sprawdź
+zdjęciem". Dla narzędzia wewnętrznego w biurze to zwykle w porządku, ale
+warto o tym wiedzieć — dołożenie hasła (jak `DASHBOARD_PASSWORD`
+w manager-dashboard) to kilkanaście linii, jeśli okaże się potrzebne.
+
+Gdybyś chciał zamknąć dostęp do samego Mac Mini i wystawiać przez Tailscale,
+zmień mapowanie portu w `docker-compose.yml` na `"127.0.0.1:8084:8084"` i uruchom
+`tailscale serve --bg --https=8443 8084` (8443, bo 443 zajmuje dashboard).
 
 ## Aktualizacja
 

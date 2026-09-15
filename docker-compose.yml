@@ -5,9 +5,10 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      # Tylko localhost hosta — na zewnątrz wystawiamy przez Tailscale
-      # (tailscale serve --bg 8084), tak jak manager-dashboard na 8082.
-      - "127.0.0.1:8084:8084"
+      # Widoczne w sieci biurowej: http://<IP-Mac-Mini>:8084
+      # Gdybyś chciał zamknąć to do samego hosta (i wystawiać przez Tailscale),
+      # zmień na "127.0.0.1:8084:8084".
+      - "8084:8084"
     volumes:
       # Reguły i słowniki: edytowane z UI (/reguly) i wersjonowane w repo,
       # więc muszą przeżyć restart kontenera i być widoczne na hoście.
