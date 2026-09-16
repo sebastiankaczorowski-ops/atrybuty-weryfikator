@@ -611,6 +611,7 @@ def strona_partii(request: Request, komunikat: str = "", blad: str = ""):
         "plan": plan,
         "wzorzec": panel_format.wczytaj_wzorzec(),
         "slownik_ile": sum(len(v) for v in panel_format.wczytaj_slownik().values()),
+        "duplikaty": panel_format.duplikaty(),
         "komunikat": komunikat, "blad": blad,
     }
     con.close()
@@ -675,12 +676,18 @@ async def wgraj_wzorzec(plik: UploadFile = File(...)):
     sciezka = katalog / f"{datetime.now():%Y-%m-%d_%H%M%S}__{Path(nazwa).name}"
     sciezka.write_bytes(await plik.read())
     try:
-        wynik = panel_format.naucz_z_pliku(sciezka)
+        if panel_format.czy_plik_slownika(sciezka):
+            w = panel_format.naucz_ze_slownika(sciezka)
+            tresc = (f"Słownik sklepu wczytany: {w['atrybutow']} atrybutów "
+                     f"({w['slownikowych']} słownikowych, {w['wolnych']} wolnych), "
+                     f"{w['wartosci']} wartości. Wyłączonych atrybutów: {w['wylaczonych']}.")
+        else:
+            w = panel_format.naucz_z_pliku(sciezka)
+            tresc = (f"Wzorzec zapisany: {w['kolumny']} kolumn, {w['produktow']} produktów. "
+                     f"Słownik ID: +{w['nowych_wartosci']} nowych, "
+                     f"{w['wartosci_razem']} wartości razem.")
     except Exception as e:  # noqa: BLE001 — komunikat ma trafić do użytkownika
         return RedirectResponse(
             "/eksport/partie?blad=" + quote(f"Nie udało się odczytać pliku: {e}"),
             status_code=303)
-    return RedirectResponse("/eksport/partie?komunikat=" + quote(
-        f"Wzorzec zapisany: {wynik['kolumny']} kolumn, {wynik['produktow']} produktów. "
-        f"Słownik ID: +{wynik['nowych_wartosci']} nowych, "
-        f"{wynik['wartosci_razem']} wartości razem."), status_code=303)
+    return RedirectResponse("/eksport/partie?komunikat=" + quote(tresc), status_code=303)

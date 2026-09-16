@@ -46,6 +46,18 @@ class Plan:
     def zmian(self) -> int:
         return sum(len(p.zmiany) for p in self.pozycje)
 
+    def pominiete_zbiorczo(self) -> list[dict]:
+        """Pominięte zwinięte do (atrybut, wartość, powód) — to jest lista do
+        naprawy reguł, a nie lista produktów do klikania."""
+        licznik: dict[tuple, dict] = {}
+        for p in self.pominiete:
+            klucz = (p["atrybut"], p["nowa_wartosc"], p["powod"])
+            wpis = licznik.setdefault(klucz, {
+                "atrybut": p["atrybut"], "nowa_wartosc": p["nowa_wartosc"],
+                "powod": p["powod"], "ile": 0, "przyklad": p["produkt_id"]})
+            wpis["ile"] += 1
+        return sorted(licznik.values(), key=lambda w: -w["ile"])
+
 
 SQL_CZEKAJACE = """
 SELECT d.produkt_id, d.atrybut, d.nowa_wartosc, d.hasz_starej, d.utworzono,
@@ -81,6 +93,7 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
     wzorzec = pf.wczytaj_wzorzec()
     znane = set(wzorzec.naglowki)
     kol_surowe = set(wzorzec.surowe)
+    etykiety = pf.wczytaj_etykiety()
 
     plan = Plan()
     wg_produktu: dict[str, Pozycja] = {}
@@ -94,7 +107,8 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
             powod = "kolumny nie ma w formacie panelu"
         else:
             wartosc, powod = pf.wartosc_do_pliku(
-                slownik, kolumna, r["nowa_wartosc"], kol_slownikowe, kol_surowe)
+                slownik, kolumna, r["nowa_wartosc"], kol_slownikowe, kol_surowe,
+                etykiety)
 
         if powod:
             plan.pominiete.append({
@@ -117,7 +131,7 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
         poz.zmiany[kolumna] = wartosc
         stara = r["stara_wartosc"] or ""
         stara_do_pliku, _ = pf.wartosc_do_pliku(slownik, kolumna, stara,
-                                                kol_slownikowe, kol_surowe)
+                                                kol_slownikowe, kol_surowe, etykiety)
         poz.stare[kolumna] = stara_do_pliku or stara
         poz.klucze.append((r["produkt_id"], r["atrybut"], r["hasz_starej"]))
 

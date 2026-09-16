@@ -936,3 +936,88 @@ def test_cofniecie_decyzji_z_partii_jest_blokowane(tmp_path, monkeypatch):
     con = db.polacz(baza)
     assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 3
     con.close()
+
+
+# --- pełny słownik atrybutów ze sklepu ------------------------------------
+
+def _plik_slownika(tmp_path, atrybuty, wartosci):
+    """Eksport „Atrybuty" z panelu: arkusz atrybutów + arkusz wartości."""
+    import openpyxl
+    wb = openpyxl.Workbook()
+    a = wb.active
+    a.title = "Atrybuty"
+    a.append(["id", "status", "title"])
+    for w in atrybuty:
+        a.append(list(w))
+    b = wb.create_sheet("Wartości atrybutów słownikowych")
+    b.append(["id", "title", "title"])
+    for w in wartosci:
+        b.append(list(w))
+    sciezka = tmp_path / "slownik.xlsx"
+    wb.save(sciezka)
+    return sciezka
+
+
+def test_slownik_sklepu_dzieli_atrybuty_na_slownikowe_i_wolne(tmp_path, monkeypatch):
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    plik = _plik_slownika(tmp_path,
+        [(3.0, "ACTIVE", "Szerokość"), (2104.0, "ACTIVE", "Materiał"),
+         (108.0, "DRAFT", "Ilość nóg")],
+        [(1952.0, "Materiał", "metal"), (2104.0, "Materiał", "drewno"),
+         (1735.0, "Ilość nóg", "1")])
+    w = pf.naucz_ze_slownika(plik)
+    assert w["slownikowych"] == 2 and w["wolnych"] == 1
+    assert "Szerokość" in pf.wczytaj_wzorzec().surowe
+    assert "Materiał" not in pf.wczytaj_wzorzec().surowe
+
+
+def test_wartosc_wielokrotna_dostaje_id_dla_kazdego_czlonu(tmp_path, monkeypatch):
+    """„ceramika, metal" to lista wartości — każda ma własne ID."""
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    pf.naucz_ze_slownika(_plik_slownika(tmp_path,
+        [(1.0, "ACTIVE", "Materiał")],
+        [(1952.0, "Materiał", "metal"), (2274.0, "Materiał", "ceramika")]))
+    s, e = pf.wczytaj_slownik(), pf.wczytaj_etykiety()
+    assert pf.wartosc_slownikowa(s, "Materiał", "ceramika, metal", e)[0] == \
+        "2274|ceramika, 1952|metal"
+    # jeden nieznany człon przekreśla całą wartość — pół listy to nie poprawka
+    assert pf.wartosc_slownikowa(s, "Materiał", "ceramika, dąb", e)[0] is None
+
+
+def test_etykieta_idzie_w_pisowni_sklepu(tmp_path, monkeypatch):
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    pf.naucz_ze_slownika(_plik_slownika(tmp_path,
+        [(1.0, "ACTIVE", "Kierunek otwierania")],
+        [(1893.0, "Kierunek otwierania", "W lewą stronę")]))
+    s, e = pf.wczytaj_slownik(), pf.wczytaj_etykiety()
+    assert pf.id_dla(s, "Kierunek otwierania", "w lewa strone", e)[0] == "1893|W lewą stronę"
+
+
+def test_wpisy_null_w_slowniku_sa_odrzucane(tmp_path, monkeypatch):
+    """Słownik sklepu ma pozycje o tytule NULL — to śmieć po imporcie."""
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    w = pf.naucz_ze_slownika(_plik_slownika(tmp_path,
+        [(1.0, "ACTIVE", "Styl")],
+        [(1695.0, "Styl", "nowoczesny"), (2033.0, "Styl", "NULL")]))
+    assert w["wartosci"] == 1 and w["smieci"] == 1
+    assert "null" not in pf.wczytaj_slownik()["Styl"]
+
+
+def test_duplikaty_slownika_sa_raportowane(tmp_path, monkeypatch):
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    w = pf.naucz_ze_slownika(_plik_slownika(tmp_path,
+        [(1.0, "ACTIVE", "Styl")],
+        [(1695.0, "Styl", "nowoczesny"), (2291.0, "Styl", "nowoczesny")]))
+    assert w["duplikaty"] and w["duplikaty"][0]["ids"] == ["1695", "2291"]
+    s, e = pf.wczytaj_slownik(), pf.wczytaj_etykiety()
+    assert pf.id_dla(s, "Styl", "nowoczesny", e)[0] is None

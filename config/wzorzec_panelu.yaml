@@ -1,0 +1,1097 @@
+naglowki:
+- ID
+- Kod
+- Kod producenta
+- Nazwa
+- TM nazwa
+- Cena
+- Rabat
+- Producent
+- Kolekcje
+- Typ
+- Podtyp
+- Waga (kolejność wyświetlania)
+- Ilość w opakowaniu
+- Skala
+- Dostępność
+- Status
+- Minimalny czas oczekiwania
+- Minimalny interwał terminu
+- Maksymalny czas oczekiwania
+- Maksymalny interwał terminu
+- Konfigurator
+- Szerokość
+- Średnica
+- Wysokość
+- Długość
+- Głębokość
+- Rozkładane
+- Liczba drzwi
+- Liczba szuflad
+- Lustro
+- Wypełnienie
+- Z pojemnikiem na pościel
+- Styl
+- Materiał
+- Funkcja spania
+- Wypełnienie siedziska
+- Szerokość po rozłożeniu
+- Rozstaw
+- Oświetlenie
+- Kształt blatu
+- Półka na klawiaturę
+- Typ witryny
+- Rodzaj drzwi
+- Rodzaj szafki
+- Ilość nóg
+- Półka pod blatem
+- Rozmiar
+- Długość powierzchni spania
+- Szerokość powierzchni spania
+- Wysokość siedziska
+- Szerokość siedziska
+- Głębokość siedziska
+- Maksymalna wysokość krzesła
+- Wysokość z zagłówkiem
+- Maksymalna głębokość
+- Szerokość cokołu
+- Maksymalna wysokość stołu/ławy
+- Waga
+- Stopień montażu
+- Ilość uchwytów
+- Środek szafy
+- Tapicerowane
+- Kategorie
+- Masa ciała
+- Dla kogo
+- Pojemność
+- Do użytku w piekarniku
+- Do użytku w mikrofalówce
+- Do mycia w zmywarce
+- Rodzaj krzesła
+- Rodzaj witryny
+- Rodzaj komody
+- Rodzaj regału
+- '!przepisać na pokoje -> Rodzaj biurka'
+- Rodzaj łóżka
+- TM Design
+- Designerskie
+- Skórzane
+- Wyświetlanie sofy w wyszukiwarce
+- Ilość osób
+- Modułowe
+- Cleo
+- Typ funkcji spania
+- Materiał klosza
+- Ilość źródeł światła
+- Regulacja
+- Materiał podstawy
+- Materac/Stelaż
+- Twardość
+- Kierunek otwierania
+- Typ szuflad
+- Układ mebla
+- Rozmiar stołu
+- Wewnętrzna szerokość szuflad
+- Wewnętrzna wysokość szuflad
+- Wewnętrzna głębokość szuflad
+- Maksymalny udźwig mebla
+- Maksymalny udźwig szuflady
+- Maksymalne wysunięcie szuflady
+- Szerokość wnęki
+- Głębokość wnęki
+- Wysokość wnęki
+- Maksymalny udźwig półki
+- Podparcie
+- Kształt
+- Liczba szafek
+- Liczba drążków
+- Zagłówek
+- Podłokietniki
+- Oparcie
+- Schowek
+- Elementy zestawu
+- Zamykanie
+- Dekoracje
+- Rozmiar
+- Liczba półek
+- Liczba szaf
+- Wysokość oparcia
+- Funkcja relax
+- Antyalergiczne
+- Ilość wkładek
+- Podnóżek
+- Pokrowiec zdejmowalny
+- Typ uchwytu
+- Rodzaj regulacji
+- Typ funkcji relax
+- Rodzaj zasilania
+- Udźwig
+- Typ oparcia
+- Źródło światła
+- Klasa energetyczna
+- Barwa światła
+- Typ stelaża
+- Typ wkładu
+- Typ siedziska
+- Typ oświetlenia
+- Typ drążka
+- Rodzaj dodatku
+- Rodzaj materaca
+- Rodzaj frontu
+- Typ rozkładania
+- Typ modułu
+- Do poprawy
+- Wysokość do ziemi
+- Rodzaj drewna
+- Rodzaj forniru
+- Rodzaj płyty
+- Rodzaj folii
+- Nowe materiały
+- Maksymalna wysokość
+- Głębokość po rozłożeniu
+- Maksymalna wysokość do ziemi
+- Typ
+- Materac w zestawie
+- Stelaż w zestawie
+- Maksymalne obciążenie
+- Materiał obicia
+- Status produktu
+- Funkcje
+- Wyposażenie
+- Na nóżkach
+- Sposób ustawienia
+- Właściwości obicia
+- Cechy materaca
+- ''
+surowe:
+- '!przepisać na pokoje -> Rodzaj biurka'
+- Boki
+- Cena
+- Cleo
+- Designerskie
+- Dla kogo
+- Do mycia w zmywarce
+- Do poprawy
+- Do użytku w mikrofalówce
+- Do użytku w piekarniku
+- Dodatki
+- Dostępność
+- Dostępny w
+- Długość
+- Długość powierzchni spania
+- Funkcja relax
+- Funkcja spania
+- Głębokość
+- Głębokość po rozłożeniu
+- Głębokość siedziska
+- Głębokość wnęki
+- ID
+- Ilość nóg
+- Ilość uchwytów
+- Ilość w opakowaniu
+- Ilość źródeł światła
+- Kasa energetyczna
+- Kategorie
+- Kod
+- Kod producenta
+- Konfigurowalny
+- Lustro
+- Maksymalna głębokość
+- Maksymalna wysokość
+- Maksymalna wysokość do ziemi
+- Maksymalna wysokość krzesła
+- Maksymalna wysokość stołu/ławy
+- Maksymalne obciążenie
+- Maksymalne wysunięcie szuflady
+- Maksymalny czas oczekiwania
+- Maksymalny udźwig mebla
+- Maksymalny udźwig półki
+- Maksymalny udźwig szuflady
+- Masa ciała
+- Materac/Stelaż
+- Materiał klosza
+- Materiał podstawy
+- Minimalny czas oczekiwania
+- Modułowe
+- Nazwa
+- Nowe materiały
+- Oparcie
+- Podłokietnik
+- Pojemność
+- Półka pod blatem
+- Płaszczyzna regulacji
+- Rodzaj komody
+- Rodzaj krzesła
+- Rodzaj materaca
+- Rodzaj oparcia
+- Rodzaj regału
+- Rodzaj siedziska
+- Rodzaj szafki
+- Rodzaj uchwytu
+- Rodzaj witryny
+- Rodzaj łóżka
+- Rozmiar po rozłożeniu
+- Rozmiar łóżka
+- Rozstaw
+- Skala
+- Skórzane
+- Status
+- Szerokość
+- Szerokość cokołu
+- Szerokość po rozłożeniu
+- Szerokość powierzchni spania
+- Szerokość siedziska
+- Szerokość wnęki
+- TEST
+- TM Design
+- TM nazwa
+- Typ funkcji relax
+- Typ siedziska
+- Typ witryny
+- Typ wkładu
+- Udźwig
+- Waga
+- Waga (kolejność wyświetlania)
+- Wewnętrzna głębokość szuflad
+- Wewnętrzna szerokość szuflad
+- Wewnętrzna wysokość szuflad
+- Wielkość łóżka
+- Wypełnienie siedziska
+- Wysokość
+- Wysokość do ziemi
+- Wysokość oparcia
+- Wysokość siedziska
+- Wysokość wnęki
+- Wysokość z zagłówkiem
+- Wyświetlanie sofy w wyszukiwarce
+- Z szufladą i drzwiczkami
+- Średnica
+- Środek szafy
+- Źródło światła
+preambula:
+- - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - de24b6dbe604e29dfec931cd310b49b6
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+- - Produkty - Produkty
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+- - ': ACTIVE, : 8293, Znajdź kolekcję: 19286'
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+- - 'Export date:'
+  - ''
+  - 2026-09-16 08:02:33
+  - 'Items: '
+  - 66
+  - ''
+  - 'Limit: 2000'
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+- - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''
+  - ''

@@ -92,24 +92,63 @@ def zapisz_slownik(s: dict) -> None:
                              encoding="utf-8")
 
 
-def id_dla(slownik: dict, kolumna: str, etykieta: str) -> tuple[str | None, str]:
+PLIK_ETYKIET = KATALOG_CONFIG / "etykiety_panelu.yaml"
+
+
+def wczytaj_etykiety() -> dict[str, dict[str, str]]:
+    if not PLIK_ETYKIET.exists():
+        return {}
+    return yaml.safe_load(PLIK_ETYKIET.read_text(encoding="utf-8")) or {}
+
+
+def zapisz_etykiety(e: dict) -> None:
+    PLIK_ETYKIET.parent.mkdir(parents=True, exist_ok=True)
+    PLIK_ETYKIET.write_text(yaml.safe_dump(e, allow_unicode=True, sort_keys=True),
+                            encoding="utf-8")
+
+
+def id_dla(slownik: dict, kolumna: str, etykieta: str,
+           etykiety: dict | None = None) -> tuple[str | None, str]:
     """(wartość do pliku, powód gdy się nie da).
 
     Zwraca `ID|etykieta`, gdy znamy dokładnie jedno ID. Gdy etykieta ma
     w panelu kilka ID (zdarza się — ta sama nazwa w różnych zestawach
     atrybutów), nie zgadujemy: lepiej zostawić to człowiekowi.
     """
-    ids = (slownik.get(kolumna) or {}).get(norm(etykieta))
+    klucz = norm(etykieta)
+    ids = (slownik.get(kolumna) or {}).get(klucz)
     if not ids:
-        return None, "nieznane ID w panelu"
+        return None, "wartość spoza słownika sklepu"
     if len(ids) > 1:
         return None, f"niejednoznaczne ID ({', '.join(ids)})"
-    return f"{ids[0]}|{etykieta}", ""
+    kanoniczna = ((etykiety or {}).get(kolumna) or {}).get(klucz, etykieta)
+    return f"{ids[0]}|{kanoniczna}", ""
+
+
+# Wartości wielokrotne: nasz eksport podaje je jako „ceramika, metal".
+# Każdy człon ma własne ID, więc mapujemy je po kolei i sklejamy z powrotem.
+ROZDZIELACZ = ", "
+
+
+def wartosc_slownikowa(slownik: dict, kolumna: str, wartosc: str,
+                       etykiety: dict | None = None) -> tuple[str | None, str]:
+    czlony = [c.strip() for c in str(wartosc).split(",") if c.strip()]
+    if len(czlony) <= 1:
+        return id_dla(slownik, kolumna, wartosc, etykiety)
+
+    wyniki = []
+    for c in czlony:
+        w, powod = id_dla(slownik, kolumna, c, etykiety)
+        if powod:
+            return None, f"{powod}: „{c}”"
+        wyniki.append(w)
+    return ROZDZIELACZ.join(wyniki), ""
 
 
 def wartosc_do_pliku(slownik: dict, kolumna: str, wartosc: str,
                      kolumny_slownikowe: set[str],
-                     kolumny_surowe: set[str] | None = None) -> tuple[str | None, str]:
+                     kolumny_surowe: set[str] | None = None,
+                     etykiety: dict | None = None) -> tuple[str | None, str]:
     """Liczby i teksty idą jak są; słownikowe muszą dostać ID.
 
     Kolumna, której nigdy nie widzieliśmy w pliku z panelu, jest trzecim
@@ -119,7 +158,7 @@ def wartosc_do_pliku(slownik: dict, kolumna: str, wartosc: str,
     poprawki po prostu nie wypuszczamy.
     """
     if kolumna in kolumny_slownikowe:
-        return id_dla(slownik, kolumna, wartosc)
+        return wartosc_slownikowa(slownik, kolumna, wartosc, etykiety)
     if kolumny_surowe is None or kolumna in kolumny_surowe:
         return wartosc, ""
     return None, "kolumny nie było w żadnym pliku z panelu"
@@ -203,3 +242,121 @@ def naucz_z_pliku(sciezka: str | Path) -> dict:
 
 def kolumny_slownikowe(slownik: dict | None = None) -> set[str]:
     return set((slownik if slownik is not None else wczytaj_slownik()).keys())
+
+
+# --- pełny słownik atrybutów ze sklepu ------------------------------------
+#
+# Eksport „Atrybuty" z panelu ma dwa arkusze: listę atrybutów (id, status,
+# title) i listę wartości słownikowych (id, atrybut, wartość). To jest
+# źródło prawdy, w przeciwieństwie do uczenia się z eksportów produktów,
+# które pokazują tylko te wartości, które akurat gdzieś wystąpiły.
+
+PLIK_ATRYBUTOW = KATALOG_CONFIG / "atrybuty_panelu.yaml"
+
+
+def czy_plik_slownika(sciezka: str | Path) -> bool:
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(sciezka, read_only=True)
+        if len(wb.worksheets) < 2:
+            wb.close()
+            return False
+        naglowki = [next(ws.iter_rows(values_only=True)) for ws in wb.worksheets[:2]]
+        wb.close()
+        return (tuple(naglowki[0][:3]) == ("id", "status", "title")
+                and tuple(naglowki[1][:3]) == ("id", "title", "title"))
+    except Exception:
+        return False
+
+
+def _ident(v) -> str:
+    """'2022.0' i 2022 to ten sam identyfikator — arkusz podaje je jako float."""
+    try:
+        return str(int(float(v)))
+    except (TypeError, ValueError):
+        return str(v).strip()
+
+
+def wczytaj_atrybuty_panelu() -> dict[str, dict]:
+    if not PLIK_ATRYBUTOW.exists():
+        return {}
+    return yaml.safe_load(PLIK_ATRYBUTOW.read_text(encoding="utf-8")) or {}
+
+
+def naucz_ze_slownika(sciezka: str | Path) -> dict:
+    """Wgrywa kompletny słownik: atrybuty + ich dozwolone wartości.
+
+    Nadpisuje wartości poznane wcześniej z eksportów produktów — ten plik
+    jest pełny, tamte były wyrywkowe.
+    """
+    import openpyxl
+    wb = openpyxl.load_workbook(sciezka, read_only=True)
+    ark_atrybuty, ark_wartosci = wb.worksheets[0], wb.worksheets[1]
+
+    atrybuty: dict[str, dict] = {}
+    for r in list(ark_atrybuty.iter_rows(values_only=True))[1:]:
+        if r[0] is None or not r[2]:
+            continue
+        atrybuty[str(r[2]).strip()] = {"id": _ident(r[0]), "status": str(r[1] or "")}
+
+    slownik: dict[str, dict[str, list[str]]] = {}
+    etykiety: dict[str, dict[str, str]] = {}
+    ile_wartosci = 0
+    smieci = 0
+    for r in list(ark_wartosci.iter_rows(values_only=True))[1:]:
+        if r[0] is None or not r[1] or r[2] is None:
+            continue
+        kolumna, etykieta = str(r[1]).strip(), str(r[2]).strip()
+        # w słowniku sklepu siedzą pozycje o tytule „NULL" — to śmieć po
+        # imporcie, nigdy poprawny cel poprawki
+        if not etykieta or etykieta.upper() == "NULL":
+            smieci += 1
+            continue
+        lista = slownik.setdefault(kolumna, {}).setdefault(norm(etykieta), [])
+        # do pliku ma iść pisownia sklepu, nie nasza z eksportu BigQuery
+        etykiety.setdefault(kolumna, {})[norm(etykieta)] = etykieta
+        ident = _ident(r[0])
+        if ident not in lista:
+            lista.append(ident)
+            ile_wartosci += 1
+    wb.close()
+
+    zapisz_slownik(slownik)
+    zapisz_etykiety(etykiety)
+    PLIK_ATRYBUTOW.parent.mkdir(parents=True, exist_ok=True)
+    PLIK_ATRYBUTOW.write_text(yaml.safe_dump(atrybuty, allow_unicode=True, sort_keys=True),
+                              encoding="utf-8")
+
+    # atrybut z listy, którego nie ma w wartościach, jest polem wolnym
+    # (liczba albo tekst) — te wolno przepisywać jeden do jednego
+    wzorzec = wczytaj_wzorzec()
+    wzorzec.surowe = sorted(set(wzorzec.surowe) |
+                            {k for k in atrybuty if k not in slownik})
+    wzorzec.surowe = [k for k in wzorzec.surowe if k not in slownik]
+    zapisz_wzorzec(wzorzec)
+
+    wylaczone = [k for k, v in atrybuty.items() if v["status"] != "ACTIVE"]
+    return {
+        "atrybutow": len(atrybuty),
+        "slownikowych": len(slownik),
+        "wartosci": ile_wartosci,
+        "wolnych": len([k for k in atrybuty if k not in slownik]),
+        "wylaczonych": len(wylaczone),
+        "wylaczone": sorted(wylaczone),
+        "smieci": smieci,
+        "duplikaty": duplikaty(slownik),
+    }
+
+
+def duplikaty(slownik: dict | None = None) -> list[dict]:
+    """Ta sama etykieta pod kilkoma ID w jednym atrybucie.
+
+    To problem po stronie sklepu, nie nasz: dopóki „nowoczesny" ma trzy ID,
+    nie da się rozstrzygnąć, które wpisać, więc takie poprawki wypadają
+    z eksportu. Lista jest po to, żeby dało się to posprzątać w panelu.
+    """
+    s = slownik if slownik is not None else wczytaj_slownik()
+    etykiety = wczytaj_etykiety()
+    out = [{"atrybut": k, "wartosc": (etykiety.get(k) or {}).get(v, v), "ids": ids}
+           for k, m in s.items() for v, ids in m.items() if len(ids) > 1]
+    return sorted(out, key=lambda w: (w["atrybut"], w["wartosc"]))

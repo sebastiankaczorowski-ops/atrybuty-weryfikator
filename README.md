@@ -87,12 +87,15 @@ wartościami.
 Dwie rzeczy, o których trzeba wiedzieć:
 
 1. **Wartości słownikowe w panelu to `ID|etykieta`** („2022|tapicerowane"),
-   a nasze źródło ma same etykiety. Mapowania uczymy się z prawdziwych plików
-   z panelu wgrywanych na `/eksport/partie`; wynik siedzi w
-   `config/slownik_idow.yaml`. Poprawka na wartość, której nie ma w słowniku,
-   nie trafia do pliku — ląduje na liście „nie wejdą do pliku" z powodem.
-   To celowo ostrożne: goła etykieta w kolumnie słownikowej zakłada nową
-   wartość w słowniku sklepu.
+   a nasze źródło ma same etykiety. Źródłem prawdy jest eksport słownika
+   atrybutów z panelu (dwa arkusze: 159 atrybutów, 68 słownikowych, 473
+   wartości), wgrywany na `/eksport/partie` — trafia do
+   `config/slownik_idow.yaml`, `config/etykiety_panelu.yaml`
+   i `config/atrybuty_panelu.yaml`. Eksport produktów z panelu też dokłada
+   wartości, ale przede wszystkim daje układ 165 kolumn.
+   Wartości wielokrotne („ceramika, metal") dostają ID dla każdego członu;
+   jeden nieznany człon przekreśla całą wartość, bo pół listy to nie poprawka.
+   Etykieta idzie w pisowni sklepu, nie w naszej.
 2. **Plik zawiera tylko kolumny klucza i zmieniane atrybuty**, reszta zostaje
    pusta. Czy panel czyta pustą komórkę jako „nie ruszaj", czy jako „wyczyść" —
    trzeba sprawdzić na pierwszej, małej partii. Dlatego domyślny rozmiar to 20.

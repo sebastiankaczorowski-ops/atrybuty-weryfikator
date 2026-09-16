@@ -1,0 +1,477 @@
+'!przepisać na pokoje -> Rodzaj biurka':
+  id: '214'
+  status: DISABLED
+Antyalergiczne:
+  id: '268'
+  status: ACTIVE
+Barwa światła:
+  id: '285'
+  status: ACTIVE
+Boki:
+  id: '112'
+  status: ACTIVE
+Cechy materaca:
+  id: '325'
+  status: ACTIVE
+Cleo:
+  id: '224'
+  status: DISABLED
+Dekoracje:
+  id: '262'
+  status: ACTIVE
+Designerskie:
+  id: '217'
+  status: DISABLED
+Dla kogo:
+  id: '205'
+  status: DISABLED
+Do mycia w zmywarce:
+  id: '209'
+  status: DISABLED
+Do poprawy:
+  id: '303'
+  status: DISABLED
+Do użytku w mikrofalówce:
+  id: '208'
+  status: DISABLED
+Do użytku w piekarniku:
+  id: '207'
+  status: DISABLED
+Dodatki:
+  id: '292'
+  status: ACTIVE
+Dostępny w:
+  id: '97'
+  status: ACTIVE
+Długość:
+  id: '6'
+  status: DISABLED
+Długość powierzchni spania:
+  id: '233'
+  status: ACTIVE
+Elementy zestawu:
+  id: '260'
+  status: ACTIVE
+Funkcja relax:
+  id: '267'
+  status: DISABLED
+Funkcja spania:
+  id: '95'
+  status: DISABLED
+Funkcje:
+  id: '320'
+  status: ACTIVE
+Głębokość:
+  id: '7'
+  status: ACTIVE
+Głębokość po rozłożeniu:
+  id: '312'
+  status: ACTIVE
+Głębokość siedziska:
+  id: '121'
+  status: ACTIVE
+Głębokość wnęki:
+  id: '249'
+  status: DISABLED
+Ilość nóg:
+  id: '108'
+  status: DRAFT
+Ilość osób:
+  id: '221'
+  status: ACTIVE
+Ilość uchwytów:
+  id: '200'
+  status: ACTIVE
+Ilość wkładek:
+  id: '269'
+  status: ACTIVE
+Ilość źródeł światła:
+  id: '230'
+  status: DISABLED
+Kasa energetyczna:
+  id: '279'
+  status: ACTIVE
+Kategorie:
+  id: '203'
+  status: DISABLED
+Kierunek otwierania:
+  id: '236'
+  status: ACTIVE
+Klasa energetyczna:
+  id: '284'
+  status: ACTIVE
+Konfigurowalny:
+  id: '277'
+  status: ACTIVE
+Kształt:
+  id: '253'
+  status: ACTIVE
+Kształt blatu:
+  id: '102'
+  status: ACTIVE
+Liczba drzwi:
+  id: '41'
+  status: ACTIVE
+Liczba drążków:
+  id: '255'
+  status: ACTIVE
+Liczba półek:
+  id: '264'
+  status: ACTIVE
+Liczba szaf:
+  id: '265'
+  status: ACTIVE
+Liczba szafek:
+  id: '254'
+  status: ACTIVE
+Liczba szuflad:
+  id: '42'
+  status: ACTIVE
+Lustro:
+  id: '43'
+  status: DISABLED
+Maksymalna głębokość:
+  id: '124'
+  status: DISABLED
+Maksymalna wysokość:
+  id: '311'
+  status: ACTIVE
+Maksymalna wysokość do ziemi:
+  id: '313'
+  status: ACTIVE
+Maksymalna wysokość krzesła:
+  id: '122'
+  status: DISABLED
+Maksymalna wysokość stołu/ławy:
+  id: '126'
+  status: DRAFT
+Maksymalne obciążenie:
+  id: '317'
+  status: ACTIVE
+Maksymalne wysunięcie szuflady:
+  id: '247'
+  status: DRAFT
+Maksymalny udźwig mebla:
+  id: '245'
+  status: DISABLED
+Maksymalny udźwig półki:
+  id: '251'
+  status: DISABLED
+Maksymalny udźwig szuflady:
+  id: '246'
+  status: DISABLED
+Masa ciała:
+  id: '204'
+  status: DRAFT
+Materac w zestawie:
+  id: '315'
+  status: ACTIVE
+Materac/Stelaż:
+  id: '234'
+  status: DISABLED
+Materiał:
+  id: '99'
+  status: ACTIVE
+Materiał klosza:
+  id: '229'
+  status: DISABLED
+Materiał obicia:
+  id: '318'
+  status: ACTIVE
+Materiał podstawy:
+  id: '232'
+  status: DISABLED
+Miejsce użytkowania:
+  id: '19'
+  status: ACTIVE
+Modułowe:
+  id: '222'
+  status: DISABLED
+Na nóżkach:
+  id: '322'
+  status: ACTIVE
+Nowe materiały:
+  id: '310'
+  status: DRAFT
+Oparcie:
+  id: '258'
+  status: DISABLED
+Oświetlenie:
+  id: '101'
+  status: ACTIVE
+Podnóżek:
+  id: '271'
+  status: ACTIVE
+Podparcie:
+  id: '252'
+  status: ACTIVE
+Podłokietnik:
+  id: '116'
+  status: ACTIVE
+Podłokietniki:
+  id: '257'
+  status: ACTIVE
+Pojemność:
+  id: '206'
+  status: DISABLED
+Pokrowiec zdejmowalny:
+  id: '272'
+  status: ACTIVE
+Półka na klawiaturę:
+  id: '103'
+  status: ACTIVE
+Półka pod blatem:
+  id: '109'
+  status: DISABLED
+Płaszczyzna regulacji:
+  id: '276'
+  status: DISABLED
+Rama:
+  id: '107'
+  status: ACTIVE
+Regulacja:
+  id: '231'
+  status: ACTIVE
+Rodzaj dodatku:
+  id: '291'
+  status: ACTIVE
+Rodzaj drewna:
+  id: '305'
+  status: ACTIVE
+Rodzaj drzwi:
+  id: '105'
+  status: ACTIVE
+Rodzaj folii:
+  id: '309'
+  status: ACTIVE
+Rodzaj forniru:
+  id: '307'
+  status: ACTIVE
+Rodzaj frontu:
+  id: '297'
+  status: ACTIVE
+Rodzaj komody:
+  id: '212'
+  status: DISABLED
+Rodzaj krzesła:
+  id: '210'
+  status: DISABLED
+Rodzaj materaca:
+  id: '293'
+  status: ACTIVE
+Rodzaj oparcia:
+  id: '114'
+  status: ACTIVE
+Rodzaj płyty:
+  id: '308'
+  status: ACTIVE
+Rodzaj regału:
+  id: '213'
+  status: DISABLED
+Rodzaj regulacji:
+  id: '274'
+  status: ACTIVE
+Rodzaj siedziska:
+  id: '115'
+  status: ACTIVE
+Rodzaj szafki:
+  id: '106'
+  status: DISABLED
+Rodzaj uchwytu:
+  id: '298'
+  status: ACTIVE
+Rodzaj witryny:
+  id: '211'
+  status: DISABLED
+Rodzaj zasilania:
+  id: '280'
+  status: ACTIVE
+Rodzaj łóżka:
+  id: '215'
+  status: DISABLED
+Rozkładane:
+  id: '31'
+  status: ACTIVE
+Rozmiar:
+  id: '263'
+  status: DISABLED
+Rozmiar po rozłożeniu:
+  id: '294'
+  status: ACTIVE
+Rozmiar stołu:
+  id: '241'
+  status: ACTIVE
+Rozmiar łóżka:
+  id: '240'
+  status: ACTIVE
+Rozstaw:
+  id: '100'
+  status: DISABLED
+Schowek:
+  id: '259'
+  status: ACTIVE
+Skórzane:
+  id: '219'
+  status: DISABLED
+Sposób ustawienia:
+  id: '323'
+  status: ACTIVE
+Status produktu:
+  id: '319'
+  status: ACTIVE
+Stelaż w zestawie:
+  id: '316'
+  status: ACTIVE
+Stopień montażu:
+  id: '128'
+  status: ACTIVE
+Styl:
+  id: '92'
+  status: ACTIVE
+Szerokość:
+  id: '3'
+  status: ACTIVE
+Szerokość cokołu:
+  id: '125'
+  status: DISABLED
+Szerokość po rozłożeniu:
+  id: '295'
+  status: DISABLED
+Szerokość powierzchni spania:
+  id: '118'
+  status: ACTIVE
+Szerokość siedziska:
+  id: '120'
+  status: ACTIVE
+Szerokość wnęki:
+  id: '248'
+  status: DISABLED
+TEST:
+  id: '225'
+  status: DRAFT
+TM Design:
+  id: '216'
+  status: DISABLED
+Tapicerowane:
+  id: '202'
+  status: ACTIVE
+Twardość:
+  id: '235'
+  status: ACTIVE
+Typ:
+  id: '314'
+  status: ACTIVE
+Typ drążka:
+  id: '290'
+  status: ACTIVE
+Typ funkcji relax:
+  id: '278'
+  status: DRAFT
+Typ funkcji spania:
+  id: '228'
+  status: ACTIVE
+Typ modułu:
+  id: '301'
+  status: ACTIVE
+Typ oparcia:
+  id: '282'
+  status: ACTIVE
+Typ oświetlenia:
+  id: '289'
+  status: ACTIVE
+Typ rozkładania:
+  id: '299'
+  status: ACTIVE
+Typ siedziska:
+  id: '288'
+  status: DISABLED
+Typ stelaża:
+  id: '286'
+  status: ACTIVE
+Typ szuflad:
+  id: '237'
+  status: ACTIVE
+Typ uchwytu:
+  id: '273'
+  status: ACTIVE
+Typ witryny:
+  id: '104'
+  status: DISABLED
+Typ wkładu:
+  id: '287'
+  status: ACTIVE
+Udźwig:
+  id: '281'
+  status: ACTIVE
+Układ mebla:
+  id: '238'
+  status: ACTIVE
+Waga:
+  id: '127'
+  status: ACTIVE
+Wewnętrzna głębokość szuflad:
+  id: '244'
+  status: DISABLED
+Wewnętrzna szerokość szuflad:
+  id: '242'
+  status: DISABLED
+Wewnętrzna wysokość szuflad:
+  id: '243'
+  status: DISABLED
+Wielkość łóżka:
+  id: '110'
+  status: ACTIVE
+Wypełnienie:
+  id: '56'
+  status: ACTIVE
+Wypełnienie siedziska:
+  id: '96'
+  status: DISABLED
+Wyposażenie:
+  id: '321'
+  status: ACTIVE
+Wysokość:
+  id: '5'
+  status: ACTIVE
+Wysokość do ziemi:
+  id: '304'
+  status: ACTIVE
+Wysokość oparcia:
+  id: '266'
+  status: ACTIVE
+Wysokość siedziska:
+  id: '119'
+  status: ACTIVE
+Wysokość wnęki:
+  id: '250'
+  status: DISABLED
+Wysokość z zagłówkiem:
+  id: '123'
+  status: DISABLED
+Wyświetlanie sofy w wyszukiwarce:
+  id: '220'
+  status: DISABLED
+Właściwości obicia:
+  id: '324'
+  status: ACTIVE
+Z pojemnikiem na pościel:
+  id: '90'
+  status: ACTIVE
+Z szufladą i drzwiczkami:
+  id: '226'
+  status: DRAFT
+Zagłówek:
+  id: '256'
+  status: ACTIVE
+Zamykanie:
+  id: '261'
+  status: ACTIVE
+Średnica:
+  id: '4'
+  status: ACTIVE
+Środek szafy:
+  id: '201'
+  status: DISABLED
+Źródło światła:
+  id: '283'
+  status: ACTIVE

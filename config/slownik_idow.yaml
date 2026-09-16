@@ -1,0 +1,988 @@
+Antyalergiczne:
+  antyalergiczne:
+  - '2049'
+  nie antyalergiczne:
+  - '2050'
+Barwa światła:
+  ciepla:
+  - '2137'
+  neutralna:
+  - '2138'
+  zimna:
+  - '2139'
+Cechy materaca:
+  antyalergiczny:
+  - '2345'
+  dwustronny:
+  - '2346'
+  rehabilitacyjny:
+  - '2348'
+  wentylowany:
+  - '2347'
+  ze strefami twardosci:
+  - '2349'
+  ze zdejmowanym pokrowcem:
+  - '2350'
+Dekoracje:
+  fazowanie:
+  - '2058'
+  guziki:
+  - '2076'
+  pikowanie:
+  - '2002'
+  postarzanie:
+  - '2107'
+  przeszycia:
+  - '2003'
+  ryflowanie:
+  - '2075'
+  rzezbienia:
+  - '2056'
+  widoczne uslojenie drewna:
+  - '2105'
+Elementy zestawu:
+  barek:
+  - '1999'
+  biurko:
+  - '1998'
+  kontenerek:
+  - '2122'
+  lustro:
+  - '226'
+  pokrowiec:
+  - '2069'
+  szafki nocne:
+  - '2025'
+  witryna:
+  - '2000'
+Funkcje:
+  funkcja relax:
+  - '2320'
+  funkcja spania:
+  - '2319'
+  port usb:
+  - '2323'
+  regulowane podlokietniki:
+  - '2322'
+  regulowane siedzisko:
+  - '2318'
+  regulowane zaglowki:
+  - '2321'
+Ilość osób:
+  1-osobowe:
+  - '1963'
+  10-osobowe:
+  - '1966'
+  12-osobowe:
+  - '2125'
+  2-osobowe:
+  - '1829'
+  3-osobowe:
+  - '1830'
+  4-osobowe:
+  - '1831'
+  6-osobowe:
+  - '1964'
+  8-osobowe:
+  - '1965'
+Ilość wkładek:
+  1 x 100cm:
+  - '2083'
+  1 x 120cm:
+  - '2064'
+  1 x 30cm:
+  - '2070'
+  1 x 35cm:
+  - '2071'
+  1 x 39cm:
+  - '2116'
+  1 x 40cm:
+  - '2079'
+  1 x 43cm:
+  - '2077'
+  1 x 45cm:
+  - '2115'
+  1 x 46cm:
+  - '2059'
+  1 x 47cm:
+  - '2078'
+  1 x 49cm:
+  - '2060'
+  1 x 50cm:
+  - '2072'
+  1 x 55cm:
+  - '2063'
+  1 x 60cm:
+  - '2080'
+  - '2081'
+  1 x 70cm:
+  - '2082'
+  1 x 80cm:
+  - '2062'
+  1 x 90cm:
+  - '2061'
+  2 x 30cm:
+  - '2091'
+  2 x 35cm:
+  - '2089'
+  2 x 37cm:
+  - '2103'
+  2 x 38 cm:
+  - '2280'
+  2 x 40cm:
+  - '2057'
+  2 x 41 5cm:
+  - '2110'
+  2 x 42 5cm:
+  - '2232'
+  2 x 44cm:
+  - '2114'
+  2 x 45cm:
+  - '2102'
+  2 x 50cm:
+  - '2073'
+  2 x 60 cm:
+  - '2354'
+  3 x 25cm:
+  - '2068'
+  3 x 40cm:
+  - '2094'
+  3 x 44cm:
+  - '2113'
+  3 x 45cm:
+  - '2066'
+  3 x 46 5cm:
+  - '2112'
+  3 x 46cm:
+  - '2067'
+  3 x 47cm:
+  - '2065'
+  3 x 50cm:
+  - '2085'
+  3 x 53cm:
+  - '2095'
+  3 x 70cm:
+  - '2088'
+  4 x 40cm:
+  - '2098'
+  4 x 45cm:
+  - '2097'
+  4 x 50cm:
+  - '2074'
+  4 x 60cm:
+  - '2092'
+  5 x 50cm:
+  - '2123'
+  6 x 50cm:
+  - '2093'
+Kierunek otwierania:
+  do gory:
+  - '1898'
+  uniwersalna:
+  - '1897'
+  w dol:
+  - '2055'
+  w lewa strone:
+  - '1893'
+  w prawa strone:
+  - '1892'
+Klasa energetyczna:
+  a:
+  - '2141'
+  - '2142'
+  - '2143'
+Kształt:
+  asymetryczny:
+  - '2096'
+  kwadratowy:
+  - '1961'
+  l:
+  - '2191'
+  okragly:
+  - '1959'
+  owalny:
+  - '1960'
+  polokragly:
+  - '2159'
+  prostokatny:
+  - '1962'
+  trapezowy:
+  - '2190'
+  trojkatny:
+  - '2189'
+  u:
+  - '2192'
+Kształt blatu:
+  kwadratowy:
+  - '1723'
+  nieregularny:
+  - '2341'
+  okragly:
+  - '1722'
+  owalny:
+  - '1721'
+  prostokatny:
+  - '1724'
+Liczba drzwi:
+  1-drzwiowe:
+  - '214'
+  2-drzwiowe:
+  - '215'
+  3-drzwiowe:
+  - '216'
+  bez drzwi:
+  - '218'
+  wielodrzwiowe:
+  - '217'
+Liczba drążków:
+  1 drazek:
+  - '1983'
+  2 drazki:
+  - '1984'
+  3 drazki:
+  - '1985'
+  4 i wiecej drazkow:
+  - '2030'
+  brak drazkow:
+  - '1982'
+Liczba półek:
+  1-polka:
+  - '1967'
+  2-polki:
+  - '1968'
+  3-polki:
+  - '1969'
+  4-polki:
+  - '1970'
+  5 i wiecej:
+  - '1971'
+  bez polek:
+  - '1972'
+Liczba szaf:
+  1-szafa:
+  - '1976'
+  2-szafy:
+  - '1975'
+  3-szafy:
+  - '1974'
+  4 i wiecej:
+  - '2027'
+  bez szaf:
+  - '1973'
+Liczba szafek:
+  1-szafka:
+  - '1979'
+  2-szafki:
+  - '1980'
+  3-szafki:
+  - '1981'
+  4 i wiecej:
+  - '2028'
+  bez szafek:
+  - '1977'
+Liczba szuflad:
+  1-szuflada:
+  - '219'
+  2-szuflady:
+  - '220'
+  3-szuflady:
+  - '221'
+  4 i wiecej:
+  - '222'
+  bez szuflad:
+  - '223'
+Materac w zestawie:
+  nie:
+  - '2276'
+  tak:
+  - '2275'
+Materiał:
+  ceramika:
+  - '2274'
+  drewno:
+  - '2104'
+  marmur:
+  - '2228'
+  metal:
+  - '1952'
+  plyta meblowa:
+  - '2224'
+  szklo:
+  - '1953'
+  tapicerowane:
+  - '2022'
+  tworzywo sztuczne:
+  - '2026'
+Materiał obicia:
+  bouclé:
+  - '2311'
+  ekoskora:
+  - '2307'
+  plecionka:
+  - '2313'
+  skora naturalna:
+  - '2308'
+  szenil:
+  - '2312'
+  sztruks:
+  - '2314'
+  tkanina:
+  - '2309'
+  welur:
+  - '2310'
+Miejsce użytkowania:
+  apteka:
+  - '345'
+  azienka:
+  - '287'
+  biuro:
+  - '58'
+  gabinet:
+  - '348'
+  hotel:
+  - '344'
+  jadalnia:
+  - '56'
+  kino-teatr:
+  - '63'
+  kuchnia:
+  - '55'
+  laboratorium:
+  - '68'
+  ogrod:
+  - '65'
+  pokoj:
+  - '305'
+  pokoj dziecka:
+  - '246'
+  pokoj mlodziezowy:
+  - '247'
+  przedpokoj:
+  - '274'
+  recepcja:
+  - '347'
+  restauracja:
+  - '60'
+  sala audytoryjna:
+  - '69'
+  sala konferencyjna:
+  - '59'
+  sala medyczna:
+  - '66'
+  salon:
+  - '57'
+  sklep:
+  - '346'
+  sypialnia:
+  - '272'
+  szkola:
+  - '62'
+  uzytecznosci publicznej:
+  - '61'
+  warsztat:
+  - '67'
+Na nóżkach:
+  nie:
+  - '2331'
+  tak:
+  - '2330'
+Oświetlenie:
+  brak:
+  - '1720'
+  opcjonalne:
+  - '1951'
+  w zestawie:
+  - '1719'
+Podnóżek:
+  bez podnozka:
+  - '2099'
+  z podnozkiem:
+  - '2100'
+Podparcie:
+  inne:
+  - '2196'
+  kolumna:
+  - '2084'
+  na kolkach:
+  - '1958'
+  na nozkach:
+  - '1956'
+  na plozach:
+  - '1957'
+  wiszace:
+  - '1732'
+Podłokietniki:
+  bez podlokietnikow:
+  - '1989'
+  z podlokietnikami:
+  - '1797'
+Pokrowiec zdejmowalny:
+  niezdejmowalny:
+  - '2118'
+  zdejmowalny:
+  - '2117'
+Półka na klawiaturę:
+  bez polki:
+  - '1726'
+  z polka:
+  - '1725'
+Rama:
+  bez ramy:
+  - '1734'
+  z rama:
+  - '1733'
+Regulacja:
+  elektryczna:
+  - '2326'
+  manualna:
+  - '2325'
+  nachylenia:
+  - '2324'
+  szerokosci:
+  - '2229'
+  wysokosci:
+  - '1997'
+Rodzaj dodatku:
+  ladowarka:
+  - '2188'
+  listwa ozdobna:
+  - '2187'
+  naklejka:
+  - '2186'
+  organizer:
+  - '2184'
+  pilot:
+  - '2185'
+  poduszka:
+  - '2140'
+Rodzaj drewna:
+  drewno akacjowe:
+  - '2215'
+  drewno brzozowe:
+  - '2218'
+  drewno bukowe:
+  - '2213'
+  drewno debowe:
+  - '2212'
+  drewno jesionowe:
+  - '2219'
+  drewno jodlowe:
+  - '2217'
+  drewno olchowe:
+  - '2220'
+  drewno orzechowe:
+  - '2214'
+  drewno sosnowe:
+  - '2216'
+Rodzaj drzwi:
+  harmonijkowe:
+  - '2343'
+  klapowe:
+  - '2342'
+  przesuwne:
+  - '1730'
+  uchylne:
+  - '1729'
+Rodzaj folii:
+  folia 3d:
+  - '2211'
+  folia finish:
+  - '2209'
+  folia meblowa:
+  - '2210'
+Rodzaj forniru:
+  fornir debowy:
+  - '2221'
+Rodzaj frontu:
+  azurowy:
+  - '2172'
+  pelny:
+  - '2167'
+  przeszklony:
+  - '2169'
+  ryflowany:
+  - '2268'
+  z lustrem:
+  - '2269'
+Rodzaj płyty:
+  plyta hdf:
+  - '2207'
+  plyta mdf:
+  - '2206'
+  plyta meblowa:
+  - '2208'
+Rodzaj regulacji:
+  regulacja elektryczna:
+  - '2136'
+  regulacja manualna:
+  - '2144'
+  regulacja mechaniczna:
+  - '2135'
+  regulacja pneumatyczna:
+  - '2146'
+Rodzaj zasilania:
+  zasilanie akumlatorowe:
+  - '2148'
+  zasilanie bateryjne:
+  - '2149'
+  zasilanie sieciowe 230v:
+  - '2147'
+Rozkładane:
+  nie:
+  - '207'
+  tak:
+  - '206'
+Rozmiar:
+  100x200:
+  - '1743'
+  100x220:
+  - '2271'
+  120x200:
+  - '1744'
+  120x220:
+  - '2234'
+  140x190:
+  - '2133'
+  140x200:
+  - '1745'
+  140x220:
+  - '2235'
+  160x200:
+  - '1746'
+  160x220:
+  - '2236'
+  180x200:
+  - '1747'
+  180x220:
+  - '2237'
+  200x200:
+  - '1906'
+  200x220:
+  - '1748'
+  60x120:
+  - '2124'
+  70x140:
+  - '2120'
+  70x160:
+  - '2130'
+  70x170:
+  - '2131'
+  80x140:
+  - '2353'
+  80x160:
+  - '2127'
+  80x180:
+  - '2047'
+  80x190:
+  - '2048'
+  80x200:
+  - '1741'
+  80x220:
+  - '2270'
+  90x160:
+  - '2132'
+  - '2134'
+  90x180:
+  - '2129'
+  90x190:
+  - '2054'
+  90x200:
+  - '1742'
+  90x200 na stelazu:
+  - '1751'
+  90x220:
+  - '2233'
+Rozmiar stołu:
+  100x100:
+  - '1926'
+  100x60:
+  - '1950'
+  100x80:
+  - '1908'
+  100x90:
+  - '1917'
+  110x100:
+  - '2243'
+  110x110:
+  - '2230'
+  110x80:
+  - '2241'
+  110x90:
+  - '2242'
+  112x72:
+  - '1943'
+  120x100:
+  - '1927'
+  120x120:
+  - '1940'
+  120x80:
+  - '1909'
+  120x90:
+  - '1918'
+  122x82:
+  - '1942'
+  130x100:
+  - '2246'
+  130x80:
+  - '2244'
+  130x90:
+  - '2245'
+  140x100:
+  - '1928'
+  140x70:
+  - '2053'
+  140x80:
+  - '1910'
+  140x85:
+  - '1936'
+  140x90:
+  - '1919'
+  150x100:
+  - '2248'
+  150x80:
+  - '2247'
+  150x90:
+  - '1945'
+  160x100:
+  - '1929'
+  160x80:
+  - '1911'
+  160x90:
+  - '1920'
+  160x95:
+  - '1937'
+  170x100:
+  - '2251'
+  170x80:
+  - '2249'
+  170x90:
+  - '2250'
+  180x100:
+  - '1930'
+  180x80:
+  - '1912'
+  180x90:
+  - '1921'
+  180x95:
+  - '1938'
+  188x188:
+  - '1944'
+  190x100:
+  - '2254'
+  190x80:
+  - '2252'
+  190x90:
+  - '2253'
+  200x100:
+  - '1931'
+  200x80:
+  - '1913'
+  200x90:
+  - '1922'
+  210x100:
+  - '1933'
+  210x80:
+  - '1914'
+  210x90:
+  - '1923'
+  220x100:
+  - '1934'
+  220x80:
+  - '1915'
+  220x90:
+  - '1924'
+  225x95:
+  - '1939'
+  240x100:
+  - '1947'
+  240x90:
+  - '2255'
+  50x50:
+  - '1948'
+  80x100:
+  - '1925'
+  80x80:
+  - '1907'
+  80x90:
+  - '1916'
+  82x82:
+  - '1941'
+  85x85:
+  - '2231'
+  90x100:
+  - '2240'
+  90x80:
+  - '2238'
+  90x90:
+  - '2239'
+  95x95:
+  - '1935'
+Schowek:
+  bez schowka:
+  - '1993'
+  ze schowkiem:
+  - '1992'
+Sposób ustawienia:
+  stojacy:
+  - '2333'
+  wiszacy:
+  - '2332'
+Status produktu:
+  dostepny tylko u nas:
+  - '2316'
+  nowosc:
+  - '2315'
+  polski produkt:
+  - '2317'
+Stelaż w zestawie:
+  nie:
+  - '2278'
+  tak:
+  - '2277'
+Stopień montażu:
+  mebel gotowy:
+  - '1772'
+  wymaga zlozenia:
+  - '1773'
+Styl:
+  angielski:
+  - '2013'
+  - '2288'
+  art deco:
+  - '2011'
+  - '2284'
+  boho:
+  - '2287'
+  chlopiecy:
+  - '2014'
+  - '2282'
+  dzieciece i mlodziezowe:
+  - '1697'
+  dzieciecy:
+  - '2010'
+  dziewczecy:
+  - '2015'
+  - '2283'
+  etno:
+  - '1820'
+  - '2305'
+  - '2306'
+  glamour:
+  - '1847'
+  - '2297'
+  - '2298'
+  industrialny:
+  - '1815'
+  - '2301'
+  - '2302'
+  japandi:
+  - '2286'
+  klasyczny:
+  - '1696'
+  - '2293'
+  - '2294'
+  minimalistyczny:
+  - '2281'
+  modern classic:
+  - '2285'
+  nowoczesny:
+  - '1695'
+  - '2291'
+  - '2292'
+  prowansalski:
+  - '1822'
+  - '2295'
+  - '2296'
+  retro:
+  - '1817'
+  - '2289'
+  rustykalny:
+  - '2012'
+  - '2299'
+  - '2300'
+  shabby chic:
+  - '1818'
+  skandynawski:
+  - '1816'
+  - '2303'
+  - '2304'
+  vintage:
+  - '1819'
+  - '2290'
+Tapicerowane:
+  nietapicerowane:
+  - '1779'
+  tapicerowane:
+  - '1778'
+Twardość:
+  bardzo twarde:
+  - '1994'
+  miekkie:
+  - '1887'
+  srednie:
+  - '1888'
+  twarde:
+  - '1889'
+Typ:
+  stojace:
+  - '2265'
+  wiszace:
+  - '2264'
+  z koszem na pranie:
+  - '2267'
+Typ drążka:
+  pantograf:
+  - '2198'
+  poprzeczny:
+  - '2197'
+Typ funkcji spania:
+  click-clack:
+  - '2111'
+  delfin:
+  - '1841'
+  dl:
+  - '1839'
+  easy-lift:
+  - '2106'
+  leopard:
+  - '2031'
+  lift:
+  - '1843'
+  sedalift:
+  - '2109'
+  stelaz belgijski:
+  - '1840'
+  stelaz wloski:
+  - '2032'
+  wozek:
+  - '1842'
+Typ modułu:
+  narozny 45:
+  - '2195'
+  narozny 90:
+  - '2194'
+  prosty:
+  - '2193'
+Typ oparcia:
+  azurowe:
+  - '2160'
+  poduszka:
+  - '2152'
+  twarde:
+  - '2151'
+  zintegrowane:
+  - '2150'
+Typ oświetlenia:
+  led:
+  - '2153'
+  zarowka e14:
+  - '2155'
+  zarowka e27:
+  - '2154'
+  zarowka g9:
+  - '2158'
+  zarowka mr16:
+  - '2157'
+Typ rozkładania:
+  dostawka:
+  - '2183'
+  klapowy:
+  - '2181'
+  rozsuwany asynchronicznie:
+  - '2182'
+  rozsuwany synchronicznie:
+  - '2180'
+Typ stelaża:
+  stelaz podnoszony:
+  - '2162'
+  stelaz regulowany:
+  - '2161'
+Typ szuflad:
+  metabox:
+  - '1896'
+  sambox smb:
+  - '1895'
+  smartbox stb:
+  - '1894'
+Typ uchwytu:
+  brak system otwierania bez uchwytowy:
+  - '2179'
+  galka:
+  - '2175'
+  kolatka:
+  - '2176'
+  reling:
+  - '2174'
+  uchwyt elastyczny:
+  - '2178'
+  uchwyt krawedziowy:
+  - '2173'
+  uchwyt wpuszczany:
+  - '2177'
+Układ mebla:
+  lewostronny:
+  - '1900'
+  prawostronny:
+  - '1901'
+  uniwersalny:
+  - '2334'
+Wypełnienie:
+  mikrowlokno:
+  - '2256'
+  mikrowlokno / pianka wysokoelastyczna:
+  - '2257'
+  pasy tapicerskie:
+  - '1707'
+  pianka poliuretanowa:
+  - '1401'
+  pianka termoelastyczna:
+  - '380'
+  pianka wysokoelastyczna hr:
+  - '2203'
+  pierze:
+  - '1949'
+  sprezyny bonellowe:
+  - '376'
+  sprezyny faliste:
+  - '1708'
+  sprezyny kieszeniowe:
+  - '378'
+  wypelnienie silikonowe:
+  - '2201'
+Wyposażenie:
+  cichy domyk:
+  - '2327'
+  pelen wysuw szuflad:
+  - '2329'
+  push to open:
+  - '2328'
+Właściwości obicia:
+  hydrofobowe:
+  - '2336'
+  latwe w czyszczeniu:
+  - '2335'
+  odporne na blakniecie:
+  - '2352'
+  odporne na pilling i mechacenie:
+  - '2351'
+  odporne na scieranie:
+  - '2338'
+  plamoodporne:
+  - '2337'
+  przyjazne zwierzetom:
+  - '2339'
+  trudnopalne:
+  - '2340'
+Z pojemnikiem na pościel:
+  nie:
+  - '1694'
+  tak:
+  - '1693'
+Zagłówek:
+  bez zaglowka:
+  - '1986'
+  z zaglowkiem:
+  - '1988'
+Zamykanie:
+  zamykane na kluczyk:
+  - '2001'

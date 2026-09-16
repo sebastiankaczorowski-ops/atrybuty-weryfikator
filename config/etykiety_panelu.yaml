@@ -1,0 +1,515 @@
+Antyalergiczne:
+  antyalergiczne: antyalergiczne
+  nie antyalergiczne: nie antyalergiczne
+Barwa światła:
+  ciepla: Ciepła
+  neutralna: Neutralna
+  zimna: Zimna
+Cechy materaca:
+  antyalergiczny: antyalergiczny
+  dwustronny: dwustronny
+  rehabilitacyjny: rehabilitacyjny
+  wentylowany: wentylowany
+  ze strefami twardosci: ze strefami twardości
+  ze zdejmowanym pokrowcem: ze zdejmowanym pokrowcem
+Dekoracje:
+  fazowanie: fazowanie
+  guziki: guziki
+  pikowanie: pikowanie
+  postarzanie: postarzanie
+  przeszycia: przeszycia
+  ryflowanie: ryflowanie
+  rzezbienia: rzeźbienia
+  widoczne uslojenie drewna: widoczne usłojenie drewna
+Elementy zestawu:
+  barek: barek
+  biurko: biurko
+  kontenerek: kontenerek
+  lustro: lustro
+  pokrowiec: pokrowiec
+  szafki nocne: szafki nocne
+  witryna: witryna
+Funkcje:
+  funkcja relax: funkcja relax
+  funkcja spania: funkcja spania
+  port usb: port usb
+  regulowane podlokietniki: regulowane podłokietniki
+  regulowane siedzisko: regulowane siedzisko
+  regulowane zaglowki: regulowane zagłówki
+Ilość osób:
+  1-osobowe: 1-osobowe
+  10-osobowe: 10-osobowe
+  12-osobowe: 12-osobowe
+  2-osobowe: 2-osobowe
+  3-osobowe: 3-osobowe
+  4-osobowe: 4-osobowe
+  6-osobowe: 6-osobowe
+  8-osobowe: 8-osobowe
+Ilość wkładek:
+  1 x 100cm: 1 x 100cm
+  1 x 120cm: 1 x 120cm
+  1 x 30cm: 1 x 30cm
+  1 x 35cm: 1 x 35cm
+  1 x 39cm: 1 x 39cm
+  1 x 40cm: 1 x 40cm
+  1 x 43cm: 1 x 43cm
+  1 x 45cm: 1 x 45cm
+  1 x 46cm: 1 x 46cm
+  1 x 47cm: 1 x 47cm
+  1 x 49cm: 1 x 49cm
+  1 x 50cm: 1 x 50cm
+  1 x 55cm: 1 x 55cm
+  1 x 60cm: 1 x 60cm
+  1 x 70cm: 1 x 70cm
+  1 x 80cm: 1 x 80cm
+  1 x 90cm: 1 x 90cm
+  2 x 30cm: 2 x 30cm
+  2 x 35cm: 2 x 35cm
+  2 x 37cm: 2 x 37cm
+  2 x 38 cm: 2 x 38 cm
+  2 x 40cm: 2 x 40cm
+  2 x 41 5cm: 2 x 41,5cm
+  2 x 42 5cm: 2 x 42,5cm
+  2 x 44cm: 2 x 44cm
+  2 x 45cm: 2 x 45cm
+  2 x 50cm: 2 x 50cm
+  2 x 60 cm: 2 x 60 cm
+  3 x 25cm: 3 x 25cm
+  3 x 40cm: 3 x 40cm
+  3 x 44cm: 3 x 44cm
+  3 x 45cm: 3 x 45cm
+  3 x 46 5cm: 3 x 46,5cm
+  3 x 46cm: 3 x 46cm
+  3 x 47cm: 3 x 47cm
+  3 x 50cm: 3 x 50cm
+  3 x 53cm: 3 x 53cm
+  3 x 70cm: 3 x 70cm
+  4 x 40cm: 4 x 40cm
+  4 x 45cm: 4 x 45cm
+  4 x 50cm: 4 x 50cm
+  4 x 60cm: 4 x 60cm
+  5 x 50cm: 5 x 50cm
+  6 x 50cm: 6 x 50cm
+Kierunek otwierania:
+  do gory: Do góry
+  uniwersalna: Uniwersalna
+  w dol: W dół
+  w lewa strone: W lewą stronę
+  w prawa strone: W prawą stronę
+Klasa energetyczna:
+  a: A+++
+Kształt:
+  asymetryczny: asymetryczny
+  kwadratowy: kwadratowy
+  l: L
+  okragly: okrągły
+  owalny: owalny
+  polokragly: półokrągły
+  prostokatny: prostokątny
+  trapezowy: Trapezowy
+  trojkatny: Trójkątny
+  u: U
+Kształt blatu:
+  kwadratowy: kwadratowy
+  nieregularny: nieregularny
+  okragly: okrągły
+  owalny: owalny
+  prostokatny: prostokątny
+Liczba drzwi:
+  1-drzwiowe: 1-drzwiowe
+  2-drzwiowe: 2-drzwiowe
+  3-drzwiowe: 3-drzwiowe
+  bez drzwi: bez drzwi
+  wielodrzwiowe: wielodrzwiowe
+Liczba drążków:
+  1 drazek: 1 drążek
+  2 drazki: 2 drążki
+  3 drazki: 3 drążki
+  4 i wiecej drazkow: 4 i więcej drążków
+  brak drazkow: brak drążków
+Liczba półek:
+  1-polka: 1-półka
+  2-polki: 2-półki
+  3-polki: 3-półki
+  4-polki: 4-półki
+  5 i wiecej: 5 i więcej
+  bez polek: bez półek
+Liczba szaf:
+  1-szafa: 1-szafa
+  2-szafy: 2-szafy
+  3-szafy: 3-szafy
+  4 i wiecej: 4 i więcej
+  bez szaf: bez szaf
+Liczba szafek:
+  1-szafka: 1-szafka
+  2-szafki: 2-szafki
+  3-szafki: 3-szafki
+  4 i wiecej: 4 i więcej
+  bez szafek: bez szafek
+Liczba szuflad:
+  1-szuflada: 1-szuflada
+  2-szuflady: 2-szuflady
+  3-szuflady: 3-szuflady
+  4 i wiecej: 4 i więcej
+  bez szuflad: bez szuflad
+Materac w zestawie:
+  nie: nie
+  tak: tak
+Materiał:
+  ceramika: ceramika
+  drewno: drewno
+  marmur: marmur
+  metal: metal
+  plyta meblowa: płyta meblowa
+  szklo: szkło
+  tapicerowane: tapicerowane
+  tworzywo sztuczne: tworzywo sztuczne
+Materiał obicia:
+  bouclé: bouclé
+  ekoskora: ekoskóra
+  plecionka: plecionka
+  skora naturalna: skóra naturalna
+  szenil: szenil
+  sztruks: sztruks
+  tkanina: tkanina
+  welur: welur
+Miejsce użytkowania:
+  apteka: apteka
+  azienka: azienka
+  biuro: biuro
+  gabinet: gabinet
+  hotel: hotel
+  jadalnia: jadalnia
+  kino-teatr: kino-teatr
+  kuchnia: kuchnia
+  laboratorium: laboratorium
+  ogrod: ogród
+  pokoj: pokój
+  pokoj dziecka: pokój dziecka
+  pokoj mlodziezowy: pokój młodzieżowy
+  przedpokoj: przedpokój
+  recepcja: recepcja
+  restauracja: restauracja
+  sala audytoryjna: sala audytoryjna
+  sala konferencyjna: sala konferencyjna
+  sala medyczna: sala medyczna
+  salon: salon
+  sklep: sklep
+  sypialnia: sypialnia
+  szkola: szkoła
+  uzytecznosci publicznej: użyteczności publicznej
+  warsztat: warsztat
+Na nóżkach:
+  nie: nie
+  tak: tak
+Oświetlenie:
+  brak: brak
+  opcjonalne: opcjonalne
+  w zestawie: w zestawie
+Podnóżek:
+  bez podnozka: bez podnóżka
+  z podnozkiem: z podnóżkiem
+Podparcie:
+  inne: inne
+  kolumna: kolumna
+  na kolkach: na kółkach
+  na nozkach: na nóżkach
+  na plozach: na płozach
+  wiszace: wiszące
+Podłokietniki:
+  bez podlokietnikow: bez podłokietników
+  z podlokietnikami: z podłokietnikami
+Pokrowiec zdejmowalny:
+  niezdejmowalny: niezdejmowalny
+  zdejmowalny: zdejmowalny
+Półka na klawiaturę:
+  bez polki: bez półki
+  z polka: z półką
+Rama:
+  bez ramy: Bez Ramy
+  z rama: Z ramą
+Regulacja:
+  elektryczna: elektryczna
+  manualna: manualna
+  nachylenia: nachylenia
+  szerokosci: szerokości
+  wysokosci: wysokości
+Rodzaj dodatku:
+  ladowarka: Ładowarka
+  listwa ozdobna: Listwa ozdobna
+  naklejka: Naklejka
+  organizer: Organizer
+  pilot: Pilot
+  poduszka: Poduszka
+Rodzaj drewna:
+  drewno akacjowe: drewno akacjowe
+  drewno brzozowe: drewno brzozowe
+  drewno bukowe: drewno bukowe
+  drewno debowe: drewno dębowe
+  drewno jesionowe: drewno jesionowe
+  drewno jodlowe: drewno jodłowe
+  drewno olchowe: drewno olchowe
+  drewno orzechowe: drewno orzechowe
+  drewno sosnowe: drewno sosnowe
+Rodzaj drzwi:
+  harmonijkowe: harmonijkowe
+  klapowe: klapowe
+  przesuwne: przesuwne
+  uchylne: uchylne
+Rodzaj folii:
+  folia 3d: folia 3D
+  folia finish: folia finish
+  folia meblowa: folia meblowa
+Rodzaj forniru:
+  fornir debowy: fornir dębowy
+Rodzaj frontu:
+  azurowy: ażurowy
+  pelny: pełny
+  przeszklony: przeszklony
+  ryflowany: ryflowany
+  z lustrem: z lustrem
+Rodzaj płyty:
+  plyta hdf: płyta HDF
+  plyta mdf: płyta MDF
+  plyta meblowa: płyta meblowa
+Rodzaj regulacji:
+  regulacja elektryczna: Regulacja elektryczna
+  regulacja manualna: Regulacja manualna
+  regulacja mechaniczna: Regulacja mechaniczna
+  regulacja pneumatyczna: Regulacja pneumatyczna
+Rodzaj zasilania:
+  zasilanie akumlatorowe: Zasilanie akumlatorowe
+  zasilanie bateryjne: Zasilanie bateryjne
+  zasilanie sieciowe 230v: Zasilanie sieciowe 230v
+Rozkładane:
+  nie: nie
+  tak: tak
+Rozmiar:
+  100x200: 100x200
+  100x220: 100x220
+  120x200: 120x200
+  120x220: 120x220
+  140x190: 140x190
+  140x200: 140x200
+  140x220: 140x220
+  160x200: 160x200
+  160x220: 160x220
+  180x200: 180x200
+  180x220: 180x220
+  200x200: 200x200
+  200x220: 200x220
+  60x120: 60x120
+  70x140: 70x140
+  70x160: 70x160
+  70x170: 70x170
+  80x140: 80x140
+  80x160: 80x160
+  80x180: 80x180
+  80x190: 80x190
+  80x200: 80x200
+  80x220: 80x220
+  90x160: 90x160
+  90x180: 90x180
+  90x190: 90x190
+  90x200: 90x200
+  90x200 na stelazu: 90x200 na stelażu
+  90x220: 90x220
+Rozmiar stołu:
+  100x100: 100x100
+  100x60: 100x60
+  100x80: 100x80
+  100x90: 100x90
+  110x100: 110x100
+  110x110: 110x110
+  110x80: 110x80
+  110x90: 110x90
+  112x72: 112x72
+  120x100: 120x100
+  120x120: 120x120
+  120x80: 120x80
+  120x90: 120x90
+  122x82: 122x82
+  130x100: 130x100
+  130x80: 130x80
+  130x90: 130x90
+  140x100: 140x100
+  140x70: 140x70
+  140x80: 140x80
+  140x85: 140x85
+  140x90: 140x90
+  150x100: 150x100
+  150x80: 150x80
+  150x90: 150x90
+  160x100: 160x100
+  160x80: 160x80
+  160x90: 160x90
+  160x95: 160x95
+  170x100: 170x100
+  170x80: 170x80
+  170x90: 170x90
+  180x100: 180x100
+  180x80: 180x80
+  180x90: 180x90
+  180x95: 180x95
+  188x188: 188x188
+  190x100: 190x100
+  190x80: 190x80
+  190x90: 190x90
+  200x100: 200x100
+  200x80: 200x80
+  200x90: 200x90
+  210x100: 210x100
+  210x80: 210x80
+  210x90: 210x90
+  220x100: 220x100
+  220x80: 220x80
+  220x90: 220x90
+  225x95: 225x95
+  240x100: 240x100
+  240x90: 240x90
+  50x50: 50x50
+  80x100: 80x100
+  80x80: 80x80
+  80x90: 80x90
+  82x82: 82x82
+  85x85: 85x85
+  90x100: 90x100
+  90x80: 90x80
+  90x90: 90x90
+  95x95: 95x95
+Schowek:
+  bez schowka: bez schowka
+  ze schowkiem: ze schowkiem
+Sposób ustawienia:
+  stojacy: stojący
+  wiszacy: wiszący
+Status produktu:
+  dostepny tylko u nas: dostępny tylko u nas
+  nowosc: nowość
+  polski produkt: polski produkt
+Stelaż w zestawie:
+  nie: nie
+  tak: tak
+Stopień montażu:
+  mebel gotowy: mebel gotowy
+  wymaga zlozenia: wymaga złożenia
+Styl:
+  angielski: Angielski
+  art deco: Art deco
+  boho: Boho
+  chlopiecy: Chłopięcy
+  dzieciece i mlodziezowe: dziecięce i młodzieżowe
+  dzieciecy: dziecięcy
+  dziewczecy: Dziewczęcy
+  etno: Etno
+  glamour: Glamour
+  industrialny: Industrialny
+  japandi: Japandi
+  klasyczny: Klasyczny
+  minimalistyczny: Minimalistyczny
+  modern classic: Modern Classic
+  nowoczesny: Nowoczesny
+  prowansalski: Prowansalski
+  retro: Retro
+  rustykalny: Rustykalny
+  shabby chic: shabby Chic
+  skandynawski: Skandynawski
+  vintage: Vintage
+Tapicerowane:
+  nietapicerowane: nietapicerowane
+  tapicerowane: tapicerowane
+Twardość:
+  bardzo twarde: bardzo twarde
+  miekkie: miękkie
+  srednie: średnie
+  twarde: twarde
+Typ:
+  stojace: Stojące
+  wiszace: Wiszące
+  z koszem na pranie: Z koszem na pranie
+Typ drążka:
+  pantograf: Pantograf
+  poprzeczny: Poprzeczny
+Typ funkcji spania:
+  click-clack: click-clack
+  delfin: delfin
+  dl: DL
+  easy-lift: easy-lift
+  leopard: leopard
+  lift: lift
+  sedalift: sedalift
+  stelaz belgijski: stelaż belgijski
+  stelaz wloski: stelaż włoski
+  wozek: wózek
+Typ modułu:
+  narozny 45: Narożny 45°
+  narozny 90: Narożny 90°
+  prosty: Prosty
+Typ oparcia:
+  azurowe: Ażurowe
+  poduszka: Poduszka
+  twarde: Twarde
+  zintegrowane: Zintegrowane
+Typ oświetlenia:
+  led: LED
+  zarowka e14: Żarówka E14
+  zarowka e27: Żarówka E27
+  zarowka g9: Żarówka G9
+  zarowka mr16: Żarówka MR16
+Typ rozkładania:
+  dostawka: Dostawka
+  klapowy: Klapowy
+  rozsuwany asynchronicznie: Rozsuwany asynchronicznie
+  rozsuwany synchronicznie: Rozsuwany synchronicznie
+Typ stelaża:
+  stelaz podnoszony: Stelaż podnoszony
+  stelaz regulowany: Stelaż regulowany
+Typ szuflad:
+  metabox: Metabox
+  sambox smb: Sambox (SMB)
+  smartbox stb: Smartbox (STB)
+Typ uchwytu:
+  brak system otwierania bez uchwytowy: Brak (system otwierania bez uchwytowy)
+  galka: Gałka
+  kolatka: Kołatka
+  reling: Reling
+  uchwyt elastyczny: Uchwyt elastyczny
+  uchwyt krawedziowy: Uchwyt krawędziowy
+  uchwyt wpuszczany: Uchwyt wpuszczany
+Układ mebla:
+  lewostronny: lewostronny
+  prawostronny: prawostronny
+  uniwersalny: uniwersalny
+Wypełnienie:
+  mikrowlokno: mikrowłókno
+  mikrowlokno / pianka wysokoelastyczna: mikrowłókno / pianka wysokoelastyczna
+  pasy tapicerskie: pasy tapicerskie
+  pianka poliuretanowa: pianka poliuretanowa
+  pianka termoelastyczna: pianka termoelastyczna
+  pianka wysokoelastyczna hr: pianka wysokoelastyczna (HR)
+  pierze: pierze
+  sprezyny bonellowe: sprężyny bonellowe
+  sprezyny faliste: sprężyny faliste
+  sprezyny kieszeniowe: sprężyny kieszeniowe
+  wypelnienie silikonowe: wypełnienie silikonowe
+Wyposażenie:
+  cichy domyk: cichy domyk
+  pelen wysuw szuflad: pełen wysuw szuflad
+  push to open: push to open
+Właściwości obicia:
+  hydrofobowe: hydrofobowe
+  latwe w czyszczeniu: łatwe w czyszczeniu
+  odporne na blakniecie: odporne na blaknięcie
+  odporne na pilling i mechacenie: odporne na pilling i mechacenie
+  odporne na scieranie: odporne na ścieranie
+  plamoodporne: plamoodporne
+  przyjazne zwierzetom: przyjazne zwierzętom
+  trudnopalne: trudnopalne
+Z pojemnikiem na pościel:
+  nie: nie
+  tak: tak
+Zagłówek:
+  bez zaglowka: bez zagłówka
+  z zaglowkiem: z zagłówkiem
+Zamykanie:
+  zamykane na kluczyk: zamykane na kluczyk

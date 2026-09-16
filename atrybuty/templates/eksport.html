@@ -79,11 +79,13 @@
 <section class="dodaj">
   <h3>Wzorzec formatu i słownik ID</h3>
   <p class="pod">Panel zapisuje wartości słownikowe jako <code>ID|etykieta</code>
-  (np. <code>2022|tapicerowane</code>), a nasze źródło ma same etykiety. Każdy
-  wgrany tu eksport z panelu dokłada wartości do słownika. Im więcej produktów
-  w takim pliku, tym mniej poprawek wypada z eksportu jako „nieznane ID".</p>
+  (np. <code>2022|tapicerowane</code>), a nasze źródło ma same etykiety.
+  Wgraj tu <b>eksport słownika atrybutów</b> (dwa arkusze: atrybuty i wartości) —
+  to pełne źródło prawdy. <b>Eksport produktów</b> z panelu też zadziała, ale uczy
+  tylko tych wartości, które akurat w nim wystąpiły; jest za to jedynym źródłem
+  układu 165 kolumn, więc jeden taki plik też musi tu trafić.</p>
   <form method="post" action="/eksport/wzorzec" enctype="multipart/form-data" class="pola">
-    <div class="pole"><label>plik z panelu (.xlsx)</label>
+    <div class="pole"><label>plik z panelu: słownik atrybutów albo eksport produktów (.xlsx)</label>
       <input type="file" name="plik" accept=".xlsx,.xlsm" required></div>
     <button class="p" type="submit">Wczytaj</button>
   </form>
@@ -95,15 +97,39 @@
 {% if plan.pominiete %}
 <section>
   <h2>Poprawki, które nie wejdą do pliku ({{ plan.pominiete|length }})</h2>
-  <p class="pod">Zostają w kolejce eksportu — wejdą, gdy słownik pozna ich ID.
-  Najszybsza droga: wyeksportuj z panelu produkty z tym atrybutem i wgraj plik powyżej.</p>
+  <p class="pod">Zwinięte do samych wartości, bo to lista do poprawienia reguł,
+  a nie do klikania po produktach. „Wartość spoza słownika sklepu" znaczy, że
+  reguła proponuje coś, czego panel po prostu nie ma — np. <code>4-drzwiowe</code>,
+  gdy sklep zna tylko <code>wielodrzwiowe</code>. Póki to trwa, decyzje zostają
+  w kolejce eksportu i niczego nie psują.</p>
   <table class="pominiete">
-    <thead><tr><th>produkt</th><th>atrybut</th><th>wartość</th><th>powód</th></tr></thead>
+    <thead><tr><th>atrybut</th><th>proponowana wartość</th>
+      <th class="n">ile</th><th>powód</th><th>przykład</th></tr></thead>
     <tbody>
-    {% for p in plan.pominiete[:100] %}
-      <tr><td><code>{{ p.produkt_id }}</code> {{ p.nazwa }}</td>
-          <td>{{ p.atrybut }}</td><td>{{ p.nowa_wartosc }}</td>
-          <td class="dowod">{{ p.powod }}</td></tr>
+    {% for p in plan.pominiete_zbiorczo()[:80] %}
+      <tr><td>{{ p.atrybut }}</td><td><b>{{ p.nowa_wartosc }}</b></td>
+          <td class="n">{{ p.ile }}</td>
+          <td class="dowod">{{ p.powod }}</td>
+          <td><a href="/produkt/{{ p.przyklad }}" target="_blank">
+            <code>{{ p.przyklad }}</code></a></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if duplikaty %}
+<section>
+  <h2>Do posprzątania w panelu: zduplikowane wartości słownika ({{ duplikaty|length }})</h2>
+  <p class="pod">Ta sama etykieta pod kilkoma ID. Dopóki tak jest, nie da się
+  rozstrzygnąć, które ID wpisać, więc poprawki na te wartości wypadają z eksportu.
+  To problem po stronie sklepu — do scalenia w panelu.</p>
+  <table class="pominiete">
+    <thead><tr><th>atrybut</th><th>wartość</th><th>ID w panelu</th></tr></thead>
+    <tbody>
+    {% for d in duplikaty %}
+      <tr><td>{{ d.atrybut }}</td><td><b>{{ d.wartosc }}</b></td>
+          <td class="dowod"><code>{{ d.ids|join(', ') }}</code></td></tr>
     {% endfor %}
     </tbody>
   </table>
