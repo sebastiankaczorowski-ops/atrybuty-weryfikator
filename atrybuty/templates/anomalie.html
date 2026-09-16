@@ -352,6 +352,21 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="status" value="falszywy_alarm">
         <button class="mini" type="submit">Fałszywy alarm</button>
       </form>
+      {# Własna wartość zapisuje poprawkę, nie odkłada jej — wpisanie czegoś
+         w to pole jest decyzją, a nie odłożeniem decyzji na później. #}
+      <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
+        <input type="hidden" name="regula_id" value="RECZNA">
+        <input type="hidden" name="zakres" value="pojedynczo">
+        <input type="hidden" name="status" value="zastosowana">
+        <input type="text" name="nowa" placeholder="własna wartość" required
+               style="width:130px"
+               {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"
+               title="Podpowiedzi to wartości, które sklep ma w słowniku"{% endif %}>
+        <button class="p mini" type="submit">Zapisz</button>
+      </form>
       <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
         <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
         <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
@@ -359,8 +374,8 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="regula_id" value="{{ w.regula_id }}">
         <input type="hidden" name="zakres" value="pojedynczo">
         <input type="hidden" name="status" value="odlozona">
-        <input type="text" name="nowa" placeholder="własna wartość" style="width:120px">
-        <button class="mini" type="submit">Zapisz</button>
+        <button class="mini" type="submit"
+                title="Wróć do tego później — finding zniknie z listy otwartych">odłóż</button>
       </form>
     </div>
   </td>
@@ -368,6 +383,15 @@ tr.htmx-request .szkielet{display:flex}
 {% endfor %}
 </tbody>
 </table>
+
+{# Podpowiedzi do „własnej wartości": dokładnie to, co sklep ma w słowniku.
+   Bez tego łatwo wpisać wartość, której panel nie przyjmie — i dowiedzieć
+   się o tym dopiero przy eksporcie. #}
+{% for atrybut, nr in listy_wartosci.items() %}
+<datalist id="dl-{{ nr }}">
+  {% for wartosc in wartosci_slownika[atrybut] %}<option value="{{ wartosc }}">{% endfor %}
+</datalist>
+{% endfor %}
 
 <div class="strony">
   {% if strona > 1 %}<a href="/anomalie?{{ fl.jako_query(strona=strona-1) }}">← poprzednia</a>{% endif %}

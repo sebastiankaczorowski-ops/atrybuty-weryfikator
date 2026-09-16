@@ -1021,3 +1021,44 @@ def test_duplikaty_slownika_sa_raportowane(tmp_path, monkeypatch):
     assert w["duplikaty"] and w["duplikaty"][0]["ids"] == ["1695", "2291"]
     s, e = pf.wczytaj_slownik(), pf.wczytaj_etykiety()
     assert pf.id_dla(s, "Styl", "nowoczesny", e)[0] is None
+
+
+def test_wlasna_wartosc_zapisuje_poprawke_a_nie_odklada(tmp_path, monkeypatch):
+    """Pole „własna wartość" to decyzja, nie odłożenie jej na później."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    import atrybuty.app as app_mod
+    con, baza = _baza_z_decyzjami(tmp_path, monkeypatch)
+    con.execute("DELETE FROM decyzje"); con.commit(); con.close()
+
+    klient = TestClient(app_mod.app)
+    strona = klient.get("/anomalie").text
+    assert 'placeholder="własna wartość"' in strona
+    # formularz z tym polem musi wysyłać status zastosowana
+    kawalek = strona[:strona.find('placeholder="własna wartość"')]
+    assert kawalek.rsplit('name="status"', 1)[1].startswith(' value="zastosowana"')
+
+    klient.post("/decyzja", data={
+        "produkt_id": "1", "atrybut": "Materiał", "stara": "plyta",
+        "nowa": "dąb", "regula_id": "RECZNA", "status": "zastosowana",
+        "zakres": "pojedynczo"})
+    con = db.polacz(baza)
+    r = con.execute("SELECT status, nowa_wartosc FROM decyzje WHERE produkt_id='1'").fetchone()
+    con.close()
+    assert r["status"] == "zastosowana" and r["nowa_wartosc"] == "dąb"
+
+
+def test_kolejka_podpowiada_wartosci_ze_slownika(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    pf.naucz_ze_slownika(_plik_slownika(tmp_path,
+        [(1.0, "ACTIVE", "Materiał")],
+        [(2104.0, "Materiał", "drewno"), (1952.0, "Materiał", "metal")]))
+    con, _ = _baza_z_decyzjami(tmp_path, monkeypatch)
+    con.execute("DELETE FROM decyzje"); con.commit(); con.close()
+
+    strona = TestClient(app_mod.app).get("/anomalie").text
+    assert "<datalist" in strona and 'value="drewno"' in strona and 'value="metal"' in strona

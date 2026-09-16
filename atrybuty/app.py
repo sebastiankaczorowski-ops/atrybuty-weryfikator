@@ -78,6 +78,21 @@ def anomalie(request: Request,
 
     wiersze = zapytania.lista(con, przebieg, fl)
     ile = zapytania.policz(con, przebieg, fl)
+
+    # Podpowiedzi do „własnej wartości" — tylko dla atrybutów widocznych na tej
+    # stronie, żeby nie wstawiać 473 wartości w każdy wiersz.
+    slownik = panel_format.wczytaj_slownik()
+    etykiety = panel_format.wczytaj_etykiety()
+    listy_wartosci: dict[str, int] = {}
+    wartosci_slownika: dict[str, list[str]] = {}
+    for w in wiersze:
+        atr = w["atrybut"]
+        if atr in listy_wartosci or atr not in slownik:
+            continue
+        listy_wartosci[atr] = len(listy_wartosci) + 1
+        mapa = etykiety.get(atr, {})
+        wartosci_slownika[atr] = sorted(mapa.get(k, k) for k in slownik[atr])
+
     kontekst = {
         "request": request,
         "wiersze": wiersze,
@@ -91,6 +106,8 @@ def anomalie(request: Request,
         "przebieg": db.ostatni_przebieg(con),
         "prog": PROG_DO_WIZJI,
         "pytania_wizji": wizja.obslugiwane_atrybuty(),
+        "listy_wartosci": listy_wartosci,
+        "wartosci_slownika": wartosci_slownika,
     }
     con.close()
     return szablony.TemplateResponse(request, "anomalie.html", kontekst)
