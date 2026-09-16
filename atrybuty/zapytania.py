@@ -198,6 +198,12 @@ def statystyki(con: sqlite3.Connection, przebieg: int) -> dict:
                                Filtr(grupuj=False, werdykt="zgodne", status="otwarte")),
         "wizja_nie_widac": policz(con, przebieg,
                                   Filtr(grupuj=False, werdykt="nie_widac", status="otwarte")),
+        "ze_skladowych": policz(con, przebieg,
+                                Filtr(grupuj=False, regula="L0-ZE-SKLADOWYCH", status="otwarte")),
+        "ze_skladowych_grup": policz(con, przebieg,
+                                     Filtr(grupuj=True, regula="L0-ZE-SKLADOWYCH", status="otwarte")),
+        "konflikty_skladowych": policz(con, przebieg,
+                                       Filtr(grupuj=False, regula="L0-KONFLIKT", status="otwarte")),
     }
 
 

@@ -1062,3 +1062,68 @@ def test_kolejka_podpowiada_wartosci_ze_slownika(tmp_path, monkeypatch):
 
     strona = TestClient(app_mod.app).get("/anomalie").text
     assert "<datalist" in strona and 'value="drewno"' in strona and 'value="metal"' in strona
+
+
+# --- L0: atrybuty rozjechane między atrybutami a składowymi ---------------
+
+def _prod_ze_skladowymi(pid, atrybuty, skladowe, odciete=False):
+    from atrybuty.model import Produkt
+    return Produkt(id=pid, nazwa=f"Komoda {pid}", producent="BRW", kolekcja="",
+                   zdjecie="", styl="", kategoria="komoda",
+                   atrybuty=dict(atrybuty), atrybuty_surowe=dict(atrybuty),
+                   skladowe=dict(skladowe), skladowe_odciete=odciete)
+
+
+SLOWNIK_TESTOWY = {"Materiał": {"drewno": ["2104"], "metal": ["1952"]},
+                   "Podparcie": {"na nozkach": ["1956"]}}
+
+
+def test_atrybut_ze_skladowych_trafia_do_przepisania():
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {"Materiał": "drewno"}, {"Podparcie": "na nóżkach"})
+    f = skladowe.znajdz([p], SLOWNIK_TESTOWY)
+    assert len(f) == 1
+    assert f[0].regula_id == "L0-ZE-SKLADOWYCH"
+    assert f[0].atrybut == "Podparcie" and f[0].proponowana_wartosc == "na nóżkach"
+
+
+def test_nieslownikowe_ze_skladowych_sa_pomijane():
+    """Liczby i teksty bez słownika zostają, gdzie były — nie ma czym
+    potwierdzić, że wartość jest sensowna."""
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {}, {"Długość": "200", "Do poprawy": "stojące"})
+    assert skladowe.znajdz([p], SLOWNIK_TESTOWY) == []
+
+
+def test_flaga_odciecia_wylacza_produkt():
+    """omit_components_in_attributes=1 znaczy, że składowe są już przepisane."""
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {}, {"Podparcie": "na nóżkach"}, odciete=True)
+    assert skladowe.znajdz([p], SLOWNIK_TESTOWY) == []
+
+
+def test_konflikt_realny_jest_krytyczny_a_zaokraglenie_nie():
+    from atrybuty import skladowe
+    from atrybuty.model import INFO, KRYTYCZNA
+    realny = _prod_ze_skladowymi("1", {"Materiał": "metal"}, {"Materiał": "drewno"})
+    zaokr = _prod_ze_skladowymi("2", {"Wysokość": "90,5"}, {"Wysokość": "90"})
+    zapis = _prod_ze_skladowymi("3", {"Głębokość": "41,9"}, {"Głębokość": "41.9"})
+    f = {x.produkt_id: x for x in skladowe.znajdz([realny, zaokr, zapis], SLOWNIK_TESTOWY)}
+    assert f["1"].waga == KRYTYCZNA and f["1"].regula_id == "L0-KONFLIKT"
+    assert f["2"].waga == INFO
+    assert f["3"].waga == INFO       # 41,9 i 41.9 to ta sama liczba
+
+
+def test_zgodne_wartosci_nie_daja_findingu():
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {"Materiał": "drewno"}, {"Materiał": "drewno"})
+    assert skladowe.znajdz([p], SLOWNIK_TESTOWY) == []
+
+
+def test_przepisania_grupuja_sie_po_wartosci():
+    """6616 produktów z „Podparcie = na nóżkach" to jedna decyzja."""
+    from atrybuty import skladowe
+    produkty = [_prod_ze_skladowymi(str(i), {}, {"Podparcie": "na nóżkach"})
+                for i in range(5)]
+    f = skladowe.znajdz(produkty, SLOWNIK_TESTOWY)
+    assert len(f) == 5 and len({x.grupa for x in f}) == 1

@@ -14,8 +14,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from . import (config, db, detektory, kategorie, normalizacja, schema_gen, wizja,
-               zdjecia as zdjecia_mod, zrodla)
+from . import (config, db, detektory, kategorie, normalizacja, schema_gen,
+               skladowe, wizja, zdjecia as zdjecia_mod, zrodla)
 from .model import Finding, Produkt, oszacuj_kompletnosc
 
 csv.field_size_limit(10_000_000)
@@ -48,6 +48,8 @@ KOLUMNY_PODTYPU = ("podtyp", "subtype")
 KOLUMNY_KODOW = ("kod produktu", "kod producenta", "kod EAN", "nasz kod EAN",
                  "unikatowy kod produktu", "sku", "ean")
 KOLUMNY_ZDJEC = ("zdjecia", "zdjęcia", "images")
+KOLUMNY_SKLADOWYCH = ("atrybuty z zakladki", "atrybuty z zakładki", "atrybuty skladowych")
+KOLUMNA_ODCIECIA = "omit_components_in_attributes"
 
 
 def wczytaj_kategorie(sciezka: str | Path) -> dict[str, dict]:
@@ -81,6 +83,8 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
         kol_podtyp = next((k for k in pola if k.lower() in KOLUMNY_PODTYPU), None)
         kol_kody = [k for k in pola if k.lower() in KOLUMNY_KODOW]
         kol_zdjecia = next((k for k in pola if k.lower() in KOLUMNY_ZDJEC), None)
+        kol_skladowe = next((k for k in pola if k.lower() in KOLUMNY_SKLADOWYCH), None)
+        kol_odciecie = next((k for k in pola if k.lower() == KOLUMNA_ODCIECIA), None)
 
         for wiersz in czytnik:
             surowe = normalizacja.parsuj_atrybuty(wiersz.get("atrybuty", ""))
@@ -104,6 +108,9 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
             kody = {k: (wiersz.get(k) or "").strip() for k in kol_kody
                     if (wiersz.get(k) or "").strip()}
             galeria = zdjecia_mod.parsuj(wiersz.get(kol_zdjecia, "")) if kol_zdjecia else []
+            skladowe = (normalizacja.parsuj_atrybuty(wiersz.get(kol_skladowe, ""))
+                        if kol_skladowe else {})
+            odciete = (wiersz.get(kol_odciecie) or "").strip() in ("1", "true", "True")
 
             produkty.append(Produkt(
                 id=pid,
@@ -114,6 +121,7 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
                 styl=(wiersz.get("style") or "").strip(),
                 kategoria=kat, zrodlo_kategorii=zrodlo, podtyp=podtyp,
                 kody=kody, zdjecia=galeria,
+                skladowe=skladowe, skladowe_odciete=odciete,
                 atrybuty=znorm, atrybuty_surowe=surowe, liczby=liczby,
                 kompletnosc=oszacuj_kompletnosc(znorm)))
             findingi += f_norm
@@ -139,7 +147,17 @@ def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
         config.zapisz_schema(schema_gen.zbuduj(produkty))
 
     findingi = detektory.uruchom(produkty, f_norm)
+    # L0 leci osobno: nie zależy od reguł ani od schematu, tylko od tego,
+    # co sklep trzyma w składowych. Dotyczy też produktów wyłączonych
+    # z analizy jako puste — dla nich przepisanie ze składowych bywa
+    # jedynym sposobem, żeby w ogóle miały atrybuty.
+    findingi += skladowe.znajdz(produkty)
     print(f"Findingów: {len(findingi)}")
+    if any(p.skladowe for p in produkty):
+        s = skladowe.podsumowanie(produkty, findingi)
+        print(f"  L0 składowe: {s['do_przepisania']} do przepisania, "
+              f"{s['konfliktow']} konfliktów ({s['konfliktow_krytycznych']} krytycznych), "
+              f"{s['grup']} grup")
 
     BAZA.parent.mkdir(parents=True, exist_ok=True)
     con = db.polacz(BAZA)

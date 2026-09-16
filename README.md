@@ -70,6 +70,31 @@ pojedynczy produkt wypiąć jako fałszywy alarm („to nie ten"), zostawiając
 resztę grupy otwartą. Grupa łączy po (reguła, atrybut, wartość), a nie po
 wyglądzie mebla, więc czasem wpada do niej produkt z innej bajki.
 
+## Warstwa L0 — atrybuty w dwóch miejscach
+
+W sklepie ta sama cecha mebla może siedzieć w atrybutach produktu albo
+w jego składowych, a front bierze ją stamtąd, gdzie znajdzie. Docelowo mają
+być wyłącznie w atrybutach. Eksport podaje obie kolumny (`atrybuty`,
+`atrybuty z zakladki`) plus flagę `omit_components_in_attributes`.
+
+Na eksporcie z 16.09 (32 252 produkty):
+
+| | |
+|---|---|
+| do przepisania ze składowych | 67 384 par w **402 grupach** |
+| konflikty wartości | 4 319 par, w tym 1 831 krytycznych |
+| produkty bez składowych | 1 520 (drobnica: nogi, amortyzatory, szablony) |
+
+Przepisujemy **wyłącznie atrybuty słownikowe**. Liczby i teksty
+(Długość, Wysokość siedziska, „Do poprawy" — ok. 22 tys. par) zostają, gdzie
+były: nie ma słownika, który potwierdzałby, że wartość jest sensowna, a
+przepisanie ich na wiarę to przenoszenie bałaganu, nie porządkowanie.
+Produkty z flagą `omit_components_in_attributes = 1` są pomijane w całości.
+
+Konflikty nie są jedną kupką i dlatego mają różne wagi: „90,5 vs 90" to
+zaokrąglenie (info), a „Głębokość 102 vs 200" to błąd, który ktoś musi
+zobaczyć (krytyczna).
+
 ## Rozstrzygnięte i eksport do sklepu
 
 `/rozstrzygniete` pokazuje każdą podjętą decyzję razem ze zmianą

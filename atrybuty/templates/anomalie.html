@@ -159,6 +159,18 @@ tr.htmx-request .szkielet{display:flex}
     <b>{{ stat.do_wizji }}</b><span>kandydaci do Gemini</span></a>
   <a class="kafel {{ 'akt' if fl.routing=='do_czlowieka' }}" href="/anomalie?routing=do_czlowieka">
     <b>{{ stat.do_czlowieka }}</b><span>do oceny człowieka</span></a>
+  {% if stat.ze_skladowych %}
+  <a class="kafel {{ 'akt' if fl.regula=='L0-ZE-SKLADOWYCH' }}"
+     href="/anomalie?regula=L0-ZE-SKLADOWYCH"
+     title="Atrybut słownikowy siedzi w składowych, a nie w atrybutach produktu">
+    <b>{{ stat.ze_skladowych }}</b><span>do przepisania ze składowych ({{ stat.ze_skladowych_grup }} grup)</span></a>
+  {% endif %}
+  {% if stat.konflikty_skladowych %}
+  <a class="kafel {{ 'akt' if fl.regula=='L0-KONFLIKT' }}"
+     href="/anomalie?regula=L0-KONFLIKT&waga=krytyczna"
+     title="Ten sam atrybut ma różne wartości w atrybutach i w składowych">
+    <b>{{ stat.konflikty_skladowych }}</b><span>konfliktów ze składowymi</span></a>
+  {% endif %}
   <a class="kafel {{ 'akt' if fl.werdykt=='niezgodne' }}" href="/anomalie?werdykt=niezgodne">
     <b>{{ stat.wizja_niezgodne }}</b><span>Gemini: niezgodne ze zdjęciem</span></a>
   <div class="kafel"><b>{{ stat.zdecydowane }}</b><span>rozstrzygnięte</span></div>

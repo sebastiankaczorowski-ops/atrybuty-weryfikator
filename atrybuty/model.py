@@ -14,6 +14,7 @@ SREDNIA = "srednia"
 INFO = "info"
 
 # Warstwy detekcji.
+L0 = "L0"  # porządek w źródle: atrybuty rozjechane między dwoma miejscami
 L1 = "L1"  # struktura i słowniki (deterministyczne)
 L2 = "L2"  # statystyka i spójność (deterministyczne)
 L3 = "L3"  # model wizyjny (płatne)
@@ -37,6 +38,12 @@ class Produkt:
     kody: dict[str, str] = field(default_factory=dict)   # kod produktu/producenta/EAN
     zdjecia: list = field(default_factory=list)          # [(etykieta, url)]
     kompletnosc: str = "ok"                        # ok | bez_wymiarow | szczatkowy | pusty
+    # Atrybuty widziane przez front ze składowych mebla. U nas te same cechy
+    # siedzą w dwóch miejscach i front bierze je stamtąd, gdzie znajdzie —
+    # docelowo mają być wyłącznie w atrybutach produktu.
+    skladowe: dict[str, str] = field(default_factory=dict)
+    # Flaga ze sklepu: 1 = składowe już przepisane, front ich nie czyta.
+    skladowe_odciete: bool = False
 
     @property
     def ma_zdjecie(self) -> bool:
