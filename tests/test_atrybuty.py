@@ -776,3 +776,163 @@ def test_kolejka_linkuje_do_podgladu_grupy(tmp_path, monkeypatch):
     klient = _klient_z_grupa(tmp_path, monkeypatch)
     odp = klient.get("/anomalie")
     assert "identycznych" in odp.text and "hx-get=\"/grupa?grupa=" in odp.text
+
+
+# --- format panelu i eksport partiami -------------------------------------
+
+def _plik_panelu(tmp_path, wiersze_danych, naglowki=None):
+    """Minimalny plik w układzie eksportu z panelu (nagłówki w wierszu 6)."""
+    import openpyxl
+    naglowki = naglowki or ["ID", "Kod", "Kod producenta", "Nazwa", "Szerokość", "Materiał"]
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    for _ in range(4):
+        ws.append([])
+    ws.append(["Export date:", None, "2026-09-16", "Items: ", len(wiersze_danych)])
+    ws.append(naglowki)
+    for w in wiersze_danych:
+        ws.append(w)
+    sciezka = tmp_path / "panel.xlsx"
+    wb.save(sciezka)
+    return sciezka
+
+
+def _panel_w_tmp(tmp_path, monkeypatch):
+    from atrybuty import panel_format as pf
+    monkeypatch.setattr(pf, "PLIK_SLOWNIKA", tmp_path / "slownik.yaml")
+    monkeypatch.setattr(pf, "PLIK_WZORCA", tmp_path / "wzorzec.yaml")
+    return pf
+
+
+def test_nauka_z_panelu_rozpoznaje_kolumny_slownikowe(tmp_path, monkeypatch):
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    plik = _plik_panelu(tmp_path, [
+        [101, "A1", "A1", "Komoda", 100, "2022|tapicerowane"],
+        [102, "A2", "A2", "Szafka", 80, "2104|drewno"]])
+    w = pf.naucz_z_pliku(plik)
+    assert "Materiał" in w["kolumny_slownikowe"]
+    assert "Szerokość" in w["kolumny_surowe"]
+    assert pf.id_dla(pf.wczytaj_slownik(), "Materiał", "drewno")[0] == "2104|drewno"
+
+
+def test_nieznana_kolumna_nie_wychodzi_jako_gola_etykieta(tmp_path, monkeypatch):
+    """Najgroźniejszy przypadek: kolumna, której nigdy nie widzieliśmy.
+
+    Wpisanie do niej gołej etykiety zakłada, że panel oczekuje tam tekstu —
+    a gdy to kolumna słownikowa, w sklepie powstaje śmieciowa wartość."""
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[101, "A1", "A1", "Komoda", 100, "2022|tapicerowane"]]))
+    s, wz = pf.wczytaj_slownik(), pf.wczytaj_wzorzec()
+    wartosc, powod = pf.wartosc_do_pliku(s, "Rodzaj frontu", "pełny",
+                                         set(s), set(wz.surowe))
+    assert wartosc is None and "panelu" in powod
+
+
+def test_niejednoznaczne_id_nie_jest_zgadywane(tmp_path, monkeypatch):
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [
+        [101, "A1", "A1", "Fotel", 80, "101|tapicerowane"],
+        [102, "A2", "A2", "Sofa", 90, "1797|tapicerowane"]]))
+    wartosc, powod = pf.id_dla(pf.wczytaj_slownik(), "Materiał", "tapicerowane")
+    assert wartosc is None and "niejednoznaczne" in powod
+
+
+def _baza_z_decyzjami(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+
+    baza = tmp_path / "e.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    import atrybuty.app as app_mod
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+
+    con = db.polacz(baza)
+    wizja.przygotuj_baze(con)
+    produkty = [Produkt(id=str(i), nazwa=f"Komoda {i}", producent="BRW", kolekcja="",
+                        zdjecie="", styl="", kategoria="komoda",
+                        kody={"kod produktu": f"K{i}", "kod producenta": f"P{i}"},
+                        atrybuty={"Materiał": "plyta"}) for i in (1, 2, 3)]
+    findingi = [Finding(str(i), "Materiał", "L1-SLOWNIK", "L1", "srednia", 0.9,
+                        "plyta", "drewno", "poza słownikiem",
+                        grupa="L1-SLOWNIK|Materiał|plyta") for i in (1, 2, 3)]
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    for i in (1, 2, 3):
+        db.zapisz_decyzje(con, str(i), "Materiał", "plyta", "zastosowana", "drewno", "L1-SLOWNIK")
+    return con, baza
+
+
+def test_partia_bierze_tylko_niewyeksportowane(tmp_path, monkeypatch):
+    from atrybuty import eksport_panelu
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+    con, _ = _baza_z_decyzjami(tmp_path, monkeypatch)
+
+    w1 = eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=2)
+    assert w1["ile"] == 2
+    w2 = eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    assert w2["ile"] == 1                      # trzeci produkt, nie te same dwa
+    assert eksport_panelu.zaplanuj(con, 50).pozycje == []
+    con.close()
+
+
+def test_wycofanie_partii_wraca_do_kolejki(tmp_path, monkeypatch):
+    from atrybuty import eksport_panelu
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+    con, _ = _baza_z_decyzjami(tmp_path, monkeypatch)
+
+    w = eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    assert eksport_panelu.wycofaj(con, w["partia_id"]) == 3
+    assert len(eksport_panelu.zaplanuj(con, 50).pozycje) == 3
+    con.close()
+
+
+def test_plik_partii_ma_uklad_panelu(tmp_path, monkeypatch):
+    import openpyxl
+    from atrybuty import eksport_panelu
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+    con, _ = _baza_z_decyzjami(tmp_path, monkeypatch)
+
+    w = eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=1)
+    ws = openpyxl.load_workbook(w["plik"]).active
+    naglowki = [c.value for c in ws[6]]
+    assert naglowki[:4] == ["ID", "Kod", "Kod producenta", "Nazwa"]
+    wiersz = dict(zip(naglowki, [c.value for c in ws[7]]))
+    assert wiersz["ID"] == 1 and wiersz["Kod producenta"] == "P1"
+    assert wiersz["Materiał"] == "2104|drewno"     # z ID, nie goła etykieta
+    assert wiersz["Szerokość"] is None             # nie ruszamy kolumn bez zmian
+
+    ws_c = openpyxl.load_workbook(w["plik_cofnij"]).active
+    assert dict(zip(naglowki, [c.value for c in ws_c[7]]))["Materiał"] == "plyta"
+    con.close()
+
+
+def test_strona_rozstrzygnietych_pokazuje_zmiane(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    con, _ = _baza_z_decyzjami(tmp_path, monkeypatch)
+    con.close()
+    odp = TestClient(app_mod.app).get("/rozstrzygniete")
+    assert odp.status_code == 200
+    assert "plyta" in odp.text and "drewno" in odp.text and "Komoda 1" in odp.text
+
+
+def test_cofniecie_decyzji_z_partii_jest_blokowane(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import db, eksport_panelu
+    import atrybuty.app as app_mod
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+    con, baza = _baza_z_decyzjami(tmp_path, monkeypatch)
+    eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    con.close()
+
+    klient = TestClient(app_mod.app)
+    odp = klient.post("/rozstrzygniete/cofnij", data={
+        "produkt_id": "1", "atrybut": "Materiał", "hasz": db.hasz("plyta")})
+    assert "cofnij najpierw partię" in odp.text
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 3
+    con.close()

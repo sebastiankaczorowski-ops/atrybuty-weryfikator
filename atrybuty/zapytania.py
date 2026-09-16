@@ -211,6 +211,86 @@ def produkt(con: sqlite3.Connection, pid: str) -> dict | None:
     return d
 
 
+# --- rozstrzygnięte -------------------------------------------------------
+
+SQL_ROZSTRZYGNIETE = """
+SELECT d.produkt_id, d.atrybut, d.status, d.nowa_wartosc, d.regula_id,
+       d.uzytkownik, d.utworzono, d.hasz_starej, d.partia_id,
+       p.nazwa, p.producent, p.kategoria, p.zdjecie,
+       f.stara_wartosc, f.waga, f.warstwa, f.dowod, f.grupa,
+       b.utworzono AS partia_data, b.wycofana AS partia_wycofana
+FROM decyzje d
+LEFT JOIN produkty p ON p.id = d.produkt_id
+LEFT JOIN findingi f ON f.produkt_id = d.produkt_id AND f.atrybut = d.atrybut
+                    AND f.hasz_starej = d.hasz_starej
+LEFT JOIN partie b ON b.id = d.partia_id
+"""
+
+
+def rozstrzygniete(con: sqlite3.Connection, status: str = "", atrybut: str = "",
+                   regula: str = "", producent: str = "", eksport: str = "",
+                   szukaj: str = "", limit: int = 100, offset: int = 0
+                   ) -> tuple[list[dict], int]:
+    """Co zostało rozstrzygnięte i jak — z widoczną zmianą stara → nowa.
+
+    `eksport`: czeka | wyslane — czy decyzja trafiła już do partii.
+    """
+    sql, par = "", {}
+    if status:
+        sql += " AND d.status = :status"; par["status"] = status
+    if atrybut:
+        sql += " AND d.atrybut = :atrybut"; par["atrybut"] = atrybut
+    if regula:
+        sql += " AND d.regula_id = :regula"; par["regula"] = regula
+    if producent:
+        sql += " AND p.producent = :producent"; par["producent"] = producent
+    if eksport == "czeka":
+        sql += " AND d.partia_id IS NULL AND d.status = 'zastosowana'"
+    elif eksport == "wyslane":
+        sql += " AND d.partia_id IS NOT NULL"
+    if szukaj:
+        sql += " AND (p.nazwa LIKE :szukaj OR d.produkt_id = :dokladnie)"
+        par["szukaj"] = f"%{szukaj}%"; par["dokladnie"] = szukaj
+
+    warunek = " WHERE 1=1" + sql
+    ile = int(con.execute(
+        "SELECT COUNT(*) FROM decyzje d LEFT JOIN produkty p ON p.id=d.produkt_id"
+        + warunek, par).fetchone()[0])
+
+    q = (SQL_ROZSTRZYGNIETE + warunek +
+         " GROUP BY d.produkt_id, d.atrybut, d.hasz_starej"
+         " ORDER BY d.utworzono DESC LIMIT :limit OFFSET :offset")
+    par |= {"limit": limit, "offset": offset}
+    return [dict(r) for r in con.execute(q, par)], ile
+
+
+def statystyki_decyzji(con: sqlite3.Connection) -> dict:
+    d = {r[0]: r[1] for r in con.execute(
+        "SELECT status, COUNT(*) FROM decyzje GROUP BY 1")}
+    return {
+        "zastosowane": d.get("zastosowana", 0),
+        "falszywe": d.get("falszywy_alarm", 0),
+        "odlozone": d.get("odlozona", 0),
+        "czeka_na_eksport": int(con.execute(
+            "SELECT COUNT(*) FROM decyzje WHERE status='zastosowana'"
+            " AND nowa_wartosc IS NOT NULL AND partia_id IS NULL").fetchone()[0]),
+        "wyeksportowane": int(con.execute(
+            "SELECT COUNT(*) FROM decyzje WHERE partia_id IS NOT NULL").fetchone()[0]),
+    }
+
+
+def slowniki_decyzji(con: sqlite3.Connection) -> dict:
+    def zbierz(q):
+        return [(r[0], r[1]) for r in con.execute(q) if r[0]]
+    return {
+        "atrybuty": zbierz("SELECT atrybut, COUNT(*) FROM decyzje GROUP BY 1 ORDER BY 2 DESC"),
+        "reguly": zbierz("SELECT regula_id, COUNT(*) FROM decyzje GROUP BY 1 ORDER BY 2 DESC"),
+        "producenci": zbierz("SELECT p.producent, COUNT(*) FROM decyzje d "
+                             "JOIN produkty p ON p.id=d.produkt_id GROUP BY 1 "
+                             "ORDER BY 2 DESC LIMIT 40"),
+    }
+
+
 # --- produkty bez danych --------------------------------------------------
 
 SQL_BRAKI = """

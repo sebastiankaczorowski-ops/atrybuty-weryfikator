@@ -70,6 +70,33 @@ pojedynczy produkt wypiąć jako fałszywy alarm („to nie ten"), zostawiając
 resztę grupy otwartą. Grupa łączy po (reguła, atrybut, wartość), a nie po
 wyglądzie mebla, więc czasem wpada do niej produkt z innej bajki.
 
+## Rozstrzygnięte i eksport do sklepu
+
+`/rozstrzygniete` pokazuje każdą podjętą decyzję razem ze zmianą
+(stara → nowa), regułą, autorem, datą i stanem eksportu. Decyzję można cofnąć
+— finding wraca do kolejki — o ile nie poszła już w partii.
+
+`/eksport/partie` robi plik w układzie eksportu z panelu
+(`admin-product-product-*.xlsx`: preambuła + nagłówki w wierszu 6 + 165 kolumn).
+Partia liczy się w produktach, bo wiersz w pliku to produkt. Każda decyzja
+dostaje `partia_id`, więc kolejna partia bierze wyłącznie to, czego jeszcze nie
+było, a partię, która nie weszła do sklepu, można wycofać — decyzje wracają do
+kolejki eksportu. Obok pliku poprawek powstaje plik cofający ze starymi
+wartościami.
+
+Dwie rzeczy, o których trzeba wiedzieć:
+
+1. **Wartości słownikowe w panelu to `ID|etykieta`** („2022|tapicerowane"),
+   a nasze źródło ma same etykiety. Mapowania uczymy się z prawdziwych plików
+   z panelu wgrywanych na `/eksport/partie`; wynik siedzi w
+   `config/slownik_idow.yaml`. Poprawka na wartość, której nie ma w słowniku,
+   nie trafia do pliku — ląduje na liście „nie wejdą do pliku" z powodem.
+   To celowo ostrożne: goła etykieta w kolumnie słownikowej zakłada nową
+   wartość w słowniku sklepu.
+2. **Plik zawiera tylko kolumny klucza i zmieniane atrybuty**, reszta zostaje
+   pusta. Czy panel czyta pustą komórkę jako „nie ruszaj", czy jako „wyczyść" —
+   trzeba sprawdzić na pierwszej, małej partii. Dlatego domyślny rozmiar to 20.
+
 ## Struktura
 
 ```

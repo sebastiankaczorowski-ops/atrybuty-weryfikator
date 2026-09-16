@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eksport partiami — kontrola atrybutów OXM</title>
+{% include "_styl.html" %}
+<style>
+.kafle{display:flex;gap:10px;flex-wrap:wrap}
+.kafel{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+       padding:10px 14px;min-width:130px;display:flex;flex-direction:column;gap:2px}
+.kafel b{font-size:19px;font-variant-numeric:tabular-nums}
+.kafel span{font-size:11.5px;color:var(--muted)}
+.dowod{color:var(--muted);font-size:12.5px}
+.ostrzezenie{background:var(--warn-soft);color:var(--warn);padding:9px 13px;border-radius:3px;
+             font-size:13.5px}
+.pominiete td{font-size:12.5px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Eksport partiami</h1>
+  <span class="plik">format panelu (.xlsx) · pliki w <code>dane/eksport</code></span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/rozstrzygniete">rozstrzygnięte</a>
+    <a href="/reguly">reguły</a>
+    <a href="/import">wgraj plik</a>
+  </nav>
+</header>
+
+<main>
+
+{% if komunikat %}<div class="komunikat ok">{{ komunikat }}</div>{% endif %}
+{% if blad %}<div class="komunikat zle">{{ blad }}</div>{% endif %}
+
+<div class="kafle">
+  <div class="kafel"><b>{{ stat.czeka_na_eksport }}</b><span>poprawek czeka</span></div>
+  <div class="kafel"><b>{{ plan.pozycje|length }}</b><span>produktów gotowych</span></div>
+  <div class="kafel"><b>{{ plan.pominiete|length }}</b><span>bez ID w panelu</span></div>
+  <div class="kafel"><b>{{ stat.wyeksportowane }}</b><span>już w partiach</span></div>
+  <div class="kafel"><b>{{ slownik_ile }}</b><span>wartości w słowniku ID</span></div>
+</div>
+
+{% if not wzorzec.ok %}
+<div class="ostrzezenie">
+  <b>Brak wzorca formatu.</b> Wgraj poniżej plik z panelu
+  (<code>admin-product-product-*.xlsx</code>) — z niego bierzemy układ 165 kolumn
+  i mapowanie etykieta → ID. Bez tego nie da się złożyć pliku, który panel przyjmie.
+</div>
+{% endif %}
+
+<section class="dodaj">
+  <h3>Nowa partia</h3>
+  <p class="pod">Partia liczy się w <b>produktach</b>, nie w poprawkach — jeden produkt
+  to jeden wiersz w pliku, więc nie rozbijamy go na dwa importy. Pierwszą partię
+  zrób małą (10–20) i sprawdź w panelu, czy wchodzi tak, jak ma wejść: plik
+  zawiera tylko kolumny klucza i te atrybuty, które zmieniamy, a reszta zostaje
+  pusta. Jeśli panel potraktuje pustą komórkę jako „wyczyść", zobaczysz to na
+  dwudziestu produktach, nie na tysiącu.</p>
+  <form method="post" action="/eksport/partie" class="pola">
+    <div class="pole"><label>ile produktów</label>
+      <select name="rozmiar">
+        <option value="10">10 — próba</option>
+        <option value="20" selected>20 — próba</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="250">250</option>
+        <option value="500">500</option>
+      </select></div>
+    <div class="pole"><label>uwagi (opcjonalnie)</label>
+      <input type="text" name="uwagi" placeholder="np. test importu, tylko materiały"></div>
+    <button class="p" type="submit" {{ 'disabled' if not wzorzec.ok or not plan.pozycje }}>
+      Zrób partię</button>
+  </form>
+</section>
+
+<section class="dodaj">
+  <h3>Wzorzec formatu i słownik ID</h3>
+  <p class="pod">Panel zapisuje wartości słownikowe jako <code>ID|etykieta</code>
+  (np. <code>2022|tapicerowane</code>), a nasze źródło ma same etykiety. Każdy
+  wgrany tu eksport z panelu dokłada wartości do słownika. Im więcej produktów
+  w takim pliku, tym mniej poprawek wypada z eksportu jako „nieznane ID".</p>
+  <form method="post" action="/eksport/wzorzec" enctype="multipart/form-data" class="pola">
+    <div class="pole"><label>plik z panelu (.xlsx)</label>
+      <input type="file" name="plik" accept=".xlsx,.xlsm" required></div>
+    <button class="p" type="submit">Wczytaj</button>
+  </form>
+  {% if wzorzec.ok %}
+  <p class="dowod" style="margin-top:8px">Aktualny wzorzec: {{ wzorzec.naglowki|length }} kolumn.</p>
+  {% endif %}
+</section>
+
+{% if plan.pominiete %}
+<section>
+  <h2>Poprawki, które nie wejdą do pliku ({{ plan.pominiete|length }})</h2>
+  <p class="pod">Zostają w kolejce eksportu — wejdą, gdy słownik pozna ich ID.
+  Najszybsza droga: wyeksportuj z panelu produkty z tym atrybutem i wgraj plik powyżej.</p>
+  <table class="pominiete">
+    <thead><tr><th>produkt</th><th>atrybut</th><th>wartość</th><th>powód</th></tr></thead>
+    <tbody>
+    {% for p in plan.pominiete[:100] %}
+      <tr><td><code>{{ p.produkt_id }}</code> {{ p.nazwa }}</td>
+          <td>{{ p.atrybut }}</td><td>{{ p.nowa_wartosc }}</td>
+          <td class="dowod">{{ p.powod }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section>
+  <h2>Partie</h2>
+  {% if not partie %}
+    <p class="pod">Jeszcze żadnej. Pierwsza partia to dobry moment, żeby sprawdzić
+    import na małej próbce.</p>
+  {% else %}
+  <table>
+    <thead><tr><th>nr</th><th>kiedy</th><th class="n">produktów</th>
+      <th class="n">decyzji</th><th>uwagi</th><th>pliki</th><th></th></tr></thead>
+    <tbody>
+    {% for p in partie %}
+    <tr class="{{ 'nieaktywna' if p.wycofana }}">
+      <td><b>{{ p.id }}</b></td>
+      <td class="dowod">{{ p.utworzono }}</td>
+      <td class="n">{{ p.ile }}</td>
+      <td class="n">{{ p.decyzji }}</td>
+      <td>{{ p.uwagi or '' }}{% if p.wycofana %}<span class="dowod"> · wycofana</span>{% endif %}</td>
+      <td>
+        <a href="/eksport/partie/{{ p.id }}/plik">poprawki ↓</a> ·
+        <a href="/eksport/partie/{{ p.id }}/plik?cofnij=1">cofające ↓</a>
+      </td>
+      <td>
+        {% if not p.wycofana %}
+        <form class="inline" method="post" action="/eksport/partie/{{ p.id }}/wycofaj">
+          <button class="mini" type="submit"
+                  title="Plik nie wszedł do sklepu — decyzje wracają do następnej partii">
+            wycofaj</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+</main>
+</body>
+</html>

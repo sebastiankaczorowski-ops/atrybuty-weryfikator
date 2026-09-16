@@ -9,14 +9,17 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import (FileResponse, HTMLResponse, RedirectResponse,
+                               StreamingResponse)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from . import (config, db, eksport, importer, kategorie, reguly as reguly_mod,
-               wizja, zapytania, zrodla as zrodla_mod)
+from . import (config, db, eksport, eksport_panelu, importer, kategorie,
+               panel_format, reguly as reguly_mod, wizja, zapytania,
+               zrodla as zrodla_mod)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
 from .pipeline import BAZA
 
@@ -545,3 +548,139 @@ def zrob_eksport(paczka: int = Form(0)):
                            paczka=paczka or None)
     con.close()
     return wynik
+
+
+# --- rozstrzygnięte i eksport partiami ------------------------------------
+
+KATALOG_PARTII = KATALOG.parent / "dane" / "eksport"
+
+
+@app.get("/rozstrzygniete", response_class=HTMLResponse)
+def strona_rozstrzygnietych(request: Request, status: str = "", atrybut: str = "",
+                            regula: str = "", producent: str = "", eksport_stan: str = "",
+                            szukaj: str = "", strona: int = 1):
+    con = _con()
+    offset = (max(1, strona) - 1) * 100
+    wiersze, ile = zapytania.rozstrzygniete(
+        con, status=status, atrybut=atrybut, regula=regula, producent=producent,
+        eksport=eksport_stan, szukaj=szukaj, limit=100, offset=offset)
+    kontekst = {
+        "request": request, "wiersze": wiersze, "ile": ile, "strona": strona,
+        "stron": max(1, (ile + 99) // 100),
+        "fl": {"status": status, "atrybut": atrybut, "regula": regula,
+               "producent": producent, "eksport_stan": eksport_stan, "szukaj": szukaj},
+        "stat": zapytania.statystyki_decyzji(con),
+        "slowniki": zapytania.slowniki_decyzji(con),
+        "nazwy_kat": kategorie.nazwy_kategorii(),
+    }
+    con.close()
+    return szablony.TemplateResponse(request, "rozstrzygniete.html", kontekst)
+
+
+@app.post("/rozstrzygniete/cofnij", response_class=HTMLResponse)
+def cofnij_decyzje(produkt_id: str = Form(...), atrybut: str = Form(...),
+                   hasz: str = Form(...)):
+    """Kasuje decyzję — finding wraca do kolejki jako otwarty.
+
+    Decyzji z przypisaną partią nie ruszamy: plik już powstał, więc cofnięcie
+    tutaj rozjechałoby bazę z tym, co poszło do sklepu. Najpierw wycofaj partię.
+    """
+    con = _con()
+    wiersz = con.execute(
+        "SELECT partia_id FROM decyzje WHERE produkt_id=? AND atrybut=? AND hasz_starej=?",
+        (produkt_id, atrybut, hasz)).fetchone()
+    if wiersz and wiersz["partia_id"]:
+        con.close()
+        return HTMLResponse(
+            '<span class="dowod">w partii — cofnij najpierw partię</span>')
+    con.execute("DELETE FROM decyzje WHERE produkt_id=? AND atrybut=? AND hasz_starej=?",
+                (produkt_id, atrybut, hasz))
+    con.commit()
+    con.close()
+    return HTMLResponse('<span class="zrobione">✓ cofnięte</span>')
+
+
+@app.get("/eksport/partie", response_class=HTMLResponse)
+def strona_partii(request: Request, komunikat: str = "", blad: str = ""):
+    con = _con()
+    plan = eksport_panelu.zaplanuj(con, limit_produktow=10**6)   # tylko podgląd
+    kontekst = {
+        "request": request,
+        "partie": eksport_panelu.partie(con),
+        "stat": zapytania.statystyki_decyzji(con),
+        "plan": plan,
+        "wzorzec": panel_format.wczytaj_wzorzec(),
+        "slownik_ile": sum(len(v) for v in panel_format.wczytaj_slownik().values()),
+        "komunikat": komunikat, "blad": blad,
+    }
+    con.close()
+    return szablony.TemplateResponse(request, "eksport.html", kontekst)
+
+
+@app.post("/eksport/partie")
+def zrob_partie(rozmiar: int = Form(50), uwagi: str = Form("")):
+    con = _con()
+    try:
+        wynik = eksport_panelu.zapisz_partie(con, KATALOG_PARTII,
+                                             limit_produktow=max(1, rozmiar), uwagi=uwagi)
+    except ValueError as e:
+        con.close()
+        return RedirectResponse(f"/eksport/partie?blad={quote(str(e))}", status_code=303)
+    con.close()
+    if not wynik["ile"]:
+        return RedirectResponse(
+            "/eksport/partie?blad=" + quote("Nic do wyeksportowania."), status_code=303)
+    tresc = (f"Partia {wynik['partia_id']}: {wynik['ile']} produktów, "
+             f"{wynik['zmian']} zmian.")
+    return RedirectResponse(f"/eksport/partie?komunikat={quote(tresc)}", status_code=303)
+
+
+@app.get("/eksport/partie/{partia_id}/plik")
+def pobierz_partie(partia_id: int, cofnij: str = ""):
+    con = _con()
+    r = con.execute("SELECT plik FROM partie WHERE id=?", (partia_id,)).fetchone()
+    con.close()
+    if not r or not r["plik"]:
+        return HTMLResponse("Nie znaleziono", status_code=404)
+    sciezka = Path(r["plik"])
+    if cofnij == "1":
+        sciezka = sciezka.with_name(sciezka.stem + "_cofnij.xlsx")
+    if not sciezka.exists():
+        return HTMLResponse("Plik zniknął z dysku", status_code=404)
+    return FileResponse(sciezka, filename=sciezka.name, media_type=
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+@app.post("/eksport/partie/{partia_id}/wycofaj")
+def wycofaj_partie(partia_id: int):
+    con = _con()
+    ile = eksport_panelu.wycofaj(con, partia_id)
+    con.close()
+    return RedirectResponse(
+        "/eksport/partie?komunikat=" + quote(
+            f"Partia {partia_id} wycofana — {ile} decyzji wraca do kolejki eksportu."),
+        status_code=303)
+
+
+@app.post("/eksport/wzorzec")
+async def wgraj_wzorzec(plik: UploadFile = File(...)):
+    """Plik z panelu uczy nas formatu i mapowania etykieta → ID."""
+    nazwa = plik.filename or "panel.xlsx"
+    if not nazwa.lower().endswith((".xlsx", ".xlsm")):
+        return RedirectResponse(
+            "/eksport/partie?blad=" + quote("To musi być plik .xlsx z panelu."),
+            status_code=303)
+    katalog = KATALOG.parent / "dane" / "wzorce"
+    katalog.mkdir(parents=True, exist_ok=True)
+    sciezka = katalog / f"{datetime.now():%Y-%m-%d_%H%M%S}__{Path(nazwa).name}"
+    sciezka.write_bytes(await plik.read())
+    try:
+        wynik = panel_format.naucz_z_pliku(sciezka)
+    except Exception as e:  # noqa: BLE001 — komunikat ma trafić do użytkownika
+        return RedirectResponse(
+            "/eksport/partie?blad=" + quote(f"Nie udało się odczytać pliku: {e}"),
+            status_code=303)
+    return RedirectResponse("/eksport/partie?komunikat=" + quote(
+        f"Wzorzec zapisany: {wynik['kolumny']} kolumn, {wynik['produktow']} produktów. "
+        f"Słownik ID: +{wynik['nowych_wartosci']} nowych, "
+        f"{wynik['wartosci_razem']} wartości razem."), status_code=303)

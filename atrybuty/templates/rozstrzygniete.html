@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rozstrzygnięte — kontrola atrybutów OXM</title>
+{% include "_styl.html" %}
+<style>
+.kafle{display:flex;gap:10px;flex-wrap:wrap}
+.kafel{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+       padding:10px 14px;min-width:120px;text-decoration:none;color:inherit;
+       display:flex;flex-direction:column;gap:2px}
+.kafel.akt{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.kafel b{font-size:19px;font-variant-numeric:tabular-nums}
+.kafel span{font-size:11.5px;color:var(--muted)}
+.filtry{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.stara{background:var(--crit-soft);color:var(--crit);padding:1px 6px;border-radius:2px}
+.nowa{background:var(--ok-soft);color:var(--ok);padding:1px 6px;border-radius:2px;font-weight:600}
+.mini-foto{width:48px;height:38px;object-fit:cover;border:1px solid var(--line);border-radius:2px}
+.brakfoto{width:48px;height:38px;display:grid;place-items:center;border:1px dashed var(--line-strong);
+          border-radius:2px;font-size:10px;color:var(--muted)}
+.dowod{color:var(--muted);font-size:12.5px;margin-top:3px}
+.zrobione{color:var(--ok);font-weight:600;font-size:12.5px}
+.st{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.st.zastosowana{background:var(--ok-soft);color:var(--ok)}
+.st.falszywy_alarm{background:var(--crit-soft);color:var(--crit)}
+.st.odlozona{background:var(--surface-2);color:var(--muted)}
+.partia{font-size:11.5px;color:var(--muted);white-space:nowrap}
+.partia.jest{color:var(--accent);font-weight:600}
+.stronicowanie{display:flex;gap:14px;align-items:center;font-size:13px}
+@media(max-width:820px){ .kol-foto,.kol-reg{display:none} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Rozstrzygnięte</h1>
+  <span class="plik">{{ ile }} decyzji w tym widoku</span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/eksport/partie">eksport partiami</a>
+    <a href="/braki">braki danych</a>
+    <a href="/reguly">reguły</a>
+    <a href="/import">wgraj plik</a>
+  </nav>
+</header>
+
+<main>
+
+<div class="kafle">
+  <a class="kafel {{ 'akt' if not fl.status and not fl.eksport_stan }}" href="/rozstrzygniete">
+    <b>{{ stat.zastosowane + stat.falszywe + stat.odlozone }}</b><span>wszystkich decyzji</span></a>
+  <a class="kafel {{ 'akt' if fl.status=='zastosowana' }}" href="/rozstrzygniete?status=zastosowana">
+    <b>{{ stat.zastosowane }}</b><span>poprawek</span></a>
+  <a class="kafel {{ 'akt' if fl.status=='falszywy_alarm' }}" href="/rozstrzygniete?status=falszywy_alarm">
+    <b>{{ stat.falszywe }}</b><span>fałszywych alarmów</span></a>
+  <a class="kafel {{ 'akt' if fl.status=='odlozona' }}" href="/rozstrzygniete?status=odlozona">
+    <b>{{ stat.odlozone }}</b><span>odłożonych</span></a>
+  <a class="kafel {{ 'akt' if fl.eksport_stan=='czeka' }}" href="/rozstrzygniete?eksport_stan=czeka">
+    <b>{{ stat.czeka_na_eksport }}</b><span>czeka na eksport</span></a>
+  <a class="kafel {{ 'akt' if fl.eksport_stan=='wyslane' }}" href="/rozstrzygniete?eksport_stan=wyslane">
+    <b>{{ stat.wyeksportowane }}</b><span>w partiach</span></a>
+</div>
+
+<form class="filtry" method="get" action="/rozstrzygniete">
+  <div class="pole"><label>szukaj (nazwa lub ID)</label>
+    <input type="text" name="szukaj" value="{{ fl.szukaj }}"></div>
+  <div class="pole"><label>atrybut</label>
+    <select name="atrybut"><option value="">— wszystkie —</option>
+    {% for a, n in slowniki.atrybuty %}
+      <option value="{{ a }}" {{ 'selected' if fl.atrybut==a }}>{{ a }} ({{ n }})</option>
+    {% endfor %}</select></div>
+  <div class="pole"><label>reguła</label>
+    <select name="regula"><option value="">— wszystkie —</option>
+    {% for a, n in slowniki.reguly %}
+      <option value="{{ a }}" {{ 'selected' if fl.regula==a }}>{{ a }} ({{ n }})</option>
+    {% endfor %}</select></div>
+  <div class="pole"><label>producent</label>
+    <select name="producent"><option value="">— wszyscy —</option>
+    {% for a, n in slowniki.producenci %}
+      <option value="{{ a }}" {{ 'selected' if fl.producent==a }}>{{ a }} ({{ n }})</option>
+    {% endfor %}</select></div>
+  <input type="hidden" name="status" value="{{ fl.status }}">
+  <input type="hidden" name="eksport_stan" value="{{ fl.eksport_stan }}">
+  <button class="p" type="submit">Filtruj</button>
+  <a href="/rozstrzygniete"><button type="button">Wyczyść</button></a>
+</form>
+
+{% if not wiersze %}
+  <p class="pod">Nic tu jeszcze nie ma — decyzje pojawią się po rozstrzygnięciu
+  czegoś w <a href="/anomalie">kolejce weryfikacji</a>.</p>
+{% else %}
+<table>
+  <thead><tr>
+    <th class="kol-foto"></th><th>produkt</th><th>zmiana</th>
+    <th class="kol-reg">skąd</th><th>kiedy</th><th>eksport</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for w in wiersze %}
+  <tr>
+    <td class="kol-foto">
+      {% if w.zdjecie %}<img class="mini-foto" src="{{ w.zdjecie }}" alt="" loading="lazy">
+      {% else %}<div class="brakfoto">brak</div>{% endif %}
+    </td>
+    <td>
+      <a href="/produkt/{{ w.produkt_id }}" target="_blank"><code>{{ w.produkt_id }}</code></a>
+      {{ w.nazwa }}
+      <div class="dowod">{{ w.producent }}
+        · <a href="{{ link_panelu(w.produkt_id) }}" target="_blank" rel="noopener">panel ↗</a></div>
+    </td>
+    <td>
+      <b>{{ w.atrybut }}</b><br>
+      {% if w.status == 'zastosowana' %}
+        {% if w.stara_wartosc %}<span class="stara">{{ w.stara_wartosc }}</span>
+        {% else %}<span class="dowod">(puste)</span>{% endif %}
+        → <span class="nowa">{{ w.nowa_wartosc }}</span>
+      {% else %}
+        <span class="st {{ w.status }}">{{ w.status.replace('_',' ') }}</span>
+        {% if w.stara_wartosc %}<span class="stara">{{ w.stara_wartosc }}</span>
+          <span class="dowod">zostaje bez zmian</span>{% endif %}
+      {% endif %}
+      {% if w.dowod %}<div class="dowod">{{ w.dowod }}</div>{% endif %}
+    </td>
+    <td class="kol-reg">
+      {% if w.regula_id %}<code>{{ w.regula_id }}</code>{% endif %}
+      <div class="dowod">{{ w.warstwa or '' }}{% if w.waga %} · {{ w.waga }}{% endif %}</div>
+    </td>
+    <td class="dowod">{{ w.utworzono[:16].replace('T',' ') }}<br>{{ w.uzytkownik }}</td>
+    <td>
+      {% if w.partia_id %}
+        <span class="partia jest">partia {{ w.partia_id }}</span>
+        {% if w.partia_wycofana %}<div class="dowod">wycofana</div>{% endif %}
+      {% elif w.status == 'zastosowana' %}
+        <span class="partia">czeka</span>
+      {% else %}<span class="partia">—</span>{% endif %}
+    </td>
+    <td>
+      <form hx-post="/rozstrzygniete/cofnij" hx-target="this" hx-swap="outerHTML">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="hasz" value="{{ w.hasz_starej }}">
+        <button class="mini" type="submit"
+                title="Skasuj decyzję — finding wróci do kolejki">cofnij</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="stronicowanie">
+  {% if strona > 1 %}<a href="/rozstrzygniete?strona={{ strona-1 }}">← poprzednia</a>{% endif %}
+  <span class="dowod">strona {{ strona }} z {{ stron }}</span>
+  {% if strona < stron %}<a href="/rozstrzygniete?strona={{ strona+1 }}">następna →</a>{% endif %}
+</div>
+{% endif %}
+
+</main>
+<script src="/static/htmx.min.js"></script>
+</body>
+</html>

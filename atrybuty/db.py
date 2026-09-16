@@ -49,12 +49,24 @@ CREATE TABLE IF NOT EXISTS decyzje (
     regula_id TEXT,
     uzytkownik TEXT,
     utworzono TEXT,
+    partia_id INTEGER,             -- NULL = jeszcze nie wyeksportowana
     PRIMARY KEY (produkt_id, atrybut, hasz_starej)
 );
 
 CREATE TABLE IF NOT EXISTS przebiegi (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     plik TEXT, utworzono TEXT, liczba_produktow INTEGER, liczba_findingow INTEGER
+);
+
+-- Partie eksportu: żeby było wiadomo, co już poszło do sklepu, a co czeka.
+CREATE TABLE IF NOT EXISTS partie (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    utworzono TEXT,
+    plik TEXT,
+    ile INTEGER,
+    pominietych INTEGER DEFAULT 0,
+    uwagi TEXT,
+    wycofana INTEGER DEFAULT 0
 );
 """
 
@@ -63,6 +75,7 @@ CREATE TABLE IF NOT EXISTS przebiegi (
 INDEKSY_PO_MIGRACJI = """
 CREATE INDEX IF NOT EXISTS ix_prod_kompletnosc ON produkty(kompletnosc);
 CREATE INDEX IF NOT EXISTS ix_prod_podtyp ON produkty(podtyp);
+CREATE INDEX IF NOT EXISTS ix_dec_partia ON decyzje(partia_id);
 """
 
 
@@ -78,6 +91,7 @@ MIGRACJE: list[tuple[str, str, str]] = [
     ("produkty", "podtyp", "TEXT DEFAULT ''"),
     ("produkty", "kody", "TEXT DEFAULT '{}'"),
     ("produkty", "zdjecia", "TEXT DEFAULT '[]'"),
+    ("decyzje", "partia_id", "INTEGER"),
 ]
 
 
