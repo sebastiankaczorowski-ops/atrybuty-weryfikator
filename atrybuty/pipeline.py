@@ -138,6 +138,16 @@ def komenda_schema(sciezka: str, plik_kategorii: str | None = None) -> None:
     print(f"  grupy nadrzędne: {len(dane['grupy'])}")
 
 
+def wszystkie_findingi(produkty: list[Produkt], f_norm: list[Finding]) -> list[Finding]:
+    """Komplet warstw liczonych z samego pliku (L0-L2).
+
+    Jedno miejsce dla obu ścieżek importu — z konsoli i ze strony. Wcześniej
+    każda składała findingi po swojemu i nowa warstwa weszła tylko do jednej,
+    więc przez pół dnia nie było jej widać w kolejce.
+    """
+    return detektory.uruchom(produkty, f_norm) + skladowe.znajdz(produkty)
+
+
 def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
     produkty, f_norm = wczytaj_csv(sciezka, plik_kategorii)
     print(f"Wczytano {len(produkty)} produktów")
@@ -146,12 +156,7 @@ def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
         print("Brak config/schema.yaml — generuję z tych danych…")
         config.zapisz_schema(schema_gen.zbuduj(produkty))
 
-    findingi = detektory.uruchom(produkty, f_norm)
-    # L0 leci osobno: nie zależy od reguł ani od schematu, tylko od tego,
-    # co sklep trzyma w składowych. Dotyczy też produktów wyłączonych
-    # z analizy jako puste — dla nich przepisanie ze składowych bywa
-    # jedynym sposobem, żeby w ogóle miały atrybuty.
-    findingi += skladowe.znajdz(produkty)
+    findingi = wszystkie_findingi(produkty, f_norm)
     print(f"Findingów: {len(findingi)}")
     if any(p.skladowe for p in produkty):
         s = skladowe.podsumowanie(produkty, findingi)

@@ -1127,3 +1127,22 @@ def test_przepisania_grupuja_sie_po_wartosci():
                 for i in range(5)]
     f = skladowe.znajdz(produkty, SLOWNIK_TESTOWY)
     assert len(f) == 5 and len({x.grupa for x in f}) == 1
+
+
+def test_obie_sciezki_importu_licza_te_same_warstwy():
+    """Import ze strony i z konsoli muszą dawać ten sam komplet findingów —
+    L0 weszło kiedyś tylko do jednej i nie było go widać w kolejce."""
+    import inspect
+    from atrybuty import importer, pipeline
+    assert "wszystkie_findingi" in inspect.getsource(importer._przebieg)
+    assert "wszystkie_findingi" in inspect.getsource(pipeline.komenda_import)
+    zrodlo = inspect.getsource(pipeline.wszystkie_findingi)
+    assert "detektory.uruchom" in zrodlo and "skladowe.znajdz" in zrodlo
+
+
+def test_wszystkie_findingi_dokladaja_l0():
+    from atrybuty import pipeline
+    from atrybuty.model import L0
+    p = _prod_ze_skladowymi("1", {"Materiał": "drewno"}, {"Podparcie": "na nóżkach"})
+    f = pipeline.wszystkie_findingi([p], [])
+    assert any(x.warstwa == L0 for x in f)
