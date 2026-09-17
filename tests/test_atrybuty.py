@@ -1146,3 +1146,21 @@ def test_wszystkie_findingi_dokladaja_l0():
     p = _prod_ze_skladowymi("1", {"Materiał": "drewno"}, {"Podparcie": "na nóżkach"})
     f = pipeline.wszystkie_findingi([p], [])
     assert any(x.warstwa == L0 for x in f)
+
+
+def test_konflikt_na_nieznanym_atrybucie_nie_blokuje_kolejki():
+    """„Liczba miejsc" nie istnieje w panelu (sklep ma „Ilość osób") — takiej
+    poprawki i tak nie da się wyeksportować, więc nie jest krytyczna."""
+    from atrybuty import skladowe
+    from atrybuty.model import INFO
+    p = _prod_ze_skladowymi("1", {"Liczba miejsc": "2-osobowe"},
+                            {"Liczba miejsc": "2 miejsca"})
+    f = skladowe.znajdz([p], SLOWNIK_TESTOWY, {"Materiał": {}, "Podparcie": {}})
+    assert len(f) == 1 and f[0].waga == INFO
+    assert "panel nie zna" in f[0].dowod
+
+
+def test_nowa_nazwa_kolumny_skladowych_jest_rozpoznawana():
+    from atrybuty.pipeline import KOLUMNY_SKLADOWYCH
+    assert "atrybuty-skladowe" in KOLUMNY_SKLADOWYCH
+    assert "atrybuty z zakladki" in KOLUMNY_SKLADOWYCH   # stare pliki też

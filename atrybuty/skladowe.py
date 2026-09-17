@@ -55,8 +55,15 @@ def _rodzaj_roznicy(a: str, b: str) -> tuple[str, str, float]:
     return "różne wartości", KRYTYCZNA, 0.5
 
 
-def znajdz(produkty: list[Produkt], slownik: dict | None = None) -> list[Finding]:
+def znajdz(produkty: list[Produkt], slownik: dict | None = None,
+           atrybuty_panelu: dict | None = None) -> list[Finding]:
     slownik = panel_format.wczytaj_slownik() if slownik is None else slownik
+    # Atrybut, którego panel w ogóle nie zna, bywa w eksporcie pod inną nazwą
+    # („Liczba miejsc" przy sklepowym „Ilość osób"). Konfliktu na takim polu
+    # i tak nie da się wyeksportować, więc nie ma po co blokować nim kolejki.
+    znane_w_panelu = set(
+        panel_format.wczytaj_atrybuty_panelu() if atrybuty_panelu is None
+        else atrybuty_panelu)
     out: list[Finding] = []
 
     for p in produkty:
@@ -82,6 +89,9 @@ def znajdz(produkty: list[Produkt], slownik: dict | None = None) -> list[Finding
                 continue
 
             opis, waga, pewnosc = _rodzaj_roznicy(w_atrybutach, wartosc)
+            if znane_w_panelu and atrybut not in znane_w_panelu:
+                waga = INFO
+                opis += "; panel nie zna tego atrybutu, więc poprawka nie wyjdzie eksportem"
             out.append(Finding(
                 produkt_id=p.id, atrybut=atrybut, regula_id=REGULA_KONFLIKT,
                 warstwa=L0, waga=waga, pewnosc=pewnosc,

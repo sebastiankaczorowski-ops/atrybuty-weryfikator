@@ -48,7 +48,10 @@ KOLUMNY_PODTYPU = ("podtyp", "subtype")
 KOLUMNY_KODOW = ("kod produktu", "kod producenta", "kod EAN", "nasz kod EAN",
                  "unikatowy kod produktu", "sku", "ean")
 KOLUMNY_ZDJEC = ("zdjecia", "zdjęcia", "images")
-KOLUMNY_SKLADOWYCH = ("atrybuty z zakladki", "atrybuty z zakładki", "atrybuty skladowych")
+# Nazwa kolumny ze składowymi zmieniała się między eksportami — trzymamy
+# wszystkie warianty, żeby stary plik dało się przeliczyć po nowym kodzie.
+KOLUMNY_SKLADOWYCH = ("atrybuty-skladowe", "atrybuty-składowe", "atrybuty skladowe",
+                      "atrybuty z zakladki", "atrybuty z zakładki", "atrybuty skladowych")
 KOLUMNA_ODCIECIA = "omit_components_in_attributes"
 
 
