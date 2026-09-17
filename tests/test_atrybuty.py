@@ -1285,3 +1285,34 @@ def test_atrybut_nieznany_panelowi_nie_jest_przepisywany():
     from atrybuty import skladowe
     p = _prod_ze_skladowymi("1", {}, {"Liczba miejsc": "2 miejsca"})
     assert skladowe.znajdz([p], SLOWNIK_TESTOWY, STATUSY_TESTOWE) == []
+
+
+def test_karta_produktu_zestawia_atrybuty_ze_skladowymi(tmp_path, monkeypatch):
+    """Rozjazdy i braki na górze — po to się na tę kartę wchodzi."""
+    from fastapi.testclient import TestClient
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    import atrybuty.app as app_mod
+
+    baza = tmp_path / "k.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    p = _prod_ze_skladowymi("78275", {"Długość": "110", "Materiał": "metal"},
+                            {"Szerokość": "110", "Materiał": "drewno"})
+    db.zapisz_przebieg(con, "t.csv", [p], [])
+    con.close()
+
+    strona = TestClient(app_mod.app).get("/produkt/78275").text
+    assert "Atrybuty produktu a składowe" in strona
+    assert 'class="rozjazd"' in strona and 'class="tylko-skladowe"' in strona
+    # rozjazd (Materiał) przed brakiem w atrybutach (Szerokość)
+    assert strona.index("Materiał") < strona.index("Szerokość")
+
+
+def test_finding_l0_mowi_ktora_wartosc_skad():
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {"Materiał": "metal"}, {"Materiał": "drewno"})
+    f = skladowe.znajdz([p], SLOWNIK_TESTOWY, STATUSY_TESTOWE)[0]
+    assert "W atrybutach produktu: „metal”" in f.dowod
+    assert "W składowych: „drewno”" in f.dowod

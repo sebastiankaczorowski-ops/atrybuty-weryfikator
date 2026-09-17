@@ -24,6 +24,15 @@ a{color:var(--accent)}
 a.panel{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;
         padding:6px 13px;border-radius:2px;font-weight:600;font-size:13.5px}
 @media(max-width:760px){.wrap{grid-template-columns:1fr}}
+table.porownanie td{vertical-align:top}
+table.porownanie tr.rozjazd{background:#f5dedc}
+table.porownanie tr.tylko-skladowe{background:#f6e7cc}
+.pusto{color:#9aa8a3}
+.zn{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600;
+    background:#edf1ef;color:#6b7c76;white-space:nowrap}
+.zn.zle{background:#f5dedc;color:#9a2b2b}
+.zn.ostrz{background:#f6e7cc;color:#8a5a0b}
+.zn.ok{background:#dfebd6;color:#3a6b2e}
 </style>
 </head>
 <body>
@@ -51,16 +60,41 @@ a.panel{display:inline-block;background:var(--accent);color:#fff;text-decoration
       {% endfor %}
     {% endif %}
 
-    <h2 style="font-size:15px">Atrybuty po normalizacji</h2>
-    <table>
-      <thead><tr><th>Atrybut</th><th>Wartość</th><th>Wartość surowa</th></tr></thead>
+    <h2 style="font-size:15px">Atrybuty produktu a składowe</h2>
+    <p style="color:#6b7c76;font-size:13px;margin:0 0 10px">
+      Lewa kolumna to legitne miejsce, prawa to składowe mebla. Front bierze
+      wartość stamtąd, gdzie ją znajdzie — docelowo ma być tylko po lewej.
+      {% if p.skladowe_odciete %}<b>Ten produkt ma składowe odcięte od frontu.</b>{% endif %}
+    </p>
+    <table class="porownanie">
+      <thead><tr><th>Atrybut</th><th>Atrybuty produktu</th><th>Składowe</th><th>Stan</th></tr></thead>
       <tbody>
-      {% for k, v in p.atrybuty.items() %}
-        <tr><td>{{ k }}</td><td>{{ v }}</td>
-            <td>{% if p.atrybuty_surowe.get(k) != v %}<code>{{ p.atrybuty_surowe.get(k) }}</code>{% endif %}</td></tr>
+      {% for k in wszystkie_atrybuty %}
+        {% set a = p.atrybuty_surowe.get(k) %}
+        {% set s = p.skladowe.get(k) %}
+        <tr class="{{ zgodnosc[k] }}">
+          <td>{{ k }}</td>
+          <td>{% if a is not none %}{{ a }}
+              {% else %}<span class="pusto">—</span>{% endif %}</td>
+          <td>{% if s is not none %}{{ s }}
+              {% else %}<span class="pusto">—</span>{% endif %}</td>
+          <td>
+            {% if zgodnosc[k] == 'tylko-skladowe' %}<span class="zn ostrz">tylko w składowych</span>
+            {% elif zgodnosc[k] == 'rozjazd' %}<span class="zn zle">rozjazd</span>
+            {% elif zgodnosc[k] == 'tylko-atrybuty' %}<span class="zn ok">tylko w atrybutach</span>
+            {% else %}<span class="zn">zgodne</span>{% endif %}
+          </td>
+        </tr>
       {% endfor %}
       </tbody>
     </table>
+    <p style="color:#6b7c76;font-size:13px">
+      Po normalizacji wartość bywa inna niż surowa —
+      {% for k, v in p.atrybuty.items() if p.atrybuty_surowe.get(k) != v %}
+        {% if loop.first %}znormalizowane: {% endif %}
+        <code>{{ k }}: {{ p.atrybuty_surowe.get(k) }} → {{ v }}</code>{{ "; " if not loop.last }}
+      {% else %}nic tu nie wymagało normalizacji.{% endfor %}
+    </p>
     <p><a href="/anomalie">← wróć do kolejki</a></p>
   </div>
 </div>

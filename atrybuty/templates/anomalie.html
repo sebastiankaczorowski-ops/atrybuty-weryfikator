@@ -77,6 +77,8 @@ tbody tr:hover{background:var(--surface-2)}
 .grupa-tab .kol-zmiana{white-space:nowrap;font-size:12.5px}
 .grupa-tab .kol-akcja{text-align:right;white-space:nowrap}
 .grupa-stopka{margin-top:5px}
+.skad{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+      font-weight:600}
 .akcje{display:flex;gap:4px;flex-wrap:wrap}
 .zrobione{color:var(--ok);font-weight:600;font-size:12.5px}
 .werdykt{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
@@ -278,8 +280,13 @@ tr.htmx-request .szkielet{display:flex}
   <td>
     <div class="zmiana">
       <b>{{ w.atrybut }}</b>
+      {# Przy warstwie L0 obie wartości pochodzą z dwóch różnych miejsc w sklepie,
+         więc bez podpisu nie wiadomo, co się z czym rozjechało. #}
+      {% if w.warstwa == 'L0' %}<span class="skad">atrybuty:</span>{% endif %}
       {% if w.stara_wartosc %}<span class="stara">{{ w.stara_wartosc }}</span>{% else %}<span class="dowod">(puste)</span>{% endif %}
-      {% if w.proponowana_wartosc %}→ <span class="nowa">{{ w.proponowana_wartosc }}</span>{% endif %}
+      {% if w.proponowana_wartosc %}→
+        {% if w.warstwa == 'L0' %}<span class="skad">składowe:</span>{% endif %}
+        <span class="nowa">{{ w.proponowana_wartosc }}</span>{% endif %}
       {% if w.ile_w_grupie and w.ile_w_grupie > 1 %}
         <button class="grupa-licznik" type="button"
                 hx-get="/grupa?grupa={{ w.grupa|urlencode }}&nr={{ loop.index }}"

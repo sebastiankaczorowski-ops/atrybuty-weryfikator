@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS produkty (
     nazwa TEXT, producent TEXT, kolekcja TEXT, zdjecie TEXT, styl TEXT,
     kategoria TEXT, zrodlo_kategorii TEXT, kompletnosc TEXT, podtyp TEXT,
     kody TEXT, zdjecia TEXT,
+    skladowe TEXT, skladowe_odciete INTEGER DEFAULT 0,
     atrybuty TEXT, atrybuty_surowe TEXT, liczby TEXT
 );
 CREATE INDEX IF NOT EXISTS ix_prod_kat ON produkty(kategoria);
@@ -91,6 +92,8 @@ MIGRACJE: list[tuple[str, str, str]] = [
     ("produkty", "podtyp", "TEXT DEFAULT ''"),
     ("produkty", "kody", "TEXT DEFAULT '{}'"),
     ("produkty", "zdjecia", "TEXT DEFAULT '[]'"),
+    ("produkty", "skladowe", "TEXT DEFAULT '{}'"),
+    ("produkty", "skladowe_odciete", "INTEGER DEFAULT 0"),
     ("decyzje", "partia_id", "INTEGER"),
 ]
 
@@ -126,12 +129,14 @@ def zapisz_przebieg(con: sqlite3.Connection, plik: str, produkty: list[Produkt],
     con.execute("DELETE FROM produkty")
     con.executemany(
         "INSERT INTO produkty (id,nazwa,producent,kolekcja,zdjecie,styl,kategoria,"
-        "zrodlo_kategorii,kompletnosc,podtyp,kody,zdjecia,atrybuty,atrybuty_surowe,liczby)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "zrodlo_kategorii,kompletnosc,podtyp,kody,zdjecia,skladowe,skladowe_odciete,"
+        "atrybuty,atrybuty_surowe,liczby)"
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [(p.id, p.nazwa, p.producent, p.kolekcja, p.zdjecie, p.styl, p.kategoria,
           p.zrodlo_kategorii, p.kompletnosc, p.podtyp,
           json.dumps(p.kody, ensure_ascii=False),
           json.dumps([(z.etykieta, z.url) for z in p.zdjecia], ensure_ascii=False),
+          json.dumps(p.skladowe, ensure_ascii=False), int(p.skladowe_odciete),
           json.dumps(p.atrybuty, ensure_ascii=False),
           json.dumps(p.atrybuty_surowe, ensure_ascii=False),
           json.dumps(p.liczby, ensure_ascii=False)) for p in produkty])

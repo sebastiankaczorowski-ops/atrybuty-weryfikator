@@ -102,7 +102,7 @@ def znajdz(produkty: list[Produkt], slownik: dict | None = None,
                     produkt_id=p.id, atrybut=atrybut, regula_id=REGULA_PRZEPISZ,
                     warstwa=L0, waga=SREDNIA, pewnosc=0.9,
                     stara_wartosc=None, proponowana_wartosc=wartosc,
-                    dowod=f"Jest w składowych („{wartosc}”), nie ma w atrybutach produktu",
+                    dowod=f"W składowych: „{wartosc}”. W atrybutach produktu: brak.",
                     grupa=f"{REGULA_PRZEPISZ}|{atrybut}|{norm(wartosc)}"))
                 continue
 
@@ -117,7 +117,8 @@ def znajdz(produkty: list[Produkt], slownik: dict | None = None,
                 produkt_id=p.id, atrybut=atrybut, regula_id=REGULA_KONFLIKT,
                 warstwa=L0, waga=waga, pewnosc=pewnosc,
                 stara_wartosc=w_atrybutach, proponowana_wartosc=wartosc,
-                dowod=f"Składowe mówią „{wartosc}”, atrybuty „{w_atrybutach}” — {opis}",
+                dowod=(f"W atrybutach produktu: „{w_atrybutach}”. "
+                       f"W składowych: „{wartosc}”. Rozbieżność: {opis}."),
                 # grupujemy po parze wartości: te same dwie wartości to ta sama
                 # decyzja, niezależnie od produktu
                 grupa=f"{REGULA_KONFLIKT}|{atrybut}|{norm(w_atrybutach)}=>{norm(wartosc)}"))

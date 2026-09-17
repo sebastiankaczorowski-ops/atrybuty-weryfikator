@@ -214,6 +214,7 @@ def produkt(con: sqlite3.Connection, pid: str) -> dict | None:
     d = dict(r)
     d["atrybuty"] = json.loads(d["atrybuty"] or "{}")
     d["atrybuty_surowe"] = json.loads(d["atrybuty_surowe"] or "{}")
+    d["skladowe"] = json.loads(d.get("skladowe") or "{}")
     return d
 
 

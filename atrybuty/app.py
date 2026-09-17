@@ -21,6 +21,7 @@ from . import (config, db, eksport, eksport_panelu, importer, kategorie,
                panel_format, reguly as reguly_mod, weryfikacja as weryfikacja_mod,
                wizja, zapytania, zrodla as zrodla_mod)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
+from .tekst import norm
 from .pipeline import BAZA
 
 KATALOG = Path(__file__).resolve().parent
@@ -170,8 +171,27 @@ def produkt(request: Request, pid: str):
         "SELECT * FROM findingi WHERE produkt_id=? AND przebieg_id=?",
         (pid, _przebieg(con)))]
     con.close()
+
+    # Zestawienie obu miejsc obok siebie — najszybszy sposób, żeby zobaczyć,
+    # co się rozjechało, bez przeskakiwania między zakładkami w panelu.
+    atrybuty, skladowe_p = p["atrybuty_surowe"], p["skladowe"]
+    wszystkie = sorted(set(atrybuty) | set(skladowe_p))
+    zgodnosc = {}
+    for k in wszystkie:
+        a, s = atrybuty.get(k), skladowe_p.get(k)
+        if a is None:
+            zgodnosc[k] = "tylko-skladowe"
+        elif s is None:
+            zgodnosc[k] = "tylko-atrybuty"
+        else:
+            zgodnosc[k] = "zgodne" if norm(a) == norm(s) else "rozjazd"
+    # rozjazdy i braki na górze — po to się tu wchodzi
+    kolejnosc = {"rozjazd": 0, "tylko-skladowe": 1, "tylko-atrybuty": 2, "zgodne": 3}
+    wszystkie.sort(key=lambda k: (kolejnosc[zgodnosc[k]], k))
+
     return szablony.TemplateResponse(request, "produkt.html", {
         "request": request, "p": p, "findingi": findingi,
+        "wszystkie_atrybuty": wszystkie, "zgodnosc": zgodnosc,
         "nazwy_kat": kategorie.nazwy_kategorii()})
 
 
