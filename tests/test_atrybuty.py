@@ -1164,3 +1164,94 @@ def test_nowa_nazwa_kolumny_skladowych_jest_rozpoznawana():
     from atrybuty.pipeline import KOLUMNY_SKLADOWYCH
     assert "atrybuty-skladowe" in KOLUMNY_SKLADOWYCH
     assert "atrybuty z zakladki" in KOLUMNY_SKLADOWYCH   # stare pliki też
+
+
+# --- domknięcie pętli: czy wysłane poprawki weszły ------------------------
+
+def _dzien_pierwszy(tmp_path, monkeypatch):
+    """Zrzut, decyzja, partia — stan na koniec dnia pierwszego."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, eksport_panelu, weryfikacja, wizja
+    from atrybuty.model import Finding, Produkt
+
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atr.yaml")
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+
+    baza = tmp_path / "w.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    import atrybuty.app as app_mod
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+
+    con = db.polacz(baza)
+    wizja.przygotuj_baze(con)
+    weryfikacja.przygotuj_baze(con)
+    produkty = [Produkt(id=str(i), nazwa=f"Komoda {i}", producent="BRW", kolekcja="",
+                        zdjecie="", styl="", kategoria="komoda",
+                        kody={"kod produktu": f"K{i}"},
+                        atrybuty={"Materiał": "plyta"},
+                        atrybuty_surowe={"Materiał": "plyta"}) for i in (1, 2, 3, 4)]
+    findingi = [Finding(str(i), "Materiał", "L1-SLOWNIK", "L1", "srednia", 0.9,
+                        "plyta", "drewno", "poza słownikiem") for i in (1, 2, 3, 4)]
+    db.zapisz_przebieg(con, "dzien1.csv", produkty, findingi)
+    for i in (1, 2, 3, 4):
+        db.zapisz_decyzje(con, str(i), "Materiał", "plyta", "zastosowana", "drewno", "L1")
+    eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    return con, baza, produkty
+
+
+def test_weryfikacja_rozpoznaje_co_weszlo_a_co_nie(tmp_path, monkeypatch):
+    from atrybuty import db, weryfikacja
+    con, baza, _ = _dzien_pierwszy(tmp_path, monkeypatch)
+
+    # dzień drugi: 1 poprawione, 2 bez zmian, 3 zmienione na co innego, 4 zniknął
+    from atrybuty.model import Produkt
+    def prod(pid, wartosc):
+        return Produkt(id=pid, nazwa=f"Komoda {pid}", producent="BRW", kolekcja="",
+                       zdjecie="", styl="", kategoria="komoda",
+                       atrybuty={"Materiał": wartosc}, atrybuty_surowe={"Materiał": wartosc})
+    nowe = [prod("1", "drewno"), prod("2", "plyta"), prod("3", "metal")]
+    wynik = weryfikacja.sprawdz(con, 2, nowe)
+
+    assert wynik[weryfikacja.WESZLO] == 1
+    assert wynik[weryfikacja.BEZ_ZMIAN] == 1
+    assert wynik[weryfikacja.INNA] == 1
+    assert wynik[weryfikacja.BRAK_PRODUKTU] == 1
+    assert weryfikacja.podsumowanie(con)["skutecznosc"] == 25
+    con.close()
+
+
+def test_weryfikacja_wybacza_nieistotne_roznice(tmp_path, monkeypatch):
+    """„46" i „46,0" to ta sama liczba, a lista w innej kolejności to ta sama
+    lista — inaczej połowa poprawek wracałaby jako „zmienione na co innego"."""
+    from atrybuty import weryfikacja
+    assert weryfikacja._takie_same("46", "46,0")
+    assert weryfikacja._takie_same("szkło, metal", "metal, szkło")
+    assert not weryfikacja._takie_same("metal", "drewno")
+
+
+def test_partia_mlodsza_od_zrzutu_nie_jest_liczona(tmp_path, monkeypatch):
+    """Zrzut zrobiony przed wysłaniem partii nie mógł jej widzieć — liczenie
+    go jako „nie weszło" dawałoby fałszywy alarm co rano."""
+    from atrybuty import weryfikacja
+    con, _, produkty = _dzien_pierwszy(tmp_path, monkeypatch)
+    wynik = weryfikacja.sprawdz(con, 2, produkty, data_zrzutu="2000-01-01 00:00:00")
+    assert wynik["sprawdzonych"] == 0
+    con.close()
+
+
+def test_strona_weryfikacji_pokazuje_co_nie_weszlo(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import weryfikacja
+    from atrybuty.model import Produkt
+    import atrybuty.app as app_mod
+    con, _, _ = _dzien_pierwszy(tmp_path, monkeypatch)
+    weryfikacja.sprawdz(con, 2, [Produkt(
+        id="1", nazwa="Komoda 1", producent="BRW", kolekcja="", zdjecie="", styl="",
+        kategoria="komoda", atrybuty={"Materiał": "plyta"},
+        atrybuty_surowe={"Materiał": "plyta"})])
+    con.close()
+
+    strona = TestClient(app_mod.app).get("/weryfikacja").text
+    assert "import nie wszedł" in strona and "Komoda 1" in strona

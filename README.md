@@ -125,6 +125,31 @@ Dwie rzeczy, o których trzeba wiedzieć:
    pusta. Czy panel czyta pustą komórkę jako „nie ruszaj", czy jako „wyczyść" —
    trzeba sprawdzić na pierwszej, małej partii. Dlatego domyślny rozmiar to 20.
 
+## Domknięcie pętli — czy poprawka weszła
+
+Dzień wygląda tak: rano świeży zrzut z bazy sklepu, w ciągu dnia rozstrzyganie
+findingów, wieczorem partia importem do sklepu. Nazajutrz nowy zrzut mówi
+prawdę o tym, co się naprawdę zmieniło — i `/weryfikacja` to pokazuje.
+
+Bez tego kroku „wyeksportowane" znaczy tylko „zrobiliśmy plik". Import potrafi
+przejść połowicznie, panel potrafi odrzucić wiersz po cichu, ktoś potrafi
+w międzyczasie wpisać coś innego ręcznie. Każda wysłana poprawka dostaje
+jeden z pięciu werdyktów:
+
+| | |
+|---|---|
+| `weszlo` | w sklepie jest dokładnie to, co wysłaliśmy |
+| `bez_zmian` | dalej stara wartość — import nie wszedł |
+| `inna_wartosc` | zmieniło się, ale na coś innego |
+| `brak_atrybutu` | atrybutu nie ma w zrzucie |
+| `brak_produktu` | produktu nie ma w zrzucie |
+
+Dwie rzeczy, bez których ten raport byłby bezużyteczny. Partie młodsze od
+zrzutu są pomijane — zrzut zrobiony przed wysłaniem nie mógł ich widzieć,
+a policzony jako „nie weszło" dawałby fałszywy alarm co rano. I porównanie
+wybacza różnice bez znaczenia: „46" to to samo co „46,0", a „szkło, metal"
+to to samo co „metal, szkło".
+
 ## Struktura
 
 ```

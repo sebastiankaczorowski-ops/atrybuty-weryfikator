@@ -16,7 +16,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-from . import config, db, kategorie, schema_gen, zrodla
+from . import config, db, kategorie, schema_gen, weryfikacja, zrodla
 from .model import PROG_DO_WIZJI, WIDOCZNE_NA_ZDJECIU
 from .pipeline import BAZA, wczytaj_csv, wszystkie_findingi
 
@@ -83,10 +83,15 @@ def _przebieg(plik: Path, plik_kategorii: Path | None, regeneruj_schema: bool) -
         przebieg = db.zapisz_przebieg(con, str(plik), produkty, findingi)
         STAN["etap"] = "porównanie z feedami producentów"
         l4 = zrodla.dopisz_findingi_l4(con, przebieg)
+        # Świeży zrzut to jedyny moment, w którym da się sprawdzić, czy
+        # wczorajsza partia faktycznie weszła do sklepu.
+        STAN["etap"] = "sprawdzanie, czy wysłane poprawki weszły"
+        wer = weryfikacja.sprawdz(con, przebieg, produkty)
         con.close()
 
         STAN["wynik"] = _podsumowanie(przebieg, produkty, findingi)
         STAN["wynik"]["l4"] = l4
+        STAN["wynik"]["weryfikacja"] = wer
         STAN["wynik"]["findingow"] += l4
         STAN["etap"] = "gotowe"
     except Exception as e:                                   # noqa: BLE001

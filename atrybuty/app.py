@@ -18,8 +18,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from . import (config, db, eksport, eksport_panelu, importer, kategorie,
-               panel_format, reguly as reguly_mod, wizja, zapytania,
-               zrodla as zrodla_mod)
+               panel_format, reguly as reguly_mod, weryfikacja as weryfikacja_mod,
+               wizja, zapytania, zrodla as zrodla_mod)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
 from .pipeline import BAZA
 
@@ -678,6 +678,23 @@ def wycofaj_partie(partia_id: int):
         "/eksport/partie?komunikat=" + quote(
             f"Partia {partia_id} wycofana — {ile} decyzji wraca do kolejki eksportu."),
         status_code=303)
+
+
+@app.get("/weryfikacja", response_class=HTMLResponse)
+def strona_weryfikacji(request: Request, partia: int = 0, stan: str = ""):
+    """Czy to, co wysłaliśmy, faktycznie weszło do sklepu."""
+    con = _con()
+    kontekst = {
+        "request": request,
+        "stat": weryfikacja_mod.podsumowanie(con),
+        "partie": weryfikacja_mod.wg_partii(con),
+        "szczegoly": weryfikacja_mod.szczegoly(con, partia or None, stan),
+        "opisy": weryfikacja_mod.OPISY,
+        "wybrana": partia, "stan": stan,
+        "ostatni": db.ostatni_przebieg(con),
+    }
+    con.close()
+    return szablony.TemplateResponse(request, "weryfikacja.html", kontekst)
 
 
 @app.post("/eksport/wzorzec")

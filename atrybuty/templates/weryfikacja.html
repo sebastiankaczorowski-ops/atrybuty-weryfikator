@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Czy poprawki weszły — kontrola atrybutów OXM</title>
+{% include "_styl.html" %}
+<style>
+.kafle{display:flex;gap:10px;flex-wrap:wrap}
+.kafel{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+       padding:10px 14px;min-width:130px;display:flex;flex-direction:column;gap:2px;
+       text-decoration:none;color:inherit}
+.kafel.akt{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.kafel b{font-size:19px;font-variant-numeric:tabular-nums}
+.kafel span{font-size:11.5px;color:var(--muted)}
+.dowod{color:var(--muted);font-size:12.5px}
+.st{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600;
+    white-space:nowrap}
+.st.weszlo{background:var(--ok-soft);color:var(--ok)}
+.st.bez_zmian{background:var(--crit-soft);color:var(--crit)}
+.st.inna_wartosc{background:var(--warn-soft);color:var(--warn)}
+.st.brak_atrybutu,.st.brak_produktu{background:var(--surface-2);color:var(--muted)}
+.stara{background:var(--crit-soft);color:var(--crit);padding:1px 6px;border-radius:2px}
+.nowa{background:var(--ok-soft);color:var(--ok);padding:1px 6px;border-radius:2px;font-weight:600}
+.pasek{height:8px;border-radius:2px;background:var(--crit-soft);overflow:hidden;min-width:90px}
+.pasek i{display:block;height:100%;background:var(--ok)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Czy poprawki weszły</h1>
+  <span class="plik">
+    {% if ostatni %}ostatni zrzut: {{ ostatni['plik'].split('__')[-1] }}
+      · {{ ostatni['utworzono'][:16].replace('T',' ') }}{% endif %}</span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/rozstrzygniete">rozstrzygnięte</a>
+    <a href="/eksport/partie">eksport partiami</a>
+    <a href="/import">wgraj plik</a>
+  </nav>
+</header>
+
+<main>
+
+<p class="pod">Sprawdzane przy każdym imporcie: bierzemy poprawki wysłane w partiach
+i porównujemy je z tym, co przyszło w świeżym zrzucie z bazy sklepu. Partie młodsze
+od zrzutu są pomijane — zrzut zrobiony przed wysłaniem nie mógł ich jeszcze widzieć.</p>
+
+{% if not stat.sprawdzonych %}
+  <p class="pod">Jeszcze nie ma czego sprawdzać. Zrób partię na
+  <a href="/eksport/partie">stronie eksportu</a>, wgraj ją do sklepu, a przy
+  następnym porannym zrzucie zobaczysz tu, co weszło.</p>
+{% else %}
+
+<div class="kafle">
+  <a class="kafel {{ 'akt' if not stan }}" href="/weryfikacja">
+    <b>{{ stat.skutecznosc }}%</b><span>weszło ({{ stat.weszlo }} z {{ stat.sprawdzonych }})</span></a>
+  <a class="kafel {{ 'akt' if stan=='bez_zmian' }}" href="/weryfikacja?stan=bez_zmian">
+    <b>{{ stat.bez_zmian }}</b><span>bez zmian — import nie wszedł</span></a>
+  <a class="kafel {{ 'akt' if stan=='inna_wartosc' }}" href="/weryfikacja?stan=inna_wartosc">
+    <b>{{ stat.inna }}</b><span>zmienione na coś innego</span></a>
+  <a class="kafel {{ 'akt' if stan=='brak_atrybutu' }}" href="/weryfikacja?stan=brak_atrybutu">
+    <b>{{ stat.brak_atrybutu }}</b><span>brak atrybutu w zrzucie</span></a>
+  {% if stat.brak_produktu %}
+  <a class="kafel {{ 'akt' if stan=='brak_produktu' }}" href="/weryfikacja?stan=brak_produktu">
+    <b>{{ stat.brak_produktu }}</b><span>brak produktu w zrzucie</span></a>
+  {% endif %}
+</div>
+
+<section>
+  <h2>Partie</h2>
+  <table>
+    <thead><tr><th>nr</th><th>wysłana</th><th class="n">produktów</th>
+      <th>skuteczność</th><th class="n">weszło</th><th class="n">bez zmian</th>
+      <th class="n">inna</th><th class="n">brak</th><th>sprawdzono</th></tr></thead>
+    <tbody>
+    {% for p in partie %}
+    {% set razem = p.sprawdzonych or 0 %}
+    <tr class="{{ 'nieaktywna' if p.wycofana }}">
+      <td><a href="/weryfikacja?partia={{ p.id }}"><b>{{ p.id }}</b></a></td>
+      <td class="dowod">{{ p.utworzono }}{% if p.uwagi %}<br>{{ p.uwagi }}{% endif %}</td>
+      <td class="n">{{ p.ile }}</td>
+      <td>
+        {% if razem %}
+          <div class="pasek"><i style="width:{{ (100 * (p.weszlo or 0) / razem)|round|int }}%"></i></div>
+          <span class="dowod">{{ (100 * (p.weszlo or 0) / razem)|round|int }}%</span>
+        {% else %}<span class="dowod">niesprawdzona</span>{% endif %}
+      </td>
+      <td class="n">{{ p.weszlo or 0 }}</td>
+      <td class="n">{{ p.bez_zmian or 0 }}</td>
+      <td class="n">{{ p.inna or 0 }}</td>
+      <td class="n">{{ (p.brak_atrybutu or 0) + (p.brak_produktu or 0) }}</td>
+      <td class="dowod">{{ (p.ostatnio or '')[:16].replace('T',' ') }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>
+    {% if stan %}{{ opisy.get(stan, stan) }}{% else %}Co nie weszło{% endif %}
+    {% if wybrana %} — partia {{ wybrana }}{% endif %}
+    ({{ szczegoly|length }})
+  </h2>
+  {% if not szczegoly %}
+    <p class="pod">Nic tu nie ma — wszystko z tego zakresu weszło tak, jak miało.</p>
+  {% else %}
+  <table>
+    <thead><tr><th>produkt</th><th>atrybut</th><th>wysłaliśmy</th>
+      <th>jest w sklepie</th><th>stan</th><th class="n">partia</th></tr></thead>
+    <tbody>
+    {% for w in szczegoly %}
+    <tr>
+      <td>
+        <a href="/produkt/{{ w.produkt_id }}" target="_blank"><code>{{ w.produkt_id }}</code></a>
+        {{ w.nazwa or '' }}
+        <div class="dowod">{{ w.producent or '' }}
+          · <a href="{{ link_panelu(w.produkt_id) }}" target="_blank" rel="noopener">panel ↗</a></div>
+      </td>
+      <td>{{ w.atrybut }}</td>
+      <td><span class="nowa">{{ w.oczekiwana }}</span></td>
+      <td>{% if w.znaleziona %}<span class="stara">{{ w.znaleziona }}</span>
+          {% else %}<span class="dowod">(brak)</span>{% endif %}</td>
+      <td><span class="st {{ w.stan }}">{{ opisy.get(w.stan, w.stan) }}</span></td>
+      <td class="n">{{ w.partia_id }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</section>
+
+{% endif %}
+
+</main>
+</body>
+</html>

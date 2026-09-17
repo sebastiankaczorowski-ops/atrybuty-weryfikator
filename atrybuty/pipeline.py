@@ -15,7 +15,7 @@ from collections import Counter
 from pathlib import Path
 
 from . import (config, db, detektory, kategorie, normalizacja, schema_gen,
-               skladowe, wizja, zdjecia as zdjecia_mod, zrodla)
+               skladowe, weryfikacja, wizja, zdjecia as zdjecia_mod, zrodla)
 from .model import Finding, Produkt, oszacuj_kompletnosc
 
 csv.field_size_limit(10_000_000)
@@ -172,6 +172,10 @@ def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
     przebieg = db.zapisz_przebieg(con, str(sciezka), produkty, findingi)
     # L4 dopiero teraz: dopasowanie do feedów potrzebuje produktów w bazie
     l4 = zrodla.dopisz_findingi_l4(con, przebieg)
+    wer = weryfikacja.sprawdz(con, przebieg, produkty)
+    if wer.get("sprawdzonych"):
+        print(f"  weryfikacja wysłanych poprawek: {wer.get('weszlo', 0)} weszło "
+              f"z {wer['sprawdzonych']} sprawdzonych")
     con.close()
     print(f"Zapisano przebieg #{przebieg} do {BAZA}")
     if l4:
