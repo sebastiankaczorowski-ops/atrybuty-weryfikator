@@ -85,10 +85,15 @@ Na eksporcie z 16.09 (32 252 produkty):
 | konflikty wartości | 4 319 par, w tym 1 831 krytycznych |
 | produkty bez składowych | 1 520 (drobnica: nogi, amortyzatory, szablony) |
 
-Przepisujemy **wyłącznie atrybuty słownikowe**. Liczby i teksty
-(Długość, Wysokość siedziska, „Do poprawy" — ok. 22 tys. par) zostają, gdzie
-były: nie ma słownika, który potwierdzałby, że wartość jest sensowna, a
-przepisanie ich na wiarę to przenoszenie bałaganu, nie porządkowanie.
+Przepisujemy to, co mieści się w **słowniku atrybutów sklepu** i jest tam
+ACTIVE — zarówno atrybuty słownikowe (wartość dostanie ID przy eksporcie),
+jak i pola wolne: wymiary, wagę, udźwig. Kryterium to słownik ATRYBUTÓW,
+nie słownik wartości: „Szerokość" wartości słownikowych nie ma i mieć nie
+będzie, a jest normalnym polem sklepu — odcinanie jej zostawiało produkty
+bez wymiarów (np. 78275 miał w składowych 110×43×60 i nic w atrybutach).
+
+Nie przepisujemy tego, czego panel nie zna („Liczba miejsc" przy sklepowym
+„Ilość osób") ani tego, co ma wyłączone („Długość", „Do poprawy").
 Produkty z flagą `omit_components_in_attributes = 1` są pomijane w całości.
 
 Konflikty nie są jedną kupką i dlatego mają różne wagi: „90,5 vs 90" to

@@ -1255,3 +1255,33 @@ def test_strona_weryfikacji_pokazuje_co_nie_weszlo(tmp_path, monkeypatch):
 
     strona = TestClient(app_mod.app).get("/weryfikacja").text
     assert "import nie wszedł" in strona and "Komoda 1" in strona
+
+
+STATUSY_TESTOWE = {"Materiał": {"id": "1", "status": "ACTIVE"},
+                   "Podparcie": {"id": "2", "status": "ACTIVE"},
+                   "Szerokość": {"id": "3", "status": "ACTIVE"},
+                   "Długość": {"id": "4", "status": "DISABLED"}}
+
+
+def test_wymiary_ze_skladowych_tez_sa_przepisywane():
+    """Szerokość nie ma wartości słownikowych i mieć nie będzie, ale jest
+    normalnym polem sklepu — odcięcie jej zostawiało produkty bez wymiarów."""
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("78275", {"Długość": "110"},
+                            {"Szerokość": "110", "Wysokość": "43", "Waga": "19.5"})
+    f = {x.atrybut: x for x in skladowe.znajdz([p], SLOWNIK_TESTOWY, STATUSY_TESTOWE)}
+    assert f["Szerokość"].proponowana_wartosc == "110"
+    assert f["Szerokość"].regula_id == "L0-ZE-SKLADOWYCH"
+
+
+def test_atrybut_wylaczony_w_panelu_nie_jest_przepisywany():
+    """„Długość" jest w panelu DISABLED — nie ma dokąd tego wpisać."""
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {}, {"Długość": "200"})
+    assert skladowe.znajdz([p], SLOWNIK_TESTOWY, STATUSY_TESTOWE) == []
+
+
+def test_atrybut_nieznany_panelowi_nie_jest_przepisywany():
+    from atrybuty import skladowe
+    p = _prod_ze_skladowymi("1", {}, {"Liczba miejsc": "2 miejsca"})
+    assert skladowe.znajdz([p], SLOWNIK_TESTOWY, STATUSY_TESTOWE) == []

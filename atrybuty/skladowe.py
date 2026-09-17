@@ -4,16 +4,20 @@ W sklepie ta sama cecha mebla może siedzieć w atrybutach produktu albo
 w jego składowych, a front bierze ją stamtąd, gdzie znajdzie. Docelowo ma
 być wyłącznie w atrybutach. Ta warstwa robi z tego dwie rzeczy:
 
-  L0-ZE-SKLADOWYCH  atrybut słownikowy jest tylko w składowych — propozycja
-                    przepisania go w legitne miejsce
+  L0-ZE-SKLADOWYCH  atrybut jest tylko w składowych — propozycja przepisania
+                    go w legitne miejsce
   L0-KONFLIKT       ten sam atrybut ma różne wartości w obu miejscach —
                     ktoś musi rozstrzygnąć, która jest prawdziwa
 
-Przepisujemy WYŁĄCZNIE atrybuty słownikowe. Liczby i teksty ze składowych
-(Długość, Wysokość siedziska, „Do poprawy") zostają, gdzie były — przy nich
-nie ma słownika, który potwierdzałby, że wartość jest sensowna, a
-przepisanie 22 tys. takich pól na wiarę to nie porządkowanie, tylko
-przenoszenie bałaganu.
+Przepisujemy to, co mieści się w słowniku ATRYBUTÓW sklepu i jest tam
+włączone (ACTIVE) — a więc zarówno atrybuty słownikowe (wartość dostanie
+ID przy eksporcie), jak i pola wolne: wymiary, wagę, udźwig. „Szerokość"
+wartości słownikowych nie ma i mieć nie będzie, a jest normalnym polem
+sklepu, więc odcinanie jej byłoby zwykłą dziurą.
+
+Nie przepisujemy tego, czego panel nie zna („Liczba miejsc" przy sklepowym
+„Ilość osób") ani tego, co ma wyłączone („Długość", „Do poprawy") — nie ma
+dokąd tego wpisać.
 
 Produkty z flagą `omit_components_in_attributes = 1` są pominięte: sklep
 mówi, że u nich składowe są już odcięte od frontu, więc nie ma czego
@@ -55,15 +59,29 @@ def _rodzaj_roznicy(a: str, b: str) -> tuple[str, str, float]:
     return "różne wartości", KRYTYCZNA, 0.5
 
 
+def _do_przepisania(atrybut: str, slownik: dict, statusy: dict) -> bool:
+    """Czy wolno przepisać ten atrybut ze składowych do atrybutów produktu.
+
+    Trzy przypadki i tylko pierwszy dwa razy przechodzą:
+      atrybut słownikowy    — tak, wartość dostanie ID przy eksporcie
+      atrybut wolny (liczba, tekst) — tak, jeśli panel go zna i ma włączony;
+                              tu należą wymiary, waga, udźwig
+      atrybut nieznany albo wyłączony w panelu — nie, nie ma gdzie tego wpisać
+    """
+    if statusy and statusy.get(atrybut, {}).get("status") != "ACTIVE":
+        return False
+    return bool(statusy) or atrybut in slownik
+
+
 def znajdz(produkty: list[Produkt], slownik: dict | None = None,
            atrybuty_panelu: dict | None = None) -> list[Finding]:
     slownik = panel_format.wczytaj_slownik() if slownik is None else slownik
     # Atrybut, którego panel w ogóle nie zna, bywa w eksporcie pod inną nazwą
     # („Liczba miejsc" przy sklepowym „Ilość osób"). Konfliktu na takim polu
     # i tak nie da się wyeksportować, więc nie ma po co blokować nim kolejki.
-    znane_w_panelu = set(
-        panel_format.wczytaj_atrybuty_panelu() if atrybuty_panelu is None
-        else atrybuty_panelu)
+    statusy = (panel_format.wczytaj_atrybuty_panelu() if atrybuty_panelu is None
+               else atrybuty_panelu)
+    znane_w_panelu = set(statusy)
     out: list[Finding] = []
 
     for p in produkty:
@@ -74,8 +92,11 @@ def znajdz(produkty: list[Produkt], slownik: dict | None = None,
             w_atrybutach = p.atrybuty_surowe.get(atrybut)
 
             if w_atrybutach is None:
-                # brak w legitnym miejscu — przepisujemy, ale tylko słownikowe
-                if atrybut not in slownik:
+                # Brak w legitnym miejscu — przepisujemy, o ile panel zna ten
+                # atrybut i ma go włączonego. Kryterium to słownik ATRYBUTÓW,
+                # nie słownik wartości: „Szerokość" wartości słownikowych nie
+                # ma i mieć nie będzie, a jest normalnym polem sklepu.
+                if not _do_przepisania(atrybut, slownik, statusy):
                     continue
                 out.append(Finding(
                     produkt_id=p.id, atrybut=atrybut, regula_id=REGULA_PRZEPISZ,
