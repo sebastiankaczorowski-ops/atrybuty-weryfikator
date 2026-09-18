@@ -60,6 +60,19 @@ table.porownanie tr.tylko-skladowe{background:#f6e7cc}
       {% endfor %}
     {% endif %}
 
+    <div id="zgloszenie" style="margin:0 0 14px">
+      <form hx-post="/zglos-produkt" hx-target="#zgloszenie" hx-swap="innerHTML">
+        <input type="hidden" name="produkt_id" value="{{ p.id }}">
+        <input type="hidden" name="powod" value="zweryfikowany ręcznie">
+        <button class="p" type="submit"
+                title="Wiersz poniesie komplet obecnych atrybutów — po to, żeby panel
+                       mógł postawić temu produktowi flagę odcięcia składowych">
+          Dodaj do importu bez zmian</button>
+        <span style="color:#6b7c76;font-size:13px">— gdy produkt jest już poprawny,
+          a i tak ma przejść przez import (flaga „składowe nieużywane")</span>
+      </form>
+    </div>
+
     <h2 style="font-size:15px">Atrybuty produktu a składowe</h2>
     <p style="color:#6b7c76;font-size:13px;margin:0 0 10px">
       Lewa kolumna to legitne miejsce, prawa to składowe mebla. Front bierze

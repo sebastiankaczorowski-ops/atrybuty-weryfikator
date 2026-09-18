@@ -40,6 +40,7 @@
   <div class="kafel"><b>{{ stat.czeka_na_eksport }}</b><span>poprawek czeka</span></div>
   <div class="kafel"><b>{{ plan.pozycje|length }}</b><span>produktów gotowych</span></div>
   <div class="kafel"><b>{{ plan.pominiete|length }}</b><span>bez ID w panelu</span></div>
+  <div class="kafel"><b>{{ zgloszonych }}</b><span>produktów zgłoszonych ręcznie</span></div>
   <div class="kafel"><b>{{ stat.wyeksportowane }}</b><span>już w partiach</span></div>
   <div class="kafel"><b>{{ slownik_ile }}</b><span>wartości w słowniku ID</span></div>
 </div>
@@ -94,6 +95,30 @@
   <p class="dowod" style="margin-top:8px">Aktualny wzorzec: {{ wzorzec.naglowki|length }} kolumn.</p>
   {% endif %}
 </section>
+
+{% if plan.powtorki %}
+<section>
+  <h2>Produkty, które szły już wcześniej ({{ plan.powtorki|length }})</h2>
+  <p class="pod">Nie jest to błąd — decyzje na tym samym meblu zapadły po prostu
+  w różne dni. Ale drugi import wpisuje tylko kolumny z tej partii, więc jeśli
+  wolisz mieć pewność, dopisz produkt przyciskiem „dodaj do importu" na jego
+  karcie: wtedy wiersz poniesie komplet jego atrybutów i powtórzenie importu
+  niczego nie ruszy.</p>
+  <table class="pominiete">
+    <thead><tr><th>produkt</th><th class="n">poprzednia partia</th>
+      <th class="n">zmian teraz</th><th>zakres wiersza</th></tr></thead>
+    <tbody>
+    {% for p in plan.powtorki[:60] %}
+      <tr><td><a href="/produkt/{{ p.produkt_id }}" target="_blank">
+            <code>{{ p.produkt_id }}</code></a> {{ p.nazwa }}</td>
+          <td class="n">{{ p.byl_w_partii }}</td>
+          <td class="n">{{ p.zmiany|length }}</td>
+          <td class="dowod">{{ 'komplet atrybutów' if p.komplet else 'tylko poprawki' }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
 
 {% if plan.pominiete %}
 <section>

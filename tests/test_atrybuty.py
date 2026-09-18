@@ -1478,3 +1478,95 @@ def test_hurt_dalej_dziala_na_jednorodnej_grupie(tmp_path, monkeypatch):
     con = db.polacz(baza)
     assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 2
     con.close()
+
+
+# --- zgłoszenie produktu do importu bez poprawek --------------------------
+
+def _baza_do_zgloszen(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, eksport_panelu, wizja
+    from atrybuty.model import Produkt
+    import atrybuty.app as app_mod
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "e.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "a.yaml")
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+
+    baza = tmp_path / "z.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con); eksport_panelu.przygotuj_baze(con)
+    p = Produkt(id="77", nazwa="Ława Lavida", producent="Halmar", kolekcja="",
+                zdjecie="", styl="", kategoria="lawa",
+                kody={"kod produktu": "K77"},
+                atrybuty={"Szerokość": "110", "Materiał": "drewno"},
+                atrybuty_surowe={"Szerokość": "110", "Materiał": "drewno"})
+    db.zapisz_przebieg(con, "t.csv", [p], [])
+    return con, baza, app_mod
+
+
+def test_zgloszony_produkt_niesie_komplet_atrybutow(tmp_path, monkeypatch):
+    """Wiersz zgłoszenia to aktualny stan, nie poprawka — dzięki temu
+    powtórzenie importu niczego nie rusza."""
+    from atrybuty import eksport_panelu
+    con, _, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    eksport_panelu.zglos_produkt(con, "77", "zweryfikowany")
+    plan = eksport_panelu.zaplanuj(con, 50)
+    poz = plan.pozycje[0]
+    assert plan.zgloszonych == 1 and poz.komplet
+    assert poz.zmiany["Szerokość"] == "110"
+    assert poz.zmiany["Materiał"] == "2104|drewno"    # słownikowe dostaje ID
+    assert poz.stare == poz.zmiany                    # cofka nic nie zmienia
+    con.close()
+
+
+def test_zgloszenie_znika_po_wyeksportowaniu(tmp_path, monkeypatch):
+    from atrybuty import eksport_panelu
+    con, _, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    eksport_panelu.zglos_produkt(con, "77")
+    eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    assert eksport_panelu.czeka_zgloszonych(con) == 0
+    assert eksport_panelu.zaplanuj(con, 50).pozycje == []
+    con.close()
+
+
+def test_wycofanie_partii_wraca_takze_zgloszenia(tmp_path, monkeypatch):
+    from atrybuty import eksport_panelu
+    con, _, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    eksport_panelu.zglos_produkt(con, "77")
+    w = eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    eksport_panelu.wycofaj(con, w["partia_id"])
+    assert eksport_panelu.czeka_zgloszonych(con) == 1
+    con.close()
+
+
+def test_produkt_z_wczesniejszej_partii_jest_oznaczony(tmp_path, monkeypatch):
+    """Ten sam mebel może wrócić w kolejnej partii, gdy decyzje zapadły
+    w różne dni — eksport ma to pokazać, a nie ukryć."""
+    from atrybuty import db, eksport_panelu
+    con, _, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    eksport_panelu.zglos_produkt(con, "77")
+    eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+
+    db.zapisz_decyzje(con, "77", "Materiał", "drewno", "zastosowana", "drewno", "R")
+    plan = eksport_panelu.zaplanuj(con, 50)
+    assert plan.powtorki and plan.powtorki[0].byl_w_partii == 1
+    con.close()
+
+
+def test_zgloszenie_z_karty_produktu(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import eksport_panelu
+    con, baza, app_mod = _baza_do_zgloszen(tmp_path, monkeypatch)
+    con.close()
+    klient = TestClient(app_mod.app)
+    assert "Dodaj do importu bez zmian" in klient.get("/produkt/77").text
+    assert "w kolejce do importu" in klient.post(
+        "/zglos-produkt", data={"produkt_id": "77"}).text
+
+    from atrybuty import db
+    con = db.polacz(baza)
+    assert eksport_panelu.czeka_zgloszonych(con) == 1
+    klient.post("/zglos-produkt/cofnij", data={"produkt_id": "77"})
+    assert eksport_panelu.czeka_zgloszonych(con) == 0
+    con.close()

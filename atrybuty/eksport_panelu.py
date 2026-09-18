@@ -33,6 +33,8 @@ class Pozycja:
     zmiany: dict[str, str] = field(default_factory=dict)       # kolumna -> nowa
     stare: dict[str, str] = field(default_factory=dict)        # kolumna -> stara
     klucze: list[tuple[str, str, str]] = field(default_factory=list)  # (pid,atr,hasz)
+    komplet: bool = False        # wiersz niesie cały stan atrybutów, nie tylko poprawki
+    byl_w_partii: int = 0        # numer wcześniejszej partii, jeśli już szedł
 
 
 @dataclass
@@ -41,6 +43,17 @@ class Plan:
     pozycje: list[Pozycja] = field(default_factory=list)
     pominiete: list[dict] = field(default_factory=list)
     czekajacych: int = 0
+    zgloszonych: int = 0          # produkty dopisane ręcznie, bez poprawek
+
+    @property
+    def powtorki(self) -> list[Pozycja]:
+        """Produkty, które szły już we wcześniejszej partii.
+
+        Nie jest to błąd — po prostu decyzje na jednym meblu zapadły w różne
+        dni. Ale drugi import tego samego produktu wpisuje tylko kolumny
+        z tej partii, więc warto o tym wiedzieć i rozważyć wysłanie kompletu.
+        """
+        return [p for p in self.pozycje if p.byl_w_partii]
 
     @property
     def zmian(self) -> int:
@@ -73,6 +86,48 @@ ORDER BY d.utworzono
 """
 
 
+# Zgłoszenia ręczne: produkt trafia do importu, choć nic w nim nie
+# poprawiamy. Po co — żeby panel dostał jego wiersz i mógł mu postawić flagę
+# „składowe już nieużywane". Produkt zweryfikowany jako poprawny też musi
+# przez to przejść, inaczej zostanie z włączonymi składowymi na zawsze.
+SCHEMA_ZGLOSZEN = """
+CREATE TABLE IF NOT EXISTS zgloszenia (
+    produkt_id TEXT PRIMARY KEY,
+    powod TEXT,
+    utworzono TEXT,
+    partia_id INTEGER
+);
+CREATE INDEX IF NOT EXISTS ix_zgl_partia ON zgloszenia(partia_id);
+"""
+
+
+def przygotuj_baze(con: sqlite3.Connection) -> None:
+    con.executescript(SCHEMA_ZGLOSZEN)
+    con.commit()
+
+
+def zglos_produkt(con: sqlite3.Connection, produkt_id: str, powod: str = "") -> None:
+    przygotuj_baze(con)
+    con.execute(
+        "INSERT OR REPLACE INTO zgloszenia (produkt_id, powod, utworzono, partia_id)"
+        " VALUES (?,?,?,NULL)",
+        (produkt_id, powod, datetime.now().isoformat(timespec="seconds")))
+    con.commit()
+
+
+def cofnij_zgloszenie(con: sqlite3.Connection, produkt_id: str) -> None:
+    przygotuj_baze(con)
+    con.execute("DELETE FROM zgloszenia WHERE produkt_id=? AND partia_id IS NULL",
+                (produkt_id,))
+    con.commit()
+
+
+def czeka_zgloszonych(con: sqlite3.Connection) -> int:
+    przygotuj_baze(con)
+    return int(con.execute(
+        "SELECT COUNT(*) FROM zgloszenia WHERE partia_id IS NULL").fetchone()[0])
+
+
 def _kody(surowe: str | None) -> dict:
     import json
     try:
@@ -95,8 +150,17 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
     kol_surowe = set(wzorzec.surowe)
     etykiety = pf.wczytaj_etykiety()
 
+    przygotuj_baze(con)
     plan = Plan()
     wg_produktu: dict[str, Pozycja] = {}
+
+    # produkt, który szedł już w którejś partii — do ostrzeżenia
+    wczesniej = {r["produkt_id"]: r["partia"] for r in con.execute(
+        "SELECT produkt_id, MAX(partia_id) AS partia FROM decyzje "
+        "WHERE partia_id IS NOT NULL GROUP BY produkt_id")}
+    for r in con.execute("SELECT produkt_id, partia_id FROM zgloszenia "
+                         "WHERE partia_id IS NOT NULL"):
+        wczesniej.setdefault(r["produkt_id"], r["partia_id"])
 
     for r in con.execute(SQL_CZEKAJACE):
         plan.czekajacych += 1
@@ -124,7 +188,8 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
             kody = _kody(r["kody"])
             poz = Pozycja(produkt_id=r["produkt_id"], nazwa=r["nazwa"] or "",
                           kod=kody.get("kod produktu", ""),
-                          kod_producenta=kody.get("kod producenta", ""))
+                          kod_producenta=kody.get("kod producenta", ""),
+                          byl_w_partii=wczesniej.get(r["produkt_id"], 0))
             wg_produktu[r["produkt_id"]] = poz
             plan.pozycje.append(poz)
 
@@ -135,7 +200,56 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
         poz.stare[kolumna] = stara_do_pliku or stara
         poz.klucze.append((r["produkt_id"], r["atrybut"], r["hasz_starej"]))
 
+    _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, slownik,
+                       kol_slownikowe, kol_surowe, etykiety, znane, wczesniej)
     return plan
+
+
+def _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, slownik,
+                       kol_slownikowe, kol_surowe, etykiety, znane, wczesniej) -> None:
+    """Dokłada produkty zgłoszone ręcznie — z KOMPLETEM ich atrybutów.
+
+    Tu wiersz nie niesie poprawki, tylko aktualny stan: to, co i tak jest
+    w sklepie w legitnym miejscu. Dzięki temu import jest bezpieczny do
+    powtórzenia i nie zależy od tego, co poszło we wcześniejszej partii.
+    """
+    import json
+    for r in con.execute(
+            "SELECT z.produkt_id, z.powod, p.nazwa, p.kody, p.atrybuty_surowe "
+            "FROM zgloszenia z LEFT JOIN produkty p ON p.id = z.produkt_id "
+            "WHERE z.partia_id IS NULL ORDER BY z.utworzono"):
+        plan.zgloszonych += 1
+        poz = wg_produktu.get(r["produkt_id"])
+        if poz is None:
+            if len(wg_produktu) >= limit_produktow:
+                continue
+            kody = _kody(r["kody"])
+            poz = Pozycja(produkt_id=r["produkt_id"], nazwa=r["nazwa"] or "",
+                          kod=kody.get("kod produktu", ""),
+                          kod_producenta=kody.get("kod producenta", ""),
+                          byl_w_partii=wczesniej.get(r["produkt_id"], 0))
+            wg_produktu[r["produkt_id"]] = poz
+            plan.pozycje.append(poz)
+
+        poz.komplet = True
+        try:
+            atrybuty = json.loads(r["atrybuty_surowe"] or "{}")
+        except ValueError:
+            atrybuty = {}
+        for kolumna, wartosc in atrybuty.items():
+            if kolumna in poz.zmiany:          # świeża poprawka ma pierwszeństwo
+                continue
+            if znane and kolumna not in znane:
+                continue
+            wart, powod = pf.wartosc_do_pliku(slownik, kolumna, wartosc,
+                                              kol_slownikowe, kol_surowe, etykiety)
+            if powod:
+                plan.pominiete.append({
+                    "produkt_id": r["produkt_id"], "nazwa": r["nazwa"] or "",
+                    "atrybut": kolumna, "nowa_wartosc": wartosc, "powod": powod})
+                continue
+            poz.zmiany[kolumna] = wart
+            poz.stare[kolumna] = wart          # nic nie zmieniamy, więc cofka = to samo
 
 
 def _arkusz(wzorzec: pf.Wzorzec, pozycje: list[Pozycja], pole: str, stempel: str):
@@ -214,6 +328,9 @@ def zapisz_partie(con: sqlite3.Connection, katalog: str | Path,
     con.executemany(
         "UPDATE decyzje SET partia_id=? WHERE produkt_id=? AND atrybut=? AND hasz_starej=?",
         [(partia_id, *k) for poz in plan.pozycje for k in poz.klucze])
+    con.executemany(
+        "UPDATE zgloszenia SET partia_id=? WHERE produkt_id=? AND partia_id IS NULL",
+        [(partia_id, poz.produkt_id) for poz in plan.pozycje if poz.komplet])
     con.commit()
 
     return {"partia_id": partia_id, "ile": len(plan.pozycje), "zmian": plan.zmian,
@@ -226,6 +343,7 @@ def wycofaj(con: sqlite3.Connection, partia_id: int) -> int:
 
     Do użycia, gdy plik nie wszedł do sklepu. Nie kasuje samych decyzji.
     """
+    con.execute("UPDATE zgloszenia SET partia_id=NULL WHERE partia_id=?", (partia_id,))
     cur = con.execute("UPDATE decyzje SET partia_id=NULL WHERE partia_id=?", (partia_id,))
     con.execute("UPDATE partie SET wycofana=1 WHERE id=?", (partia_id,))
     con.commit()

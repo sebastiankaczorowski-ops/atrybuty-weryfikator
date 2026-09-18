@@ -727,6 +727,37 @@ def cofnij_decyzje(produkt_id: str = Form(...), atrybut: str = Form(...),
     return HTMLResponse('<span class="zrobione">✓ cofnięte</span>')
 
 
+@app.post("/zglos-produkt", response_class=HTMLResponse)
+def zglos_produkt(produkt_id: str = Form(...), powod: str = Form("")):
+    """Dopisuje produkt do najbliższej partii, choć nic w nim nie poprawiamy.
+
+    Po to, żeby panel dostał jego wiersz i mógł mu postawić flagę „składowe
+    już nieużywane". Produkt sprawdzony i uznany za poprawny też musi przez
+    import przejść — inaczej zostanie ze składowymi na froncie na zawsze.
+
+    Wiersz takiego produktu niesie KOMPLET jego legitnych atrybutów, nie
+    pojedynczą poprawkę, więc powtórzenie importu niczego nie psuje.
+    """
+    con = _con()
+    p = zapytania.produkt(con, produkt_id)
+    if not p:
+        con.close()
+        return HTMLResponse('<span class="dowod">nie ma takiego produktu</span>')
+    eksport_panelu.zglos_produkt(con, produkt_id, powod or "zweryfikowany ręcznie")
+    ile = len(p["atrybuty_surowe"])
+    con.close()
+    return HTMLResponse(
+        f'<span class="zrobione">✓ w kolejce do importu ({ile} atrybutów)</span>')
+
+
+@app.post("/zglos-produkt/cofnij", response_class=HTMLResponse)
+def cofnij_zgloszenie_produktu(produkt_id: str = Form(...)):
+    con = _con()
+    eksport_panelu.cofnij_zgloszenie(con, produkt_id)
+    con.close()
+    return HTMLResponse('<span class="dowod">wycofane z kolejki importu</span>')
+
+
 @app.get("/eksport/partie", response_class=HTMLResponse)
 def strona_partii(request: Request, komunikat: str = "", blad: str = ""):
     con = _con()
@@ -736,6 +767,7 @@ def strona_partii(request: Request, komunikat: str = "", blad: str = ""):
         "partie": eksport_panelu.partie(con),
         "stat": zapytania.statystyki_decyzji(con),
         "plan": plan,
+        "zgloszonych": eksport_panelu.czeka_zgloszonych(con),
         "wzorzec": panel_format.wczytaj_wzorzec(),
         "slownik_ile": sum(len(v) for v in panel_format.wczytaj_slownik().values()),
         "duplikaty": panel_format.duplikaty(),

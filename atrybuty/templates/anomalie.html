@@ -282,6 +282,13 @@ tr.htmx-request .szkielet{display:flex}
       </div>
       <div class="hurt" id="hurt-{{ poz.produkt_id }}">
         <span class="grupa-licznik">{{ poz.findingi|length }} błędów</span>
+        <form hx-post="/zglos-produkt" hx-target="#hurt-{{ poz.produkt_id }}"
+              hx-swap="innerHTML" hx-disabled-elt="find button">
+          <input type="hidden" name="produkt_id" value="{{ poz.produkt_id }}">
+          <button class="mini" type="submit"
+                  title="Wyślij ten produkt w najbliższej partii z kompletem obecnych
+                         atrybutów, niezależnie od findingów">do importu</button>
+        </form>
         {% if poz.gotowe %}
         <form hx-post="/decyzja/produkt" hx-target="#hurt-{{ poz.produkt_id }}"
               hx-swap="innerHTML" hx-disabled-elt="find button">

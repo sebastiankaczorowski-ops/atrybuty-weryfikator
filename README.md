@@ -153,6 +153,22 @@ było, a partię, która nie weszła do sklepu, można wycofać — decyzje wrac
 kolejki eksportu. Obok pliku poprawek powstaje plik cofający ze starymi
 wartościami.
 
+### Produkt bez poprawek też może pójść do importu
+
+Przycisk „Dodaj do importu bez zmian" (karta produktu i widok produktowy
+kolejki) dopisuje mebel do najbliższej partii, choć nic w nim nie
+poprawiamy — po to, żeby panel dostał jego wiersz i mógł mu postawić flagę
+`omit_components_in_attributes`. Produkt sprawdzony i uznany za poprawny też
+musi przez import przejść, inaczej zostanie ze składowymi na froncie na zawsze.
+
+Taki wiersz niesie **komplet obecnych atrybutów**, nie pojedynczą poprawkę.
+To jest też odpowiedź na pytanie, czy produkt może wpaść do importu kilka
+razy: w obrębie jednej partii nie (jeden produkt = jeden wiersz), ale w dwóch
+partiach owszem, gdy decyzje na tym samym meblu zapadły w różne dni. Strona
+eksportu pokazuje takie przypadki osobno („produkty, które szły już
+wcześniej") razem z numerem poprzedniej partii. Wiersz z kompletem atrybutów
+jest odporny na powtórzenie — wpisuje ten sam stan, który już jest w sklepie.
+
 Dwie rzeczy, o których trzeba wiedzieć:
 
 1. **Wartości słownikowe w panelu to `ID|etykieta`** („2022|tapicerowane"),
