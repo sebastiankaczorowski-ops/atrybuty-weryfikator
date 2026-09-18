@@ -199,10 +199,17 @@ Dwie rzeczy, o których trzeba wiedzieć:
 
 1. **Wartości słownikowe w panelu to `ID|etykieta`** („2022|tapicerowane"),
    a nasze źródło ma same etykiety. Źródłem prawdy jest eksport słownika
-   atrybutów z panelu (dwa arkusze: 159 atrybutów, 68 słownikowych, 473
-   wartości), wgrywany na `/eksport/partie` — trafia do
+   atrybutów z panelu (159 atrybutów, 68 słownikowych, 490 wartości),
+   wgrywany na `/eksport/partie` — trafia do
    `config/slownik_idow.yaml`, `config/etykiety_panelu.yaml`
-   i `config/atrybuty_panelu.yaml`. Eksport produktów z panelu też dokłada
+   i `config/atrybuty_panelu.yaml`.
+   Plik bywa wieloarkuszowy: panel dokłada kolejne zrzuty („atrybuty 9.18",
+   „wartości 9.18") i zostawia poprzednie, więc arkusze rozpoznajemy po
+   nagłówku i bierzemy **ostatnią** parę.
+   Gdy tytuł atrybutu albo wartości się zmienia, ID zostaje — po nim
+   wykrywamy przemianowanie i zapisujemy je w `config/zmiany_nazw.yaml`.
+   Starsze eksporty produktów są dzięki temu czytane pod nowymi nazwami;
+   bez tego przemianowany atrybut wypadałby z walidacji bez śladu. Eksport produktów z panelu też dokłada
    wartości, ale przede wszystkim daje układ 165 kolumn.
    Wartości wielokrotne („ceramika, metal") dostają ID dla każdego członu;
    jeden nieznany człon przekreśla całą wartość, bo pół listy to nie poprawka.

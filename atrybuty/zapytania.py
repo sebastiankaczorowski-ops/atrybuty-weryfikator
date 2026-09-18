@@ -300,21 +300,43 @@ class Slowniki:
     atrybuty: list[tuple[str, int]] = field(default_factory=list)
 
 
-def slowniki_filtrow(con: sqlite3.Connection, przebieg: int) -> Slowniki:
-    def zbierz(q: str) -> list[tuple[str, int]]:
-        return [(r[0], r[1]) for r in con.execute(q, {"przebieg": przebieg}) if r[0]]
+# Licznik przy opcji filtra ma znaczyć „tyle zostało do zrobienia", a nie
+# „tyle było przy wgraniu eksportu". Liczony po surowej tabeli findingów
+# pokazywał „Stolik (39)" długo po tym, jak wszystkie 39 zostało
+# rozstrzygniętych — wybór kategorii kończył się pustą listą.
+#
+# Każda lista jest liczona z POZOSTAŁYMI filtrami, ale bez własnego wymiaru:
+# po wybraniu producenta kategorie pokazują jego kategorie, a lista
+# producentów nadal pokazuje wszystkich — inaczej nie dałoby się zmienić
+# raz podjętego wyboru.
+def slowniki_filtrow(con: sqlite3.Connection, przebieg: int,
+                     fl: Filtr | None = None) -> Slowniki:
+    baza = replace(fl or Filtr(), grupuj=False, limit=0, offset=0)
+
+    def zbierz(wymiar: str, kolumna: str, wybrane: str,
+               limit: int | None = None) -> list[tuple[str, int]]:
+        sql, par = _warunki(replace(baza, **{wymiar: ""}))
+        q = (f"SELECT {kolumna} AS k, COUNT(*) n "
+             "FROM findingi f JOIN produkty p ON p.id=f.produkt_id "
+             "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
+             "AND d.hasz_starej=f.hasz_starej "
+             "LEFT JOIN werdykty_wizji w ON w.produkt_id=f.produkt_id AND w.atrybut=f.atrybut "
+             f"WHERE f.przebieg_id=:przebieg{sql} GROUP BY 1 ORDER BY 2 DESC")
+        if limit:
+            q += f" LIMIT {int(limit)}"
+        out = [(r["k"], r["n"]) for r in con.execute(q, par | {"przebieg": przebieg})
+               if r["k"]]
+        # aktualnie wybrana opcja musi zostać w liście, choćby spadła do zera
+        # albo wypadła poza limit — inaczej select gubi swoją wartość
+        if wybrane and wybrane not in {k for k, _ in out}:
+            out.append((wybrane, 0))
+        return out
 
     return Slowniki(
-        kategorie=zbierz("SELECT p.kategoria, COUNT(*) FROM findingi f JOIN produkty p "
-                         "ON p.id=f.produkt_id WHERE f.przebieg_id=:przebieg "
-                         "GROUP BY 1 ORDER BY 2 DESC"),
-        producenci=zbierz("SELECT p.producent, COUNT(*) FROM findingi f JOIN produkty p "
-                          "ON p.id=f.produkt_id WHERE f.przebieg_id=:przebieg "
-                          "GROUP BY 1 ORDER BY 2 DESC LIMIT 40"),
-        reguly=zbierz("SELECT regula_id, COUNT(*) FROM findingi WHERE przebieg_id=:przebieg "
-                      "GROUP BY 1 ORDER BY 2 DESC"),
-        atrybuty=zbierz("SELECT atrybut, COUNT(*) FROM findingi WHERE przebieg_id=:przebieg "
-                        "GROUP BY 1 ORDER BY 2 DESC LIMIT 40"),
+        kategorie=zbierz("kategoria", "p.kategoria", baza.kategoria),
+        producenci=zbierz("producent", "p.producent", baza.producent, limit=40),
+        reguly=zbierz("regula", "f.regula_id", baza.regula),
+        atrybuty=zbierz("atrybut", "f.atrybut", baza.atrybut, limit=40),
     )
 
 

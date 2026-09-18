@@ -254,17 +254,45 @@ def kolumny_slownikowe(slownik: dict | None = None) -> set[str]:
 PLIK_ATRYBUTOW = KATALOG_CONFIG / "atrybuty_panelu.yaml"
 
 
+NAGLOWEK_ATRYBUTOW = ("id", "status", "title")
+NAGLOWEK_WARTOSCI = ("id", "title", "title")
+
+
+def _naglowek(ws) -> tuple:
+    try:
+        return tuple((str(c).strip().lower() if c is not None else "")
+                     for c in next(ws.iter_rows(values_only=True))[:3])
+    except StopIteration:
+        return ()
+
+
+def pary_arkuszy(wb) -> list[tuple]:
+    """Pary (arkusz atrybutów, arkusz wartości) w kolejności z pliku.
+
+    Panel dokłada kolejne zrzuty słownika jako NOWE arkusze („atrybuty 9.18",
+    „wartości 9.18") i zostawia stare obok. Branie dwóch pierwszych arkuszy
+    uczyło nas wtedy po cichu nieaktualnego słownika — plik wygląda na wgrany,
+    a zmiany z panelu nie wchodzą. Dlatego rozpoznajemy arkusze po nagłówku,
+    a bierzemy ostatnią parę: zrzuty idą chronologicznie, najnowszy na końcu.
+    """
+    pary, otwarty = [], None
+    for ws in wb.worksheets:
+        n = _naglowek(ws)
+        if n == NAGLOWEK_ATRYBUTOW:
+            otwarty = ws
+        elif n == NAGLOWEK_WARTOSCI and otwarty is not None:
+            pary.append((otwarty, ws))
+            otwarty = None
+    return pary
+
+
 def czy_plik_slownika(sciezka: str | Path) -> bool:
     try:
         import openpyxl
         wb = openpyxl.load_workbook(sciezka, read_only=True)
-        if len(wb.worksheets) < 2:
-            wb.close()
-            return False
-        naglowki = [next(ws.iter_rows(values_only=True)) for ws in wb.worksheets[:2]]
+        ile = len(pary_arkuszy(wb))
         wb.close()
-        return (tuple(naglowki[0][:3]) == ("id", "status", "title")
-                and tuple(naglowki[1][:3]) == ("id", "title", "title"))
+        return ile > 0
     except Exception:
         return False
 
@@ -291,7 +319,17 @@ def naucz_ze_slownika(sciezka: str | Path) -> dict:
     """
     import openpyxl
     wb = openpyxl.load_workbook(sciezka, read_only=True)
-    ark_atrybuty, ark_wartosci = wb.worksheets[0], wb.worksheets[1]
+    pary = pary_arkuszy(wb)
+    if not pary:
+        wb.close()
+        raise ValueError("w pliku nie ma arkuszy słownika "
+                         "(nagłówki id/status/title oraz id/title/title)")
+    # ostatnia para = najnowszy zrzut; poprzednie zostawiamy w spokoju
+    ark_atrybuty, ark_wartosci = pary[-1]
+    arkusze = f"{ark_atrybuty.title} + {ark_wartosci.title}"
+
+    stare_atrybuty = wczytaj_atrybuty_panelu()
+    stary_slownik, stare_etykiety = wczytaj_slownik(), wczytaj_etykiety()
 
     atrybuty: dict[str, dict] = {}
     for r in list(ark_atrybuty.iter_rows(values_only=True))[1:]:
@@ -335,8 +373,20 @@ def naucz_ze_slownika(sciezka: str | Path) -> dict:
     wzorzec.surowe = [k for k in wzorzec.surowe if k not in slownik]
     zapisz_wzorzec(wzorzec)
 
+    zmiany = _wykryj_zmiany_nazw(stare_atrybuty, atrybuty,
+                                 stary_slownik, stare_etykiety, slownik, etykiety)
+    migrowane: list[str] = []
+    if zmiany["atrybuty"] or zmiany["wartosci"]:
+        dopisz_zmiany_nazw(zmiany)
+        migrowane = migruj_config(zmiany)
+
     wylaczone = [k for k, v in atrybuty.items() if v["status"] != "ACTIVE"]
     return {
+        "arkusze": arkusze,
+        "przemianowanych_atrybutow": len(zmiany["atrybuty"]),
+        "przemianowanych_wartosci": sum(len(v) for v in zmiany["wartosci"].values()),
+        "zmiany_nazw": zmiany,
+        "zmigrowane_pliki": migrowane,
         "atrybutow": len(atrybuty),
         "slownikowych": len(slownik),
         "wartosci": ile_wartosci,
@@ -346,6 +396,144 @@ def naucz_ze_slownika(sciezka: str | Path) -> dict:
         "smieci": smieci,
         "duplikaty": duplikaty(slownik),
     }
+
+
+# --- przemianowania w słowniku sklepu -------------------------------------
+#
+# Panel zmienia tytuł atrybutu albo wartości, a ID zostaje. Dla sklepu to
+# kosmetyka, dla nas nie: eksporty produktów sprzed zmiany dalej niosą starą
+# nazwę („Materiał obicia"), a reguły, schema i słowniki mówią już nową
+# („Rodzaj obicia"). Bez mapy stara→nowa taki atrybut po cichu wypada
+# z walidacji — nie ma go w definicjach, więc nikt go nie sprawdza.
+#
+# Mapę budujemy po ID, bo tylko ID przeżywa zmianę tytułu.
+
+PLIK_ZMIAN_NAZW = KATALOG_CONFIG / "zmiany_nazw.yaml"
+
+
+def wczytaj_zmiany_nazw() -> dict:
+    if not PLIK_ZMIAN_NAZW.exists():
+        return {"atrybuty": {}, "wartosci": {}}
+    d = yaml.safe_load(PLIK_ZMIAN_NAZW.read_text(encoding="utf-8")) or {}
+    return {"atrybuty": d.get("atrybuty") or {}, "wartosci": d.get("wartosci") or {}}
+
+
+def dopisz_zmiany_nazw(nowe: dict) -> dict:
+    """Dokłada do mapy, nie nadpisuje — historia przemianowań się kumuluje.
+
+    Gdy „A" stało się „B", a potem „B" stało się „C", stary eksport z „A"
+    ma trafić na „C", więc przy dopisaniu przepinamy też wcześniejsze wpisy.
+    """
+    mapa = wczytaj_zmiany_nazw()
+
+    for stara, nowa in (nowe.get("atrybuty") or {}).items():
+        for k, v in list(mapa["atrybuty"].items()):
+            if v == stara:
+                mapa["atrybuty"][k] = nowa
+        if stara != nowa:
+            mapa["atrybuty"][stara] = nowa
+
+    for atrybut, pary in (nowe.get("wartosci") or {}).items():
+        cel = mapa["wartosci"].setdefault(atrybut, {})
+        for stara, nowa in pary.items():
+            for k, v in list(cel.items()):
+                if v == stara:
+                    cel[k] = nowa
+            if stara != nowa:
+                cel[stara] = nowa
+
+    # atrybut przemianowany drugi raz zabiera ze sobą swoje wartości
+    for stara, nowa in mapa["atrybuty"].items():
+        if stara in mapa["wartosci"] and stara != nowa:
+            mapa["wartosci"].setdefault(nowa, {}).update(mapa["wartosci"].pop(stara))
+
+    PLIK_ZMIAN_NAZW.parent.mkdir(parents=True, exist_ok=True)
+    PLIK_ZMIAN_NAZW.write_text(
+        "# Mapa stara nazwa -> nowa nazwa, budowana po ID przy wgrywaniu\n"
+        "# słownika z panelu. Plik jest nadpisywany przez aplikację.\n"
+        + yaml.safe_dump(mapa, allow_unicode=True, sort_keys=True),
+        encoding="utf-8")
+    return mapa
+
+
+def migruj_config(zmiany: dict) -> list[str]:
+    """Przepisuje nazwy atrybutów w plikach pisanych maszynowo.
+
+    `schema.yaml` (zakresy i pokrycie per kategoria) i `reguly.yaml` odwołują
+    się do atrybutów po nazwie. Po przemianowaniu w panelu zostałyby przy
+    starej i przestałyby cokolwiek łapać. `slowniki.yaml` zostawiamy człowiekowi
+    — jest pisany ręcznie, z komentarzami, których nie chcemy zgubić.
+    """
+    from . import config
+    mapa = {k: v for k, v in (zmiany.get("atrybuty") or {}).items() if k != v}
+    if not mapa:
+        return []
+
+    def przepisz(x):
+        if isinstance(x, dict):
+            return {mapa.get(k, k) if isinstance(k, str) else k: przepisz(v)
+                    for k, v in x.items()}
+        if isinstance(x, list):
+            return [przepisz(v) for v in x]
+        return mapa.get(x, x) if isinstance(x, str) else x
+
+    ruszone = []
+    sch = config.schema()
+    if sch:
+        nowy = przepisz(sch)
+        if nowy != sch:
+            config.zapisz_schema(nowy)
+            ruszone.append("schema.yaml")
+    reg = config.reguly()
+    if reg:
+        nowy = przepisz(reg)
+        if nowy != reg:
+            config.zapisz_reguly(nowy)
+            ruszone.append("reguly.yaml")
+    return ruszone
+
+
+def _po_id(slownik: dict, etykiety: dict) -> dict[str, tuple[str, str]]:
+    """ID wartości -> (atrybut, etykieta). Tylko jednoznaczne ID."""
+    ile: dict[str, int] = {}
+    for m in slownik.values():
+        for ids in m.values():
+            for i in ids:
+                ile[i] = ile.get(i, 0) + 1
+    out = {}
+    for kolumna, m in slownik.items():
+        for klucz, ids in m.items():
+            if len(ids) != 1 or ile.get(ids[0], 0) != 1:
+                continue
+            out[ids[0]] = (kolumna, (etykiety.get(kolumna) or {}).get(klucz, klucz))
+    return out
+
+
+def _wykryj_zmiany_nazw(stare_atrybuty: dict, nowe_atrybuty: dict,
+                        stary_slownik: dict, stare_etykiety: dict,
+                        nowy_slownik: dict, nowe_etykiety: dict) -> dict:
+    zmiany_atr: dict[str, str] = {}
+    po_id = {v["id"]: k for k, v in stare_atrybuty.items() if v.get("id")}
+    for nazwa, v in nowe_atrybuty.items():
+        stara = po_id.get(v.get("id"))
+        if stara and stara != nazwa:
+            zmiany_atr[stara] = nazwa
+
+    zmiany_wart: dict[str, dict[str, str]] = {}
+    stare_po_id = _po_id(stary_slownik, stare_etykiety)
+    nowe_po_id = _po_id(nowy_slownik, nowe_etykiety)
+    for ident, (kolumna, etykieta) in nowe_po_id.items():
+        poprzednie = stare_po_id.get(ident)
+        if not poprzednie:
+            continue
+        stara_kolumna, stara_etykieta = poprzednie
+        # zmiana nazwy atrybutu jest już zapisana wyżej — tu tylko wartości
+        if zmiany_atr.get(stara_kolumna, stara_kolumna) != kolumna:
+            continue
+        if norm(stara_etykieta) != norm(etykieta):
+            zmiany_wart.setdefault(kolumna, {})[stara_etykieta] = etykieta
+
+    return {"atrybuty": zmiany_atr, "wartosci": zmiany_wart}
 
 
 def duplikaty(slownik: dict | None = None) -> list[dict]:

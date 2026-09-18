@@ -3,6 +3,32 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-18 · Nowy słownik z panelu i liczniki, które nie kłamią
+
+- **Słownik wczytuje się z najnowszego zrzutu.** Panel dokłada kolejne zrzuty
+  jako nowe arkusze („atrybuty 9.18", „wartości 9.18") i zostawia stare obok.
+  Braliśmy dwa pierwsze — plik wyglądał na wgrany, a zmiany z panelu nie
+  wchodziły. Teraz arkusze są rozpoznawane po nagłówku, a brana jest ostatnia
+  para. Komunikat po wgraniu mówi wprost, z których arkuszy.
+- **Przemianowania w panelu są zapamiętywane.** Gdy atrybut albo wartość
+  zmienia tytuł, ID zostaje — i tylko po nim da się to poznać. Mapa
+  stara→nowa ląduje w `config/zmiany_nazw.yaml`, a stare eksporty produktów
+  czytają się pod nowymi nazwami. Bez tego przemianowany atrybut po cichu
+  wypadał z walidacji: nie ma go w definicjach, więc żadna reguła go nie
+  dotykała. Kolejne przemianowanie (A→B→C) przepina też najstarszą nazwę.
+  `schema.yaml` i `reguly.yaml` są przy okazji przepisywane na nowe nazwy.
+- **Wgrany słownik z 18.09:** 5 przemianowanych atrybutów
+  (`Materiał obicia`→`Rodzaj obicia`, `Ilość osób`→`Liczba miejsc`,
+  `Twardość`→`Twardość materaca`, `Z pojemnikiem na pościel`→`Z pojemnikiem`,
+  `Status produktu`→`Marki własne`) i 12 przemianowanych wartości
+  (`2-osobowe`→`2 miejsca`, `miękkie`→`miękki (H1)` itd.).
+- **Licznik przy filtrze pokazuje, ile zostało.** „Stolik (39)" wisiał długo
+  po rozstrzygnięciu wszystkich 39 — kliknięcie kończyło się pustą listą.
+  Teraz liczone są tylko otwarte findingi, i to w zakresie pozostałych
+  filtrów: po wybraniu producenta kategorie pokazują jego kategorie. Własny
+  wymiar zostaje pełny, żeby dało się zmienić raz podjęty wybór, a wybrana
+  opcja nie znika z listy, nawet gdy spadnie do zera.
+
 ## 2026-09-18 · Reset bazy po testach
 
 - Komenda `wyczysc` czyści bazę po fazie testów: decyzje, zgłoszenia do

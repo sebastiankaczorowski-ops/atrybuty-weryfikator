@@ -1935,3 +1935,160 @@ def test_czyszczenie_robi_kopie_bazy(tmp_path, monkeypatch, capsys):
     nowa = db.polacz(baza)
     assert nowa.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 0
     nowa.close()
+
+
+# --- słownik z wieloma zrzutami + przemianowania -------------------------
+
+def _plik_slownika_wielo(tmp_path, zrzuty):
+    """Eksport „Atrybuty" z kilkoma zrzutami — tak, jak robi to panel."""
+    import openpyxl
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    for nazwa, atrybuty, wartosci in zrzuty:
+        a = wb.create_sheet(f"atrybuty {nazwa}")
+        a.append(["id", "status", "title"])
+        for w in atrybuty:
+            a.append(list(w))
+        b = wb.create_sheet(f"wartości {nazwa}")
+        b.append(["id", "title", "title"])
+        for w in wartosci:
+            b.append(list(w))
+    sciezka = tmp_path / f"slownik_{len(zrzuty)}.xlsx"
+    wb.save(sciezka)
+    return sciezka
+
+
+def _slownik_w_tmp(tmp_path, monkeypatch):
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "atrybuty.yaml")
+    monkeypatch.setattr(pf, "PLIK_ZMIAN_NAZW", tmp_path / "zmiany.yaml")
+    return pf
+
+
+def test_slownik_uczy_sie_z_najnowszego_zrzutu_a_nie_pierwszego(tmp_path, monkeypatch):
+    """Panel dokłada nowe arkusze obok starych.
+
+    Branie dwóch pierwszych to uczenie się nieaktualnego słownika — plik
+    wygląda na wgrany, a zmiany z panelu nie wchodzą.
+    """
+    pf = _slownik_w_tmp(tmp_path, monkeypatch)
+    plik = _plik_slownika_wielo(tmp_path, [
+        ("9.01", [(318.0, "ACTIVE", "Materiał obicia")],
+                 [(2307.0, "Materiał obicia", "welur")]),
+        ("9.18", [(318.0, "ACTIVE", "Rodzaj obicia")],
+                 [(2307.0, "Rodzaj obicia", "welur")]),
+    ])
+    w = pf.naucz_ze_slownika(plik)
+    assert w["arkusze"] == "atrybuty 9.18 + wartości 9.18"
+    assert "Rodzaj obicia" in pf.wczytaj_atrybuty_panelu()
+    assert "Materiał obicia" not in pf.wczytaj_atrybuty_panelu()
+
+
+def test_przemianowanie_w_panelu_laduje_w_mapie_starych_nazw(tmp_path, monkeypatch):
+    """ID przeżywa zmianę tytułu — i tylko po nim da się poznać przemianowanie."""
+    pf = _slownik_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_ze_slownika(_plik_slownika_wielo(tmp_path, [
+        ("9.01", [(221.0, "ACTIVE", "Ilość osób")],
+                 [(1829.0, "Ilość osób", "2-osobowe")])]))
+    w = pf.naucz_ze_slownika(_plik_slownika_wielo(tmp_path, [
+        ("9.18", [(221.0, "ACTIVE", "Liczba miejsc")],
+                 [(1829.0, "Liczba miejsc", "2 miejsca")])]))
+
+    assert w["zmiany_nazw"]["atrybuty"] == {"Ilość osób": "Liczba miejsc"}
+    assert w["zmiany_nazw"]["wartosci"] == {"Liczba miejsc": {"2-osobowe": "2 miejsca"}}
+    mapa = pf.wczytaj_zmiany_nazw()
+    assert mapa["atrybuty"]["Ilość osób"] == "Liczba miejsc"
+
+
+def test_kolejne_przemianowanie_przepina_najstarsza_nazwe(tmp_path, monkeypatch):
+    """A -> B -> C: eksport sprzed roku ma trafić na C, nie zatrzymać się na B."""
+    pf = _slownik_w_tmp(tmp_path, monkeypatch)
+    for nazwa in ("A", "B", "C"):
+        pf.naucz_ze_slownika(_plik_slownika_wielo(
+            tmp_path, [(nazwa, [(7.0, "ACTIVE", nazwa)], [(70.0, nazwa, "x")])]))
+    assert pf.wczytaj_zmiany_nazw()["atrybuty"] == {"A": "C", "B": "C"}
+
+
+def test_stary_eksport_czyta_sie_pod_nowa_nazwa(tmp_path, monkeypatch):
+    """Bez tego przemianowany atrybut wypada z walidacji — nie ma go
+    w definicjach, więc żadna reguła go nie dotyka."""
+    from atrybuty import config, normalizacja
+    monkeypatch.setattr(config, "_wczytaj", lambda _n: {
+        "atrybuty": {"Ilość osób": "Liczba miejsc"},
+        "wartosci": {"Liczba miejsc": {"2-osobowe": "2 miejsca"}}})
+    config.zmiany_nazw.cache_clear()
+    try:
+        assert normalizacja.parsuj_atrybuty("Ilość osób: 2-osobowe | Waga: 12") == {
+            "Liczba miejsc": "2 miejsca", "Waga": "12"}
+    finally:
+        config.zmiany_nazw.cache_clear()
+
+
+# --- liczniki przy filtrach ----------------------------------------------
+
+def _baza_do_licznikow(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+
+    baza = tmp_path / "l.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    con = db.polacz(baza)
+    wizja.przygotuj_baze(con)
+
+    def prod(pid, kat, producent):
+        return Produkt(id=pid, nazwa=f"Mebel {pid}", producent=producent, kolekcja="",
+                       zdjecie="", styl="", kategoria=kat,
+                       kody={"kod produktu": pid, "kod producenta": pid},
+                       atrybuty={"Materiał": "plyta"})
+
+    produkty = [prod("1", "stolik", "BRW"), prod("2", "stolik", "BRW"),
+                prod("3", "komoda", "Signal")]
+    findingi = [Finding(p.id, "Materiał", "L1-SLOWNIK", "L1", "srednia", 0.9,
+                        "plyta", "drewno", "poza słownikiem",
+                        grupa=f"L1-SLOWNIK|Materiał|plyta|{p.id}")
+                for p in produkty]
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    return con, db.ostatni_przebieg(con)["id"]
+
+
+def test_licznik_kategorii_schodzi_wraz_z_rozstrzyganiem(tmp_path, monkeypatch):
+    """„Stolik (39)" długo po rozstrzygnięciu wszystkich 39 to zaproszenie
+    do kliknięcia w pustą listę."""
+    from atrybuty import db, zapytania
+
+    con, przebieg = _baza_do_licznikow(tmp_path, monkeypatch)
+    assert dict(zapytania.slowniki_filtrow(con, przebieg).kategorie)["stolik"] == 2
+
+    db.zapisz_decyzje(con, "1", "Materiał", "plyta", "zastosowana", "drewno", "L1-SLOWNIK")
+    assert dict(zapytania.slowniki_filtrow(con, przebieg).kategorie)["stolik"] == 1
+
+    db.zapisz_decyzje(con, "2", "Materiał", "plyta", "zastosowana", "drewno", "L1-SLOWNIK")
+    assert "stolik" not in dict(zapytania.slowniki_filtrow(con, przebieg).kategorie)
+    con.close()
+
+
+def test_licznik_liczy_w_zakresie_pozostalych_filtrow(tmp_path, monkeypatch):
+    """Po wybraniu producenta kategorie mają pokazywać JEGO kategorie —
+    inaczej liczba obiecuje coś, czego po kliknięciu nie ma."""
+    from atrybuty import zapytania
+
+    con, przebieg = _baza_do_licznikow(tmp_path, monkeypatch)
+    sl = zapytania.slowniki_filtrow(con, przebieg, zapytania.Filtr(producent="Signal"))
+    assert dict(sl.kategorie) == {"komoda": 1}
+    # własny wymiar zostaje pełny, bo inaczej nie dałoby się zmienić wyboru
+    assert dict(sl.producenci) == {"BRW": 2, "Signal": 1}
+    con.close()
+
+
+def test_wybrana_opcja_zostaje_w_liscie_mimo_zera(tmp_path, monkeypatch):
+    """Gdyby znikła, select gubiłby swoją wartość przy pierwszym przeładowaniu."""
+    from atrybuty import db, zapytania
+
+    con, przebieg = _baza_do_licznikow(tmp_path, monkeypatch)
+    for pid in ("1", "2"):
+        db.zapisz_decyzje(con, pid, "Materiał", "plyta", "zastosowana", "drewno", "L1-SLOWNIK")
+    sl = zapytania.slowniki_filtrow(con, przebieg, zapytania.Filtr(kategoria="stolik"))
+    assert dict(sl.kategorie)["stolik"] == 0
+    con.close()

@@ -65,7 +65,7 @@ kategorie:
       Oświetlenie: 0.049
       Zagłówek: 0.034
       Rodzaj drzwi: 0.031
-      Z pojemnikiem na pościel: 0.022
+      Z pojemnikiem: 0.022
       Podparcie: 0.016
       Rodzaj frontu: 0.016
       Dekoracje: 0.014
@@ -80,8 +80,8 @@ kategorie:
       Designerskie: 0.005
       Wysokość siedziska: 0.005
       Podłokietniki: 0.005
-      Ilość osób: 0.005
-      Twardość: 0.005
+      Liczba miejsc: 0.005
+      Twardość materaca: 0.005
       Rozkładane: 0.005
       Regulacja: 0.005
       Pokrowiec zdejmowalny: 0.005
@@ -275,11 +275,11 @@ kategorie:
       Wypełnienie: 0.297
       Tapicerowane: 0.178
       Funkcje: 0.176
-      Materiał obicia: 0.134
-      Ilość osób: 0.088
+      Rodzaj obicia: 0.134
+      Liczba miejsc: 0.088
       Styl: 0.081
       Zagłówek: 0.058
-      Z pojemnikiem na pościel: 0.044
+      Z pojemnikiem: 0.044
       Udźwig: 0.036
       Właściwości obicia: 0.034
       Designerskie: 0.028
@@ -369,7 +369,7 @@ kategorie:
       Dekoracje: 0.269
       Wysokość siedziska: 0.237
       Styl: 0.229
-      Materiał obicia: 0.134
+      Rodzaj obicia: 0.134
       Podparcie: 0.126
       Kształt: 0.083
       Głębokość siedziska: 0.055
@@ -380,11 +380,11 @@ kategorie:
       Do poprawy: 0.024
       Wypełnienie: 0.02
       Maksymalna wysokość krzesła: 0.02
-      Ilość osób: 0.012
+      Liczba miejsc: 0.012
       Właściwości obicia: 0.012
       Maksymalne obciążenie: 0.012
       Schowek: 0.008
-      Z pojemnikiem na pościel: 0.008
+      Z pojemnikiem: 0.008
       Zagłówek: 0.008
       Designerskie: 0.004
       Wyświetlanie sofy w wyszukiwarce: 0.004
@@ -509,7 +509,7 @@ kategorie:
       '!przepisać na pokoje -> Rodzaj biurka': 0.001
       Podłokietniki: 0.001
       Typ: 0.001
-      Status produktu: 0.001
+      Marki własne: 0.001
       Zamykanie: 0.0
       Rodzaj witryny: 0.0
       Podnóżek: 0.0
@@ -783,7 +783,7 @@ kategorie:
       Dekoracje: 0.239
       Podnóżek: 0.212
       Styl: 0.188
-      Materiał obicia: 0.176
+      Rodzaj obicia: 0.176
       Wypełnienie: 0.175
       Regulacja: 0.143
       Maksymalne obciążenie: 0.11
@@ -793,10 +793,10 @@ kategorie:
       Udźwig: 0.04
       Maksymalna wysokość: 0.018
       Zagłówek: 0.012
-      Ilość osób: 0.012
+      Liczba miejsc: 0.012
       Wysokość oparcia: 0.007
       Do poprawy: 0.006
-      Z pojemnikiem na pościel: 0.003
+      Z pojemnikiem: 0.003
       Na nóżkach: 0.003
       Ilość nóg: 0.003
       Pokrowiec zdejmowalny: 0.003
@@ -974,7 +974,7 @@ kategorie:
       Skórzane: 0.001
       Kierunek otwierania: 0.001
       Układ mebla: 0.001
-      Ilość osób: 0.001
+      Liczba miejsc: 0.001
       Typ uchwytu: 0.001
     wymagane:
     - Kształt blatu
@@ -1033,7 +1033,7 @@ kategorie:
       Do poprawy: 0.056
       Ilość nóg: 0.056
       Pokrowiec zdejmowalny: 0.056
-      Materiał obicia: 0.032
+      Rodzaj obicia: 0.032
       Liczba szuflad: 0.024
       Typ oparcia: 0.016
       Wysokość do ziemi: 0.016
@@ -1100,7 +1100,7 @@ kategorie:
       Ilość nóg: 0.123
       Styl: 0.123
       Szerokość po rozłożeniu: 0.123
-      Ilość osób: 0.123
+      Liczba miejsc: 0.123
       Długość: 0.088
       Rozmiar stołu: 0.088
       Regulacja: 0.07
@@ -1219,13 +1219,13 @@ kategorie:
       Stelaż w zestawie: 0.983
       Głębokość: 0.974
       Stopień montażu: 0.963
-      Z pojemnikiem na pościel: 0.958
+      Z pojemnikiem: 0.958
       Rozmiar: 0.95
       Materiał: 0.913
       Zagłówek: 0.894
       Tapicerowane: 0.858
       Waga: 0.632
-      Ilość osób: 0.614
+      Liczba miejsc: 0.614
       Długość powierzchni spania: 0.564
       Styl: 0.334
       Długość: 0.286
@@ -1237,7 +1237,7 @@ kategorie:
       Maksymalne obciążenie: 0.133
       Ilość nóg: 0.133
       Układ mebla: 0.114
-      Materiał obicia: 0.075
+      Rodzaj obicia: 0.075
       Właściwości obicia: 0.072
       Typ stelaża: 0.055
       Kształt: 0.053
@@ -1250,7 +1250,7 @@ kategorie:
       Wysokość siedziska: 0.031
       Udźwig: 0.03
       Liczba drzwi: 0.03
-      Twardość: 0.026
+      Twardość materaca: 0.026
       Elementy zestawu: 0.024
       Wypełnienie: 0.022
       Podnóżek: 0.021
@@ -1281,7 +1281,7 @@ kategorie:
     - Stelaż w zestawie
     - Głębokość
     - Stopień montażu
-    - Z pojemnikiem na pościel
+    - Z pojemnikiem
     - Rozmiar
     - Materiał
   lozko_dzieciece:
@@ -1331,12 +1331,12 @@ kategorie:
       Szerokość: 1.0
       Wysokość: 1.0
       Głębokość: 1.0
-      Z pojemnikiem na pościel: 1.0
+      Z pojemnikiem: 1.0
       Materiał: 1.0
       Rozmiar: 1.0
       Długość powierzchni spania: 1.0
       Tapicerowane: 1.0
-      Ilość osób: 1.0
+      Liczba miejsc: 1.0
       Stelaż w zestawie: 1.0
       Materac w zestawie: 1.0
       Stopień montażu: 0.993
@@ -1348,12 +1348,12 @@ kategorie:
     - Szerokość
     - Wysokość
     - Głębokość
-    - Z pojemnikiem na pościel
+    - Z pojemnikiem
     - Materiał
     - Rozmiar
     - Długość powierzchni spania
     - Tapicerowane
-    - Ilość osób
+    - Liczba miejsc
     - Stelaż w zestawie
     - Materac w zestawie
     - Stopień montażu
@@ -1485,8 +1485,8 @@ kategorie:
       Rozmiar: 0.985
       Cechy materaca: 0.883
       Stopień montażu: 0.843
-      Ilość osób: 0.799
-      Twardość: 0.795
+      Liczba miejsc: 0.799
+      Twardość materaca: 0.795
       Antyalergiczne: 0.752
       Długość: 0.699
       Wypełnienie: 0.651
@@ -1499,7 +1499,7 @@ kategorie:
       Materiał: 0.008
       Liczba drzwi: 0.007
       Liczba szuflad: 0.007
-      Z pojemnikiem na pościel: 0.007
+      Z pojemnikiem: 0.007
       Tapicerowane: 0.007
       Zagłówek: 0.007
       Materac w zestawie: 0.007
@@ -1566,18 +1566,18 @@ kategorie:
       Na nóżkach: 0.08
       Liczba drążków: 0.062
       Kształt blatu: 0.043
-      Ilość osób: 0.043
+      Liczba miejsc: 0.043
       Podłokietniki: 0.042
       Rozkładane: 0.03
       Ilość uchwytów: 0.026
       Tapicerowane: 0.023
       Zagłówek: 0.022
-      Materiał obicia: 0.018
+      Rodzaj obicia: 0.018
       Układ mebla: 0.018
       Właściwości obicia: 0.016
       Wysokość siedziska: 0.015
       Głębokość siedziska: 0.015
-      Z pojemnikiem na pościel: 0.014
+      Z pojemnikiem: 0.014
       Maksymalne obciążenie: 0.014
       Udźwig: 0.014
       Dekoracje: 0.013
@@ -1762,11 +1762,11 @@ kategorie:
       Materiał: 0.969
       Głębokość: 0.969
       Na nóżkach: 0.946
-      Z pojemnikiem na pościel: 0.94
+      Z pojemnikiem: 0.94
       Podparcie: 0.939
       Układ mebla: 0.918
       Zagłówek: 0.914
-      Ilość osób: 0.9
+      Liczba miejsc: 0.9
       Wysokość siedziska: 0.887
       Podłokietniki: 0.867
       Stopień montażu: 0.857
@@ -1779,7 +1779,7 @@ kategorie:
       Waga: 0.599
       Szerokość siedziska: 0.275
       Tapicerowane: 0.228
-      Materiał obicia: 0.226
+      Rodzaj obicia: 0.226
       Właściwości obicia: 0.211
       Wysokość oparcia: 0.132
       Styl: 0.129
@@ -1806,11 +1806,11 @@ kategorie:
     - Materiał
     - Głębokość
     - Na nóżkach
-    - Z pojemnikiem na pościel
+    - Z pojemnikiem
     - Podparcie
     - Układ mebla
     - Zagłówek
-    - Ilość osób
+    - Liczba miejsc
   nieznana:
     liczba_produktow: 27
     zakresy: {}
@@ -1827,8 +1827,8 @@ kategorie:
       Na nóżkach: 0.519
       Dekoracje: 0.481
       Zagłówek: 0.37
-      Ilość osób: 0.37
-      Z pojemnikiem na pościel: 0.37
+      Liczba miejsc: 0.37
+      Z pojemnikiem: 0.37
       Wypełnienie: 0.37
       Wysokość siedziska: 0.37
       Liczba szuflad: 0.37
@@ -1842,7 +1842,7 @@ kategorie:
       Szerokość powierzchni spania: 0.296
       Długość powierzchni spania: 0.296
       Funkcje: 0.296
-      Materiał obicia: 0.296
+      Rodzaj obicia: 0.296
       Właściwości obicia: 0.296
       Tapicerowane: 0.259
       Oświetlenie: 0.259
@@ -1999,12 +1999,12 @@ kategorie:
     pokrycie:
       Materiał: 0.974
       Szerokość: 0.974
-      Ilość osób: 0.974
+      Liczba miejsc: 0.974
       Wysokość: 0.974
       Szerokość powierzchni spania: 0.974
       Długość powierzchni spania: 0.974
       Głębokość: 0.974
-      Z pojemnikiem na pościel: 0.961
+      Z pojemnikiem: 0.961
       Waga: 0.948
       Zagłówek: 0.844
       Stopień montażu: 0.831
@@ -2014,7 +2014,7 @@ kategorie:
       Typ funkcji spania: 0.753
       Funkcje: 0.74
       Dekoracje: 0.61
-      Materiał obicia: 0.481
+      Rodzaj obicia: 0.481
       Właściwości obicia: 0.481
       Wypełnienie: 0.403
       Podnóżek: 0.325
@@ -2036,12 +2036,12 @@ kategorie:
     wymagane:
     - Materiał
     - Szerokość
-    - Ilość osób
+    - Liczba miejsc
     - Wysokość
     - Szerokość powierzchni spania
     - Długość powierzchni spania
     - Głębokość
-    - Z pojemnikiem na pościel
+    - Z pojemnikiem
     - Waga
   pufa:
     liczba_produktow: 326
@@ -2114,12 +2114,12 @@ kategorie:
       Styl: 0.086
       Ilość nóg: 0.086
       Średnica: 0.064
-      Z pojemnikiem na pościel: 0.064
+      Z pojemnikiem: 0.064
       Designerskie: 0.052
       Podnóżek: 0.052
       Głębokość siedziska: 0.037
       Do poprawy: 0.034
-      Materiał obicia: 0.031
+      Rodzaj obicia: 0.031
       Podłokietniki: 0.028
       Skórzane: 0.025
       TM Design: 0.021
@@ -2129,7 +2129,7 @@ kategorie:
       Liczba szuflad: 0.009
       Kształt blatu: 0.009
       Maksymalne obciążenie: 0.009
-      Ilość osób: 0.006
+      Liczba miejsc: 0.006
       Rodzaj drewna: 0.006
       Szerokość siedziska: 0.006
       Właściwości obicia: 0.006
@@ -2208,11 +2208,11 @@ kategorie:
       Tapicerowane: 0.009
       Typ: 0.008
       Rodzaj folii: 0.007
-      Z pojemnikiem na pościel: 0.007
+      Z pojemnikiem: 0.007
       Rozmiar: 0.007
       Zagłówek: 0.007
       Ilość uchwytów: 0.007
-      Ilość osób: 0.006
+      Liczba miejsc: 0.006
       Kształt blatu: 0.006
       Środek szafy: 0.004
       Elementy zestawu: 0.003
@@ -2387,8 +2387,8 @@ kategorie:
       Na nóżkach: 0.894
       Zagłówek: 0.864
       Stopień montażu: 0.854
-      Z pojemnikiem na pościel: 0.842
-      Ilość osób: 0.839
+      Z pojemnikiem: 0.842
+      Liczba miejsc: 0.839
       Wysokość siedziska: 0.827
       Wypełnienie: 0.783
       Głębokość siedziska: 0.691
@@ -2399,7 +2399,7 @@ kategorie:
       Szerokość powierzchni spania: 0.464
       Typ funkcji spania: 0.424
       Szerokość siedziska: 0.304
-      Materiał obicia: 0.198
+      Rodzaj obicia: 0.198
       Styl: 0.146
       Właściwości obicia: 0.14
       Tapicerowane: 0.134
@@ -2494,17 +2494,17 @@ kategorie:
       Dla kogo: 0.481
       Regulacja: 0.333
       Waga: 0.196
-      Ilość osób: 0.048
+      Liczba miejsc: 0.048
       Liczba szuflad: 0.026
       Liczba drzwi: 0.021
       Styl: 0.021
-      Z pojemnikiem na pościel: 0.021
+      Z pojemnikiem: 0.021
       Tapicerowane: 0.021
       Zagłówek: 0.021
       Materac w zestawie: 0.021
       Stelaż w zestawie: 0.021
       Wypełnienie: 0.021
-      Twardość: 0.021
+      Twardość materaca: 0.021
       Rozkładane: 0.005
       Kształt blatu: 0.005
       Podparcie: 0.005
@@ -2590,7 +2590,7 @@ kategorie:
       Stopień montażu: 0.832
       Szerokość: 0.824
       Głębokość: 0.817
-      Ilość osób: 0.804
+      Liczba miejsc: 0.804
       Waga: 0.756
       Szerokość po rozłożeniu: 0.461
       Rozmiar stołu: 0.445
@@ -2614,7 +2614,7 @@ kategorie:
       Tapicerowane: 0.005
       Podnóżek: 0.004
       Do poprawy: 0.003
-      Materiał obicia: 0.003
+      Rodzaj obicia: 0.003
       Podłokietniki: 0.002
       Wysokość do ziemi: 0.002
       Rodzaj płyty: 0.002
@@ -2622,7 +2622,7 @@ kategorie:
       Rodzaj drewna: 0.001
       Półka na klawiaturę: 0.001
       Rodzaj folii: 0.001
-      Z pojemnikiem na pościel: 0.001
+      Z pojemnikiem: 0.001
       Rodzaj dodatku: 0.001
     wymagane:
     - Wysokość
@@ -2688,7 +2688,7 @@ kategorie:
       Styl: 0.097
       Liczba drzwi: 0.075
       Udźwig: 0.064
-      Ilość osób: 0.046
+      Liczba miejsc: 0.046
       Sposób ustawienia: 0.031
       Maksymalne obciążenie: 0.031
       Na nóżkach: 0.029
@@ -2824,10 +2824,10 @@ kategorie:
       Kształt blatu: 0.0
       '!przepisać na pokoje -> Rodzaj biurka': 0.0
       Zagłówek: 0.0
-      Ilość osób: 0.0
+      Liczba miejsc: 0.0
       Długość powierzchni spania: 0.0
       Rozmiar: 0.0
-      Z pojemnikiem na pościel: 0.0
+      Z pojemnikiem: 0.0
       Typ: 0.0
       Rozkładane: 0.0
     wymagane: []
@@ -2904,7 +2904,7 @@ kategorie:
       Elementy zestawu: 0.001
       Rodzaj komody: 0.001
       Rodzaj płyty: 0.001
-      Materiał obicia: 0.001
+      Rodzaj obicia: 0.001
       Rozkładane: 0.001
       Podłokietniki: 0.001
     wymagane:
@@ -2989,10 +2989,10 @@ kategorie:
       Rodzaj witryny: 0.004
       Liczba drążków: 0.004
       Kierunek otwierania: 0.004
-      Materiał obicia: 0.004
+      Rodzaj obicia: 0.004
       '!przepisać na pokoje -> Rodzaj biurka': 0.002
       Rodzaj drewna: 0.002
-      Ilość osób: 0.002
+      Liczba miejsc: 0.002
       Zagłówek: 0.002
       Średnica: 0.002
       Wypełnienie: 0.002
@@ -3180,8 +3180,8 @@ kategorie:
       Rodzaj komody: 0.005
       Rodzaj folii: 0.005
       Kierunek otwierania: 0.005
-      Ilość osób: 0.005
-      Materiał obicia: 0.005
+      Liczba miejsc: 0.005
+      Rodzaj obicia: 0.005
       Maksymalne obciążenie: 0.005
       Szerokość po rozłożeniu: 0.005
       Ilość wkładek: 0.005

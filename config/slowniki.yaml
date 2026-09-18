@@ -48,7 +48,7 @@ atrybuty:
                tapicerowane, marmur, ceramika, kamień, rattan, lustro, mdf]
     aliasy: {plyta: płyta meblowa, płyta: płyta meblowa, lite drewno: drewno,
              stal: metal, plastik: tworzywo sztuczne, tkanina: tapicerowane}
-  Materiał obicia:
+  Rodzaj obicia:            # do 2026-09-18 „Materiał obicia"
     typ: multi_enum
     wartosci: [welur, ekoskóra, tkanina, bouclé, sztruks, szenil, plecionka,
                skóra naturalna]
@@ -78,10 +78,11 @@ atrybuty:
     wartosci: [brak drążków, 1 drążek, 2 drążki, 3 drążki, 4 i więcej drążków]
     aliasy: {"4 i więcej": 4 i więcej drążków}
   Ilość nóg:   {typ: tekst}
-  Ilość osób:
+  Liczba miejsc:            # do 2026-09-18 „Ilość osób", wartości „N-osobowe"
     typ: enum
-    wartosci: [1-osobowe, 2-osobowe, 3-osobowe, 4-osobowe, 6-osobowe,
-               8-osobowe, 10-osobowe, 12-osobowe]
+    liczebnik: true
+    wartosci: [1 miejsce, 2 miejsca, 3 miejsca, 4 miejsca, 6 miejsc,
+               8 miejsc, 10 miejsc, 12 miejsc]
 
   # --- cechy konstrukcyjne ---
   Stopień montażu:
@@ -131,12 +132,12 @@ atrybuty:
   Na nóżkach:               {typ: enum, wartosci: [tak, nie]}
   Materac w zestawie:       {typ: enum, wartosci: [tak, nie]}
   Stelaż w zestawie:        {typ: enum, wartosci: [tak, nie]}
-  Z pojemnikiem na pościel: {typ: enum, wartosci: [tak, nie]}
+  Z pojemnikiem:            {typ: enum, wartosci: [tak, nie]}   # do 2026-09-18 „...na pościel”
 
   # --- materace i siedziska ---
-  Twardość:
+  Twardość materaca:        # do 2026-09-18 „Twardość"; panel dołożył skalę H
     typ: multi_enum
-    wartosci: [miękkie, średnie, twarde, bardzo twarde]
+    wartosci: ["miękki (H1)", "średni (H2)", "twardy (H3)", "bardzo twardy (H4/H5)"]
   Cechy materaca:
     typ: multi_enum
     wartosci: [antyalergiczny, dwustronny, wentylowany, ze strefami twardości,

@@ -113,7 +113,7 @@ def anomalie(request: Request,
         "widok": widok,
         "produkty": produkty,
         "fl": fl,
-        "slowniki": zapytania.slowniki_filtrow(con, przebieg),
+        "slowniki": zapytania.slowniki_filtrow(con, przebieg, fl),
         "stat": zapytania.statystyki(con, przebieg),
         "nazwy_kat": kategorie.nazwy_kategorii(),
         "przebieg": db.ostatni_przebieg(con),
@@ -1046,9 +1046,15 @@ async def wgraj_wzorzec(plik: UploadFile = File(...)):
     try:
         if panel_format.czy_plik_slownika(sciezka):
             w = panel_format.naucz_ze_slownika(sciezka)
-            tresc = (f"Słownik sklepu wczytany: {w['atrybutow']} atrybutów "
+            tresc = (f"Słownik sklepu wczytany z arkuszy „{w['arkusze']}”: "
+                     f"{w['atrybutow']} atrybutów "
                      f"({w['slownikowych']} słownikowych, {w['wolnych']} wolnych), "
                      f"{w['wartosci']} wartości. Wyłączonych atrybutów: {w['wylaczonych']}.")
+            if w["przemianowanych_atrybutow"] or w["przemianowanych_wartosci"]:
+                tresc += (f" Przemianowane w panelu: "
+                          f"{w['przemianowanych_atrybutow']} atrybutów, "
+                          f"{w['przemianowanych_wartosci']} wartości — "
+                          f"stare nazwy zapisane w config/zmiany_nazw.yaml.")
         else:
             w = panel_format.naucz_z_pliku(sciezka)
             tresc = (f"Wzorzec zapisany: {w['kolumny']} kolumn, {w['produktow']} produktów. "

@@ -29,6 +29,26 @@ def _bool_mapa() -> dict[str, str]:
     return out
 
 
+def _po_przemianowaniu(klucz: str, wartosc: str) -> tuple[str, str]:
+    """Stara nazwa atrybutu/wartości -> obecna nazwa ze sklepu.
+
+    Cicho, bez findingu: to nie jest błąd w danych, tylko ślad po zmianie
+    tytułu w panelu. ID w sklepie się nie zmieniło, więc świeży eksport
+    ma już nową nazwę — przepisujemy wyłącznie starsze wgrania, żeby reguły
+    i schema w ogóle ten atrybut zobaczyły.
+    """
+    mapa = config.zmiany_nazw()
+    klucz = mapa["atrybuty"].get(klucz, klucz)
+    pary = mapa["wartosci"].get(klucz) or {}
+    if pary and wartosc:
+        czlony = [c.strip() for c in wartosc.split(",")]
+        if len(czlony) > 1:
+            wartosc = ", ".join(pary.get(c, c) for c in czlony if c)
+        else:
+            wartosc = pary.get(wartosc, wartosc)
+    return klucz, wartosc
+
+
 def parsuj_atrybuty(surowe: str) -> dict[str, str]:
     """'Szerokość: 60 | Waga: 36' -> {'Szerokość': '60', 'Waga': '36'}"""
     out: dict[str, str] = {}
@@ -38,6 +58,7 @@ def parsuj_atrybuty(surowe: str) -> dict[str, str]:
         klucz, wartosc = kawalek.split(":", 1)
         klucz, wartosc = klucz.strip(), wartosc.strip()
         if klucz:
+            klucz, wartosc = _po_przemianowaniu(klucz, wartosc)
             out[klucz] = wartosc
     return out
 

@@ -36,15 +36,6 @@ Funkcje:
   regulowane podlokietniki: regulowane podłokietniki
   regulowane siedzisko: regulowane siedzisko
   regulowane zaglowki: regulowane zagłówki
-Ilość osób:
-  1-osobowe: 1-osobowe
-  10-osobowe: 10-osobowe
-  12-osobowe: 12-osobowe
-  2-osobowe: 2-osobowe
-  3-osobowe: 3-osobowe
-  4-osobowe: 4-osobowe
-  6-osobowe: 6-osobowe
-  8-osobowe: 8-osobowe
 Ilość wkładek:
   1 x 100cm: 1 x 100cm
   1 x 120cm: 1 x 120cm
@@ -127,6 +118,15 @@ Liczba drążków:
   3 drazki: 3 drążki
   4 i wiecej drazkow: 4 i więcej drążków
   brak drazkow: brak drążków
+Liczba miejsc:
+  1 miejsce: 1 miejsce
+  10 miejsc: 10 miejsc
+  12 miejsc: 12 miejsc
+  2 miejsca: 2 miejsca
+  3 miejsca: 3 miejsca
+  4 miejsca: 4 miejsca
+  6 miejsc: 6 miejsc
+  8 miejsc: 8 miejsc
 Liczba półek:
   1-polka: 1-półka
   2-polki: 2-półki
@@ -152,6 +152,8 @@ Liczba szuflad:
   3-szuflady: 3-szuflady
   4 i wiecej: 4 i więcej
   bez szuflad: bez szuflad
+Marki własne:
+  dostepny tylko u nas: dostępny tylko u nas
 Materac w zestawie:
   nie: nie
   tak: tak
@@ -164,15 +166,6 @@ Materiał:
   szklo: szkło
   tapicerowane: tapicerowane
   tworzywo sztuczne: tworzywo sztuczne
-Materiał obicia:
-  bouclé: bouclé
-  ekoskora: ekoskóra
-  plecionka: plecionka
-  skora naturalna: skóra naturalna
-  szenil: szenil
-  sztruks: sztruks
-  tkanina: tkanina
-  welur: welur
 Miejsce użytkowania:
   apteka: apteka
   azienka: azienka
@@ -268,6 +261,15 @@ Rodzaj frontu:
   przeszklony: przeszklony
   ryflowany: ryflowany
   z lustrem: z lustrem
+Rodzaj obicia:
+  bouclé: bouclé
+  ekoskora: ekoskóra
+  plecionka: plecionka
+  skora naturalna: skóra naturalna
+  szenil: szenil
+  sztruks: sztruks
+  tkanina: tkanina
+  welur: welur
 Rodzaj płyty:
   plyta hdf: płyta HDF
   plyta mdf: płyta MDF
@@ -383,10 +385,6 @@ Schowek:
 Sposób ustawienia:
   stojacy: stojący
   wiszacy: wiszący
-Status produktu:
-  dostepny tylko u nas: dostępny tylko u nas
-  nowosc: nowość
-  polski produkt: polski produkt
 Stelaż w zestawie:
   nie: nie
   tak: tak
@@ -397,32 +395,39 @@ Styl:
   angielski: Angielski
   art deco: Art deco
   boho: Boho
+  băieți: Băieți
   chlopiecy: Chłopięcy
   dzieciece i mlodziezowe: dziecięce i młodzieżowe
   dzieciecy: dziecięcy
   dziewczecy: Dziewczęcy
   etno: Etno
+  fete: Fete
   glamour: Glamour
+  industrial: Industrial
   industrialny: Industrialny
   japandi: Japandi
   klasyczny: Klasyczny
   minimalistyczny: Minimalistyczny
+  modern: Modern
   modern classic: Modern Classic
   nowoczesny: Nowoczesny
+  provensal: Provensal
   prowansalski: Prowansalski
   retro: Retro
   rustykalny: Rustykalny
+  scandinav: Scandinav
   shabby chic: shabby Chic
   skandynawski: Skandynawski
+  tineret: tineret
   vintage: Vintage
 Tapicerowane:
   nietapicerowane: nietapicerowane
   tapicerowane: tapicerowane
-Twardość:
-  bardzo twarde: bardzo twarde
-  miekkie: miękkie
-  srednie: średnie
-  twarde: twarde
+Twardość materaca:
+  bardzo twardy h4/h5: bardzo twardy (H4/H5)
+  miekki h1: miękki (H1)
+  sredni h2: średni (H2)
+  twardy h3: twardy (H3)
 Typ:
   stojace: Stojące
   wiszace: Wiszące
@@ -505,7 +510,7 @@ Właściwości obicia:
   plamoodporne: plamoodporne
   przyjazne zwierzetom: przyjazne zwierzętom
   trudnopalne: trudnopalne
-Z pojemnikiem na pościel:
+Z pojemnikiem:
   nie: nie
   tak: tak
 Zagłówek:

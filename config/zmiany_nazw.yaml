@@ -1,0 +1,23 @@
+# Mapa stara nazwa -> nowa nazwa, budowana po ID przy wgrywaniu
+# słownika z panelu. Plik jest nadpisywany przez aplikację.
+atrybuty:
+  Ilość osób: Liczba miejsc
+  Materiał obicia: Rodzaj obicia
+  Status produktu: Marki własne
+  Twardość: Twardość materaca
+  Z pojemnikiem na pościel: Z pojemnikiem
+wartosci:
+  Liczba miejsc:
+    1-osobowe: 1 miejsce
+    10-osobowe: 10 miejsc
+    12-osobowe: 12 miejsc
+    2-osobowe: 2 miejsca
+    3-osobowe: 3 miejsca
+    4-osobowe: 4 miejsca
+    6-osobowe: 6 miejsc
+    8-osobowe: 8 miejsc
+  Twardość materaca:
+    bardzo twarde: bardzo twardy (H4/H5)
+    miękkie: miękki (H1)
+    twarde: twardy (H3)
+    średnie: średni (H2)

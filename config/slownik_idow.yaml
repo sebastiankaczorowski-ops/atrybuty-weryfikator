@@ -68,23 +68,6 @@ Funkcje:
   - '2318'
   regulowane zaglowki:
   - '2321'
-Ilość osób:
-  1-osobowe:
-  - '1963'
-  10-osobowe:
-  - '1966'
-  12-osobowe:
-  - '2125'
-  2-osobowe:
-  - '1829'
-  3-osobowe:
-  - '1830'
-  4-osobowe:
-  - '1831'
-  6-osobowe:
-  - '1964'
-  8-osobowe:
-  - '1965'
 Ilość wkładek:
   1 x 100cm:
   - '2083'
@@ -245,6 +228,23 @@ Liczba drążków:
   - '2030'
   brak drazkow:
   - '1982'
+Liczba miejsc:
+  1 miejsce:
+  - '1963'
+  10 miejsc:
+  - '1966'
+  12 miejsc:
+  - '2125'
+  2 miejsca:
+  - '1829'
+  3 miejsca:
+  - '1830'
+  4 miejsca:
+  - '1831'
+  6 miejsc:
+  - '1964'
+  8 miejsc:
+  - '1965'
 Liczba półek:
   1-polka:
   - '1967'
@@ -291,6 +291,9 @@ Liczba szuflad:
   - '222'
   bez szuflad:
   - '223'
+Marki własne:
+  dostepny tylko u nas:
+  - '2316'
 Materac w zestawie:
   nie:
   - '2276'
@@ -313,23 +316,6 @@ Materiał:
   - '2022'
   tworzywo sztuczne:
   - '2026'
-Materiał obicia:
-  bouclé:
-  - '2311'
-  ekoskora:
-  - '2307'
-  plecionka:
-  - '2313'
-  skora naturalna:
-  - '2308'
-  szenil:
-  - '2312'
-  sztruks:
-  - '2314'
-  tkanina:
-  - '2309'
-  welur:
-  - '2310'
 Miejsce użytkowania:
   apteka:
   - '345'
@@ -504,6 +490,23 @@ Rodzaj frontu:
   - '2268'
   z lustrem:
   - '2269'
+Rodzaj obicia:
+  bouclé:
+  - '2311'
+  ekoskora:
+  - '2307'
+  plecionka:
+  - '2313'
+  skora naturalna:
+  - '2308'
+  szenil:
+  - '2312'
+  sztruks:
+  - '2314'
+  tkanina:
+  - '2309'
+  welur:
+  - '2310'
 Rodzaj płyty:
   plyta hdf:
   - '2207'
@@ -727,13 +730,6 @@ Sposób ustawienia:
   - '2333'
   wiszacy:
   - '2332'
-Status produktu:
-  dostepny tylko u nas:
-  - '2316'
-  nowosc:
-  - '2315'
-  polski produkt:
-  - '2317'
 Stelaż w zestawie:
   nie:
   - '2278'
@@ -753,6 +749,10 @@ Styl:
   - '2284'
   boho:
   - '2287'
+  băieți:
+  - '2365'
+  - '2366'
+  - '2367'
   chlopiecy:
   - '2014'
   - '2282'
@@ -767,10 +767,18 @@ Styl:
   - '1820'
   - '2305'
   - '2306'
+  fete:
+  - '2368'
+  - '2369'
+  - '2370'
   glamour:
   - '1847'
   - '2297'
   - '2298'
+  industrial:
+  - '2362'
+  - '2363'
+  - '2364'
   industrialny:
   - '1815'
   - '2301'
@@ -783,12 +791,20 @@ Styl:
   - '2294'
   minimalistyczny:
   - '2281'
+  modern:
+  - '2355'
+  - '2356'
+  - '2357'
   modern classic:
   - '2285'
   nowoczesny:
   - '1695'
   - '2291'
   - '2292'
+  provensal:
+  - '2359'
+  - '2360'
+  - '2361'
   prowansalski:
   - '1822'
   - '2295'
@@ -800,12 +816,18 @@ Styl:
   - '2012'
   - '2299'
   - '2300'
+  scandinav:
+  - '2371'
+  - '2372'
+  - '2373'
   shabby chic:
   - '1818'
   skandynawski:
   - '1816'
   - '2303'
   - '2304'
+  tineret:
+  - '2358'
   vintage:
   - '1819'
   - '2290'
@@ -814,14 +836,14 @@ Tapicerowane:
   - '1779'
   tapicerowane:
   - '1778'
-Twardość:
-  bardzo twarde:
+Twardość materaca:
+  bardzo twardy h4/h5:
   - '1994'
-  miekkie:
+  miekki h1:
   - '1887'
-  srednie:
+  sredni h2:
   - '1888'
-  twarde:
+  twardy h3:
   - '1889'
 Typ:
   stojace:
@@ -973,7 +995,7 @@ Właściwości obicia:
   - '2339'
   trudnopalne:
   - '2340'
-Z pojemnikiem na pościel:
+Z pojemnikiem:
   nie:
   - '1694'
   tak:

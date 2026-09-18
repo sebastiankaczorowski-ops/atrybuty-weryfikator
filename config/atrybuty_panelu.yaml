@@ -76,9 +76,6 @@ Głębokość wnęki:
 Ilość nóg:
   id: '108'
   status: DRAFT
-Ilość osób:
-  id: '221'
-  status: ACTIVE
 Ilość uchwytów:
   id: '200'
   status: ACTIVE
@@ -114,6 +111,9 @@ Liczba drzwi:
   status: ACTIVE
 Liczba drążków:
   id: '255'
+  status: ACTIVE
+Liczba miejsc:
+  id: '221'
   status: ACTIVE
 Liczba półek:
   id: '264'
@@ -160,6 +160,9 @@ Maksymalny udźwig półki:
 Maksymalny udźwig szuflady:
   id: '246'
   status: DISABLED
+Marki własne:
+  id: '319'
+  status: ACTIVE
 Masa ciała:
   id: '204'
   status: DRAFT
@@ -175,9 +178,6 @@ Materiał:
 Materiał klosza:
   id: '229'
   status: DISABLED
-Materiał obicia:
-  id: '318'
-  status: ACTIVE
 Materiał podstawy:
   id: '232'
   status: DISABLED
@@ -259,6 +259,9 @@ Rodzaj krzesła:
 Rodzaj materaca:
   id: '293'
   status: ACTIVE
+Rodzaj obicia:
+  id: '318'
+  status: ACTIVE
 Rodzaj oparcia:
   id: '114'
   status: ACTIVE
@@ -316,9 +319,6 @@ Skórzane:
 Sposób ustawienia:
   id: '323'
   status: ACTIVE
-Status produktu:
-  id: '319'
-  status: ACTIVE
 Stelaż w zestawie:
   id: '316'
   status: ACTIVE
@@ -355,7 +355,7 @@ TM Design:
 Tapicerowane:
   id: '202'
   status: ACTIVE
-Twardość:
+Twardość materaca:
   id: '235'
   status: ACTIVE
 Typ:
@@ -454,7 +454,7 @@ Wyświetlanie sofy w wyszukiwarce:
 Właściwości obicia:
   id: '324'
   status: ACTIVE
-Z pojemnikiem na pościel:
+Z pojemnikiem:
   id: '90'
   status: ACTIVE
 Z szufladą i drzwiczkami:

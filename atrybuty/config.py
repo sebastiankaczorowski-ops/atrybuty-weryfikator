@@ -38,6 +38,17 @@ def mapa_sklepu() -> dict[str, str]:
 
 
 @functools.lru_cache(maxsize=None)
+def zmiany_nazw() -> dict[str, Any]:
+    """Stara nazwa -> nowa, po przemianowaniach w panelu sklepu.
+
+    Budowana po ID przy wgrywaniu słownika (`panel_format`). Potrzebna, bo
+    eksporty produktów sprzed przemianowania niosą stare nazwy.
+    """
+    d = _wczytaj("zmiany_nazw.yaml")
+    return {"atrybuty": d.get("atrybuty") or {}, "wartosci": d.get("wartosci") or {}}
+
+
+@functools.lru_cache(maxsize=None)
 def ustawienia() -> dict[str, Any]:
     return _wczytaj("ustawienia.yaml")
 
@@ -102,6 +113,7 @@ def wyczysc_cache() -> None:
     kategorie.cache_clear()
     mapa_sklepu.cache_clear()
     slowniki.cache_clear()
+    zmiany_nazw.cache_clear()
     ustawienia.cache_clear()
     reguly.cache_clear()
     schema.cache_clear()
