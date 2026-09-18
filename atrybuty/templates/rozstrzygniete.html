@@ -25,6 +25,7 @@
 .st.zastosowana{background:var(--ok-soft);color:var(--ok)}
 .st.falszywy_alarm{background:var(--crit-soft);color:var(--crit)}
 .st.odlozona{background:var(--surface-2);color:var(--muted)}
+.st.do_importu{background:var(--accent-soft);color:var(--accent)}
 .partia{font-size:11.5px;color:var(--muted);white-space:nowrap}
 .partia.jest{color:var(--accent);font-weight:600}
 .stronicowanie{display:flex;gap:14px;align-items:center;font-size:13px}
@@ -43,6 +44,7 @@
     <a href="/braki">braki danych</a>
     <a href="/reguly">reguły</a>
     <a href="/import">wgraj plik</a>
+    <a href="/zmiany" title="Co się zmieniło w narzędziu">co nowego</a>
   </nav>
 </header>
 
@@ -50,13 +52,16 @@
 
 <div class="kafle">
   <a class="kafel {{ 'akt' if not fl.status and not fl.eksport_stan }}" href="/rozstrzygniete">
-    <b>{{ stat.zastosowane + stat.falszywe + stat.odlozone }}</b><span>wszystkich decyzji</span></a>
+    <b>{{ stat.zastosowane + stat.falszywe + stat.odlozone + stat.do_importu }}</b><span>wszystkich decyzji</span></a>
   <a class="kafel {{ 'akt' if fl.status=='zastosowana' }}" href="/rozstrzygniete?status=zastosowana">
     <b>{{ stat.zastosowane }}</b><span>poprawek</span></a>
   <a class="kafel {{ 'akt' if fl.status=='falszywy_alarm' }}" href="/rozstrzygniete?status=falszywy_alarm">
     <b>{{ stat.falszywe }}</b><span>fałszywych alarmów</span></a>
   <a class="kafel {{ 'akt' if fl.status=='odlozona' }}" href="/rozstrzygniete?status=odlozona">
     <b>{{ stat.odlozone }}</b><span>odłożonych</span></a>
+  <a class="kafel {{ 'akt' if fl.status=='do_importu' }}" href="/rozstrzygniete?status=do_importu"
+     title="Produkt uznany za poprawny i wysłany przez import po flagę odcięcia składowych">
+    <b>{{ stat.do_importu }}</b><span>bez zmian, do importu</span></a>
   <a class="kafel {{ 'akt' if fl.eksport_stan=='czeka' }}" href="/rozstrzygniete?eksport_stan=czeka">
     <b>{{ stat.czeka_na_eksport }}</b><span>czeka na eksport</span></a>
   <a class="kafel {{ 'akt' if fl.eksport_stan=='wyslane' }}" href="/rozstrzygniete?eksport_stan=wyslane">
@@ -116,7 +121,9 @@
         {% else %}<span class="dowod">(puste)</span>{% endif %}
         → <span class="nowa">{{ w.nowa_wartosc }}</span>
       {% else %}
-        <span class="st {{ w.status }}">{{ w.status.replace('_',' ') }}</span>
+        <span class="st {{ w.status }}">{{
+          'bez zmian → import' if w.status == 'do_importu'
+          else w.status.replace('_',' ') }}</span>
         {% if w.stara_wartosc %}<span class="stara">{{ w.stara_wartosc }}</span>
           <span class="dowod">zostaje bez zmian</span>{% endif %}
       {% endif %}

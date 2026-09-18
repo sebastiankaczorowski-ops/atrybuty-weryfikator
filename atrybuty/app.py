@@ -131,17 +131,21 @@ def decyzja(request: Request,
             produkt_id: str = Form(...), atrybut: str = Form(...),
             stara: str = Form(""), nowa: str = Form(""),
             regula_id: str = Form(""), status: str = Form(...),
-            grupa: str = Form(""), zakres: str = Form("pojedynczo")):
+            grupa: str = Form(""), zakres: str = Form("pojedynczo"),
+            filtr: str = Form("")):
     """status: zastosowana | falszywy_alarm | odlozona
 
     zakres=grupa rozstrzyga wszystkie identyczne przypadki jedną decyzją —
-    to ta rzecz, która zmienia 1081 kliknięć w jedno.
+    to ta rzecz, która zmienia 1081 kliknięć w jedno. `filtr` zawęża grupę
+    do tego, co człowiek ma na ekranie — decyzja nie może sięgać dalej niż
+    widok, z którego padła.
     """
     con = _con()
     przebieg = _przebieg(con)
+    fl = zapytania.Filtr.z_query(filtr) if filtr else None
 
     if zakres == "grupa" and grupa:
-        czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa)
+        czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa, fl)
         # Blokada po stronie serwera, nie tylko w szablonie: grupa o różnych
         # wartościach nie jest jedną decyzją, choćby ktoś podrobił formularz.
         rozne = ({(c["stara_wartosc"] or "") for c in czlonkowie},
@@ -194,7 +198,8 @@ def decyzja_produkt(produkt_id: str = Form(...), status: str = Form("zastosowana
 
 
 @app.get("/grupa", response_class=HTMLResponse)
-def grupa_podglad(request: Request, grupa: str = "", nr: str = "", wartosc: str = ""):
+def grupa_podglad(request: Request, grupa: str = "", nr: str = "",
+                  wartosc: str = "", filtr: str = ""):
     """Fragment HTMX: co dokładnie siedzi w tej grupie findingów.
 
     `wartosc` rozdaje jedną wpisaną wartość na wszystkie wiersze — do
@@ -204,8 +209,9 @@ def grupa_podglad(request: Request, grupa: str = "", nr: str = "", wartosc: str 
         return HTMLResponse("")
     con = _con()
     przebieg = _przebieg(con)
-    czlonkowie = zapytania.podglad_grupy(con, przebieg, grupa) if przebieg else []
-    ile = zapytania.policz_grupe(con, przebieg, grupa) if przebieg else 0
+    fl = zapytania.Filtr.z_query(filtr) if filtr else None
+    czlonkowie = zapytania.podglad_grupy(con, przebieg, grupa, fl=fl) if przebieg else []
+    ile = zapytania.policz_grupe(con, przebieg, grupa, fl) if przebieg else 0
 
     atrybut = czlonkowie[0]["atrybut"] if czlonkowie else ""
     slownik = panel_format.wczytaj_slownik()
@@ -214,7 +220,7 @@ def grupa_podglad(request: Request, grupa: str = "", nr: str = "", wartosc: str 
     con.close()
     return szablony.TemplateResponse(request, "_grupa.html", {
         "request": request, "czlonkowie": czlonkowie, "ile": ile,
-        "grupa": grupa, "nr": nr, "wartosc": wartosc,
+        "grupa": grupa, "nr": nr, "wartosc": wartosc, "filtr": filtr,
         "podpowiedzi": podpowiedzi,
         "nazwy_kat": kategorie.nazwy_kategorii()})
 
@@ -642,6 +648,65 @@ def braki_eksport(producent: str = "", kategoria: str = "", rodzaj: str = "",
         headers={"Content-Disposition": f'attachment; filename="{nazwa}"'})
 
 
+PLIK_ZMIAN = Path(__file__).resolve().parent.parent / "CHANGELOG.md"
+
+
+def _markdown_lite(tekst: str) -> str:
+    """Tyle markdowna, ile ma CHANGELOG — nagłówki, listy, **pogrubienie**, `kod`.
+
+    Świadomie bez biblioteki: jedna zależność mniej w obrazie, a plik jest
+    nasz, więc nie ma tu niespodzianek składniowych. Treść i tak idzie przez
+    escape, zanim cokolwiek zamienimy na tagi.
+    """
+    import html
+    import re
+    wyjscie, w_liscie = [], False
+
+    def wstawki(s: str) -> str:
+        s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+        return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", s)
+
+    for surowa in html.escape(tekst).splitlines():
+        linia = surowa.rstrip()
+        wciecie = linia.startswith("  ") and w_liscie
+        goly = linia.strip()
+        if goly.startswith("- ") or (wciecie and goly):
+            if not w_liscie:
+                wyjscie.append("<ul>"); w_liscie = True
+            if goly.startswith("- "):
+                wyjscie.append(f"<li>{wstawki(goly[2:])}")
+            else:                                   # kontynuacja punktu
+                wyjscie.append(" " + wstawki(goly))
+            continue
+        if w_liscie:
+            wyjscie.append("</ul>"); w_liscie = False
+        if goly.startswith("## "):
+            wyjscie.append(f"<h2>{wstawki(goly[3:])}</h2>")
+        elif goly.startswith("# "):
+            wyjscie.append(f"<h1>{wstawki(goly[2:])}</h1>")
+        elif goly:
+            wyjscie.append(f"<p>{wstawki(goly)}</p>")
+    if w_liscie:
+        wyjscie.append("</ul>")
+    return "\n".join(wyjscie)
+
+
+@app.get("/zmiany", response_class=HTMLResponse)
+def zmiany(request: Request):
+    """Co nowego — żeby wdrożenie w środku dnia nie było zagadką.
+
+    Wersję bierzemy z pliku, który wkłada build; bez niego strona i tak ma
+    sens, więc brak pliku nie jest błędem.
+    """
+    tekst = PLIK_ZMIAN.read_text(encoding="utf-8") if PLIK_ZMIAN.exists() else ""
+    plik_wersji = PLIK_ZMIAN.parent / "WERSJA"
+    wersja = plik_wersji.read_text(encoding="utf-8").strip() if plik_wersji.exists() else ""
+    return szablony.TemplateResponse(request, "zmiany.html", {
+        "request": request,
+        "tresc": _markdown_lite(tekst) or "<p>Brak pliku CHANGELOG.md.</p>",
+        "wersja": wersja})
+
+
 @app.get("/reguly", response_class=HTMLResponse)
 def lista_regul(request: Request, komunikat: str = "", blad: str = ""):
     con = _con()
@@ -765,7 +830,8 @@ def cofnij_decyzje(produkt_id: str = Form(...), atrybut: str = Form(...),
 
 
 @app.post("/zglos-produkt", response_class=HTMLResponse)
-def zglos_produkt(produkt_id: str = Form(...), powod: str = Form("")):
+def zglos_produkt(produkt_id: str = Form(...), powod: str = Form(""),
+                  atrybut: str = Form(""), stara: str = Form("")):
     """Dopisuje produkt do najbliższej partii, choć nic w nim nie poprawiamy.
 
     Po to, żeby panel dostał jego wiersz i mógł mu postawić flagę „składowe
@@ -792,14 +858,50 @@ def zglos_produkt(produkt_id: str = Form(...), powod: str = Form("")):
             f'przepisując je ze składowych.</span>')
 
     eksport_panelu.zglos_produkt(con, produkt_id, powod or "zweryfikowany ręcznie")
+    # Zgłoszenie to też rozstrzygnięcie: „ten produkt jest OK, jaki jest".
+    # Bez tego finding zostawał otwarty i wracał na listę przy każdym
+    # odświeżeniu — ta sama praca do zrobienia drugi raz.
+    zamkniete = _domknij_po_zgloszeniu(con, produkt_id, atrybut, stara)
     con.close()
-    return HTMLResponse(
-        f'<span class="zrobione">✓ w kolejce do importu ({len(wchodzi)} atrybutów '
-        f'w wierszu)</span>')
+    tresc = (f'✓ w kolejce do importu ({len(wchodzi)} atrybutów w wierszu)')
+    if zamkniete:
+        tresc += f' · {zamkniete} findingów zamkniętych'
+    return HTMLResponse(f'<span class="zrobione">{tresc}</span>')
+
+
+STATUS_ZGLOSZONY = "do_importu"
+
+
+def _domknij_po_zgloszeniu(con, produkt_id: str, atrybut: str = "",
+                           stara: str = "", grupa: str = "") -> int:
+    """Zamyka findingi objęte zgłoszeniem do importu.
+
+    Zasięg jest celowo wąski i zależy od tego, skąd padł klik:
+    z wiersza kolejki — tylko ten finding; z grupy — findingi tej grupy;
+    z karty produktu (bez atrybutu) — wszystkie otwarte findingi produktu,
+    bo tam człowiek ogląda cały produkt, a nie jedną pozycję.
+    Wąsko dlatego, że produkt z drugim, niezwiązanym błędem ma zostać
+    w kolejce pod tym drugim błędem.
+    """
+    przebieg = _przebieg(con)
+    q = (zapytania.BAZA_SQL + " AND f.produkt_id = :pid AND d.status IS NULL")
+    par = {"przebieg": przebieg, "pid": produkt_id}
+    if atrybut:
+        q += " AND f.atrybut = :atr"; par["atr"] = atrybut
+        if stara:
+            q += " AND IFNULL(f.stara_wartosc,'') = :st"; par["st"] = stara
+    elif grupa:
+        q += " AND f.grupa = :grupa"; par["grupa"] = grupa
+    otwarte = [dict(r) for r in con.execute(q, par)]
+    if not otwarte:
+        return 0
+    return db.zapisz_decyzje_grupowo(
+        con, [(w["produkt_id"], w["atrybut"], w["stara_wartosc"], None,
+               w["regula_id"]) for w in otwarte], STATUS_ZGLOSZONY)
 
 
 @app.post("/zglos-grupe", response_class=HTMLResponse)
-def zglos_grupe(grupa: str = Form(...)):
+def zglos_grupe(grupa: str = Form(...), filtr: str = Form("")):
     """Dopisuje do importu wszystkie produkty z grupy findingów.
 
     Zgłoszenie nie jest decyzją o wartości — mówi tylko „przepuść ten produkt
@@ -808,9 +910,10 @@ def zglos_grupe(grupa: str = Form(...)):
     """
     con = _con()
     przebieg = _przebieg(con)
-    czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa)
+    fl = zapytania.Filtr.z_query(filtr) if filtr else None
+    czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa, fl)
 
-    dodane, puste = 0, 0
+    dodane, puste, zamkniete = 0, 0, 0
     ctx = eksport_panelu.Kontekst.wczytaj()      # słowniki raz, nie na produkt
     for pid in dict.fromkeys(c["produkt_id"] for c in czlonkowie):
         wchodzi, _ = eksport_panelu.atrybuty_do_pliku(con, pid, ctx)
@@ -818,10 +921,13 @@ def zglos_grupe(grupa: str = Form(...)):
             puste += 1                     # pusty wiersz nie postawi flagi
             continue
         eksport_panelu.zglos_produkt(con, pid, f"grupa {grupa[:60]}")
+        zamkniete += _domknij_po_zgloszeniu(con, pid, grupa=grupa)
         dodane += 1
     con.close()
 
     tresc = f"✓ {dodane} produktów w kolejce do importu"
+    if zamkniete:
+        tresc += f" · {zamkniete} findingów zamkniętych"
     if puste:
         tresc += f" · {puste} pominiętych (brak atrybutów do wpisania)"
     return HTMLResponse(f'<span class="zrobione">{tresc}</span>')

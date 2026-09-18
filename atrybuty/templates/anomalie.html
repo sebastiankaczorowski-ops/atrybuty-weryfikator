@@ -159,7 +159,8 @@ tr.htmx-request .szkielet{display:flex}
 
 <header>
   <h1>Kolejka weryfikacji atrybutów</h1>
-  <nav><a href="/rozstrzygniete">rozstrzygnięte</a> · <a href="/eksport/partie">eksport</a> · <a href="/weryfikacja">czy weszło</a> · <a href="/braki">braki danych</a> · <a href="/reguly">reguły</a> · <a href="/zrodla">źródła</a> · <a href="/import">wgraj plik</a></nav>
+  <nav><a href="/rozstrzygniete">rozstrzygnięte</a> · <a href="/eksport/partie">eksport</a> · <a href="/weryfikacja">czy weszło</a> · <a href="/braki">braki danych</a> · <a href="/reguly">reguły</a> · <a href="/zrodla">źródła</a> · <a href="/import">wgraj plik</a>
+    <a href="/zmiany" title="Co się zmieniło w narzędziu">co nowego</a></nav>
   {% if przebieg %}
   <span class="zrodlo">przebieg #{{ przebieg['id'] }} · {{ przebieg['liczba_produktow'] }} produktów ·
     {{ przebieg['liczba_findingow'] }} findingów · {{ przebieg['utworzono'][:16].replace('T',' ') }}</span>
@@ -495,6 +496,7 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="regula_id" value="{{ w.regula_id }}">
         <input type="hidden" name="grupa" value="{{ w.grupa }}">
         <input type="hidden" name="zakres" value="{{ zakres }}">
+        <input type="hidden" name="filtr" value="{{ fl.jako_query() }}">
         <input type="hidden" name="status" value="zastosowana">
         <button class="p mini" type="submit">
           Zastosuj{% if zakres == 'grupa' %} ×{{ w.ile_w_grupie }}{% endif %}</button>
@@ -507,6 +509,7 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="regula_id" value="{{ w.regula_id }}">
         <input type="hidden" name="grupa" value="{{ w.grupa }}">
         <input type="hidden" name="zakres" value="{{ zakres }}">
+        <input type="hidden" name="filtr" value="{{ fl.jako_query() }}">
         <input type="hidden" name="status" value="falszywy_alarm">
         <button class="mini" type="submit">Fałszywy alarm</button>
       </form>
@@ -517,6 +520,7 @@ tr.htmx-request .szkielet{display:flex}
       <form hx-post="/zglos-grupe" hx-target="#akcje-{{ loop.index }}"
             hx-swap="innerHTML" hx-disabled-elt="find button">
         <input type="hidden" name="grupa" value="{{ w.grupa }}">
+        <input type="hidden" name="filtr" value="{{ fl.jako_query() }}">
         <button class="mini" type="submit"
                 title="Wyślij wszystkie produkty z tej grupy przez import
                        z ich obecnymi atrybutami — po to, żeby panel mógł im
@@ -527,6 +531,8 @@ tr.htmx-request .szkielet{display:flex}
       <form hx-post="/zglos-produkt" hx-target="#akcje-{{ loop.index }}"
             hx-swap="innerHTML" hx-disabled-elt="find button">
         <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
+        <input type="hidden" name="stara" value="{{ w.stara_wartosc or '' }}">
         <button class="mini" type="submit"
                 title="Wyślij ten produkt przez import z obecnymi atrybutami">
           do importu</button>
@@ -542,6 +548,7 @@ tr.htmx-request .szkielet{display:flex}
             hx-disabled-elt="find button">
         <input type="hidden" name="grupa" value="{{ w.grupa }}">
         <input type="hidden" name="nr" value="{{ loop.index }}">
+        <input type="hidden" name="filtr" value="{{ fl.jako_query() }}">
         <input type="text" name="wartosc" placeholder="własna wartość" required
                style="width:130px"
                {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"

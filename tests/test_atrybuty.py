@@ -1650,6 +1650,43 @@ def test_zgloszenie_grupy_dodaje_wszystkie_produkty(tmp_path, monkeypatch):
     con.close()
 
 
+def test_zgloszenie_do_importu_zamyka_finding(tmp_path, monkeypatch):
+    """„Do importu" to rozstrzygnięcie, nie notatka na boku.
+
+    Bez tego finding zostawał otwarty i wracał na listę przy każdym
+    odświeżeniu — ta sama praca do zrobienia drugi raz.
+    """
+    from fastapi.testclient import TestClient
+    from atrybuty import db, zapytania
+    from atrybuty.model import Finding, Produkt
+    con, baza, app_mod = _baza_do_zgloszen(tmp_path, monkeypatch)
+    p = Produkt(id="77", nazwa="Ława Lavida", producent="Halmar", kolekcja="",
+                zdjecie="", styl="", kategoria="lawa", kody={"kod produktu": "K77"},
+                atrybuty={"Szerokość": "110", "Materiał": "drewno"},
+                atrybuty_surowe={"Szerokość": "110", "Materiał": "drewno"})
+    f = Finding("77", "Styl", "L1-BRAK", "L1", "srednia", 0.4, "", None, "",
+                grupa="G")
+    przebieg = db.zapisz_przebieg(con, "t2.csv", [p], [f])
+    w = zapytania.lista(con, przebieg, zapytania.Filtr(grupuj=False))[0]
+    con.close()
+
+    odp = TestClient(app_mod.app).post("/zglos-produkt", data={
+        "produkt_id": w["produkt_id"], "atrybut": w["atrybut"],
+        "stara": w["stara_wartosc"] or ""})
+    assert "findingów zamkniętych" in odp.text
+
+    con = db.polacz(baza)
+    assert not [r for r in zapytania.lista(con, przebieg, zapytania.Filtr(grupuj=False))
+                if r["produkt_id"] == w["produkt_id"]
+                and r["atrybut"] == w["atrybut"]]
+    wiersze, _ = zapytania.rozstrzygniete(con, status="do_importu")
+    assert [r["produkt_id"] for r in wiersze] == [w["produkt_id"]]
+    assert zapytania.statystyki_decyzji(con)["do_importu"] == 1
+    # zgłoszenie nie jest zmianą wartości — nic nie może wejść do pliku
+    assert wiersze[0]["nowa_wartosc"] is None
+    con.close()
+
+
 def test_partia_da_sie_zawezic_do_kategorii(tmp_path, monkeypatch):
     """Trzy osoby, trzy rozłączne zakresy — nikt nie wgrywa cudzych produktów."""
     from atrybuty import db, eksport_panelu
@@ -1721,15 +1758,46 @@ def _grupa_z_filtrem(tmp_path, monkeypatch):
 
 
 def test_licznik_grupy_znaczy_to_samo_co_zasieg_decyzji(tmp_path, monkeypatch):
-    """×N musi obejmować całą otwartą grupę, nie tylko wiersze pasujące do
-    filtra — inaczej przycisk mówi ×8, a rozstrzyga 1569 produktów."""
+    """×N i zasięg decyzji to ta sama liczba — i obie idą za filtrem.
+
+    Filtrując łóżka człowiek rozstrzyga łóżka. Licznik po przefiltrowanych
+    wierszach obiecywał ×8 przy grupie na 1569 produktów; licznik po całej
+    grupie obiecywał ruszenie komód przy filtrze na łóżka. Jedno i drugie
+    to rozjazd między tym, co widać, a tym, co się wykona.
+    """
     from atrybuty import zapytania
     con, _, _ = _grupa_z_filtrem(tmp_path, monkeypatch)
-    fl = zapytania.Filtr(grupuj=True, kategoria="lozko")   # widać 2 z 5
+
+    fl = zapytania.Filtr(grupuj=True, kategoria="lozko")   # 2 z 5
     wiersz = zapytania.lista(con, 1, fl)[0]
-    assert wiersz["ile_w_grupie"] == 5
-    assert len(zapytania.czlonkowie_grupy(con, 1, "G")) == 5
+    assert wiersz["ile_w_grupie"] == 2
+    assert len(zapytania.czlonkowie_grupy(con, 1, "G", fl)) == 2
+    assert zapytania.policz_grupe(con, 1, "G", fl) == 2
+    assert len(zapytania.podglad_grupy(con, 1, "G", fl=fl)) == 2
+
+    bez = zapytania.Filtr(grupuj=True)                     # bez filtra: cała grupa
+    assert zapytania.lista(con, 1, bez)[0]["ile_w_grupie"] == 5
+    assert len(zapytania.czlonkowie_grupy(con, 1, "G", bez)) == 5
     con.close()
+
+
+def test_decyzja_hurtowa_nie_wychodzi_poza_filtr(tmp_path, monkeypatch):
+    """„Zastosuj ×N" z widoku łóżek nie może ruszyć komód z tej samej grupy."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db, zapytania
+    con, baza, app_mod = _grupa_z_filtrem(tmp_path, monkeypatch)
+    con.close()
+    fl = zapytania.Filtr(grupuj=True, kategoria="lozko")
+    odp = TestClient(app_mod.app).post("/decyzja", data={
+        "produkt_id": "1", "atrybut": "Styl", "stara": "tkanina",
+        "regula_id": "L0-KONFLIKT", "status": "zastosowana",
+        "grupa": "G", "zakres": "grupa", "filtr": fl.jako_query()})
+    assert "2 produktów" in odp.text
+
+    con = db.polacz(baza)
+    ruszone = {r[0] for r in con.execute("SELECT produkt_id FROM decyzje")}
+    con.close()
+    assert ruszone == {"1", "2"}            # komody (3,4,5) nietknięte
 
 
 def test_podglad_grupy_rozdaje_wpisana_wartosc(tmp_path, monkeypatch):
@@ -1777,3 +1845,23 @@ def test_zapis_grupy_bierze_wartosc_z_kazdego_wiersza(tmp_path, monkeypatch):
         "SELECT produkt_id, nowa_wartosc FROM decyzje")}
     assert wg == {"1": "welur", "2": "skóra"}          # pusty nie zapisany
     con.close()
+
+
+def test_zakladka_co_nowego_pokazuje_changelog(tmp_path, monkeypatch):
+    """Trzy osoby pracują równolegle, a wdrożenie potrafi zmienić zachowanie
+    przycisku w środku dnia — muszą mieć gdzie to przeczytać."""
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    strona = TestClient(app_mod.app).get("/zmiany").text
+    assert "Co nowego" in strona
+    assert "do importu" in strona                  # najnowszy wpis
+    assert "<li>" in strona and "<h2>" in strona   # markdown poszedł na HTML
+    assert "co nowego" in TestClient(app_mod.app).get("/zmiany").text
+
+
+def test_changelog_nie_wpuszcza_html_z_pliku(tmp_path, monkeypatch):
+    """Plik jest nasz, ale renderowanie ma być bezpieczne samo z siebie."""
+    import atrybuty.app as app_mod
+    wynik = app_mod._markdown_lite("- **a** `b` <script>alert(1)</script>")
+    assert "<b>a</b>" in wynik and "<code>b</code>" in wynik
+    assert "<script>" not in wynik and "&lt;script&gt;" in wynik

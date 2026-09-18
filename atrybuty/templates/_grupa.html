@@ -14,6 +14,7 @@
             hx-target="#hurt-grupy-{{ nr }}" hx-swap="innerHTML"
             hx-disabled-elt="find button">
         <input type="hidden" name="grupa" value="{{ grupa }}">
+        <input type="hidden" name="filtr" value="{{ filtr }}">
         <button class="mini" type="submit"
                 title="Wszystkie z tej listy przez import, z obecnymi atrybutami">
           wszystkie do importu</button>
@@ -36,7 +37,8 @@
              hx-get="/grupa" hx-target="#grupa-{{ nr }}" hx-swap="innerHTML"
              hx-trigger="keyup[key=='Enter'], change"
              hx-include="this" name="wartosc"
-             hx-vals='{"grupa": {{ grupa|tojson }}, "nr": {{ nr|tojson }}}'>
+             hx-vals='{"grupa": {{ grupa|tojson }}, "nr": {{ nr|tojson }},
+                        "filtr": {{ filtr|tojson }}}'>
       <span class="dowod">wpisz i naciśnij Enter — rozda się na wszystkie
         wiersze, potem możesz poprawić pojedyncze</span>
       <button class="p mini" type="submit" style="margin-left:auto">

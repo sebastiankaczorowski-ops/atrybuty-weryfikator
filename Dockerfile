@@ -10,6 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY atrybuty/ ./atrybuty/
 COPY config/ ./config/
+# Zakładka „co nowego" czyta ten plik z obrazu — bez niego strona jest pusta.
+COPY CHANGELOG.md ./
 
 # Baza SQLite NIE leży w katalogu montowanym z hosta: na bind mountach
 # Docker Desktop (macOS) brakuje blokad plikowych i SQLite wywala się na

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 
 from .model import PROG_DO_WIZJI, WIDOCZNE_NA_ZDJECIU
 
@@ -32,6 +32,20 @@ class Filtr:
         d = {k: ("1" if v is True else v) for k, v in d.items() if v not in ("", False)}
         return urlencode(d)
 
+    @classmethod
+    def z_query(cls, s: str) -> "Filtr":
+        """Odtwarza filtr z query stringa — po to, żeby akcje na grupie
+        (podgląd, „Zastosuj ×N", „do importu ×N") działały w tym samym
+        zakresie, który człowiek widzi na ekranie.
+
+        Stronicowanie i sam tryb grupowania nie zawężają zbioru produktów,
+        więc do zasięgu grupy nie wchodzą.
+        """
+        from urllib.parse import parse_qsl
+        pomijamy = {"grupuj", "limit", "offset", "strona", "widok"}
+        pola = {f.name for f in fields(cls)} - pomijamy
+        return cls(**{k: v for k, v in parse_qsl(s) if k in pola})
+
 
 BAZA_SQL = """
 SELECT f.*, p.nazwa, p.producent, p.kategoria, p.zdjecie, p.kolekcja,
@@ -50,24 +64,36 @@ WHERE f.przebieg_id = :przebieg
 """
 
 
-# Statystyki grupy liczone po CAŁEJ otwartej grupie — niezależnie od filtrów
-# kolejki, bo taki jest zasięg decyzji hurtowej. Jednorodność też: grupa
-# z różnymi wartościami jest niejednorodna także wtedy, gdy filtr akurat
-# pokazuje z niej same identyczne wiersze.
+# Zasięg grupy = to, co widać po filtrach. Filtrując kategorię „łóżka"
+# człowiek rozstrzyga łóżka, a nie całą grupę razem z szafkami, które akurat
+# mają ten sam błąd. Ten sam zasięg obowiązuje licznik „×N", podgląd grupy,
+# „Zastosuj ×N" i „do importu ×N" — trzy różne odpowiedzi na to samo pytanie
+# byłyby gorsze niż jedna zła.
+# Filtry zawężające ZBIÓR PRODUKTÓW wchodzą do zasięgu; status nie — zasięg
+# decyzji to zawsze findingi jeszcze nierozstrzygnięte.
+def zasieg(fl: Filtr | None) -> tuple[str, dict]:
+    if fl is None:
+        return "", {}
+    return _warunki(replace(fl, status="otwarte"))
+
+
 # Liczone jednym przejściem po wszystkich grupach i dołączane JOIN-em.
 # Trzy skorelowane podzapytania na wiersz dawały te same liczby, ale 5 sekund
 # na stronę — tu jest jedno grupowanie po 69 tys. findingów i join po kluczu.
-STATY_GRUP = """
+def _staty_grup(warunki: str) -> str:
+    return f"""
 WITH staty AS (
-    SELECT g.grupa,
+    SELECT f.grupa,
            COUNT(*) AS ile_w_grupie,
-           COUNT(DISTINCT IFNULL(g.proponowana_wartosc,'')) AS roznych_propozycji,
-           COUNT(DISTINCT IFNULL(g.stara_wartosc,'')) AS roznych_starych
-    FROM findingi g
-    LEFT JOIN decyzje gd ON gd.produkt_id=g.produkt_id AND gd.atrybut=g.atrybut
-                        AND gd.hasz_starej=g.hasz_starej
-    WHERE g.przebieg_id = :przebieg AND gd.status IS NULL
-    GROUP BY g.grupa
+           COUNT(DISTINCT IFNULL(f.proponowana_wartosc,'')) AS roznych_propozycji,
+           COUNT(DISTINCT IFNULL(f.stara_wartosc,'')) AS roznych_starych
+    FROM findingi f
+    JOIN produkty p ON p.id = f.produkt_id
+    LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
+                       AND d.hasz_starej=f.hasz_starej
+    LEFT JOIN werdykty_wizji w ON w.produkt_id=f.produkt_id AND w.atrybut=f.atrybut
+    WHERE f.przebieg_id = :przebieg AND d.status IS NULL{warunki}
+    GROUP BY f.grupa
 )
 """
 
@@ -139,11 +165,11 @@ def lista(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> list[dict]:
              " GROUP BY f.grupa"
              " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
              " COUNT(*) DESC LIMIT :limit OFFSET :offset")
-        # UWAGA na zasięg. Licznik MUSI znaczyć to samo, co „Zastosuj ×N",
-        # a decyzja hurtowa obejmuje całą otwartą grupę, nie tylko wiersze
-        # pasujące do filtrów kolejki. Liczony po staremu, COUNT(*) po
-        # przefiltrowanych wierszach, pokazywał ×8 przy grupie, która
-        # rozstrzygała 1569 produktów.
+        # UWAGA na zasięg. Licznik MUSI znaczyć to samo, co „Zastosuj ×N".
+        # Liczony po stronie przefiltrowanych wierszy pokazywał ×8 przy
+        # grupie, która rozstrzygała 1569 produktów; liczony po całej grupie
+        # obiecywał z kolei, że filtrując łóżka ruszymy też szafki. Jedno
+        # i drugie to ten sam błąd: licznik ma znaczyć zasięg decyzji.
         q = q.replace(
             "SELECT f.*,",
             "SELECT f.*, staty.ile_w_grupie, staty.roznych_propozycji,"
@@ -151,7 +177,7 @@ def lista(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> list[dict]:
         q = q.replace("WHERE f.przebieg_id = :przebieg",
                       "LEFT JOIN staty ON staty.grupa = f.grupa\n"
                       "WHERE f.przebieg_id = :przebieg")
-        q = STATY_GRUP + q
+        q = _staty_grup(zasieg(fl)[0]) + q
     else:
         q = (BAZA_SQL + sql +
              " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
@@ -167,13 +193,17 @@ def lista(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> list[dict]:
     return wiersze
 
 
-def czlonkowie_grupy(con: sqlite3.Connection, przebieg: int, grupa: str) -> list[dict]:
-    q = (BAZA_SQL + " AND f.grupa = :grupa AND d.status IS NULL")
-    return [dict(r) for r in con.execute(q, {"przebieg": przebieg, "grupa": grupa})]
+def czlonkowie_grupy(con: sqlite3.Connection, przebieg: int, grupa: str,
+                     fl: Filtr | None = None) -> list[dict]:
+    """Zasięg decyzji hurtowej — grupa zawężona filtrami, które widać na ekranie."""
+    sql, par = zasieg(fl)
+    q = (BAZA_SQL + " AND f.grupa = :grupa AND d.status IS NULL" + sql)
+    return [dict(r) for r in con.execute(
+        q, par | {"przebieg": przebieg, "grupa": grupa})]
 
 
 def podglad_grupy(con: sqlite3.Connection, przebieg: int, grupa: str,
-                  limit: int = 200) -> list[dict]:
+                  limit: int = 200, fl: Filtr | None = None) -> list[dict]:
     """Wszystkie produkty z tym samym problemem — do podglądu na jeden klik.
 
     W kolejce widać tylko reprezentanta grupy i licznik „×N identycznych".
@@ -181,19 +211,25 @@ def podglad_grupy(con: sqlite3.Connection, przebieg: int, grupa: str,
     dokładnie w niej siedzi — bo grupa łączy po (reguła, atrybut, wartość),
     a nie po wyglądzie mebla i czasem wpada do niej produkt z innej bajki.
     """
-    q = (BAZA_SQL + " AND f.grupa = :grupa AND d.status IS NULL"
+    sql, par = zasieg(fl)
+    q = (BAZA_SQL + " AND f.grupa = :grupa AND d.status IS NULL" + sql +
          " ORDER BY p.producent, p.nazwa LIMIT :limit")
     return [dict(r) for r in con.execute(
-        q, {"przebieg": przebieg, "grupa": grupa, "limit": limit})]
+        q, par | {"przebieg": przebieg, "grupa": grupa, "limit": limit})]
 
 
-def policz_grupe(con: sqlite3.Connection, przebieg: int, grupa: str) -> int:
+def policz_grupe(con: sqlite3.Connection, przebieg: int, grupa: str,
+                 fl: Filtr | None = None) -> int:
     """Ile otwartych findingów w grupie — bo podgląd pokazuje najwyżej `limit`."""
+    sql, par = zasieg(fl)
     q = ("SELECT COUNT(*) FROM findingi f "
+         "JOIN produkty p ON p.id = f.produkt_id "
          "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
          "AND d.hasz_starej=f.hasz_starej "
-         "WHERE f.przebieg_id=:przebieg AND f.grupa=:grupa AND d.status IS NULL")
-    return int(con.execute(q, {"przebieg": przebieg, "grupa": grupa}).fetchone()[0])
+         "LEFT JOIN werdykty_wizji w ON w.produkt_id=f.produkt_id AND w.atrybut=f.atrybut "
+         "WHERE f.przebieg_id=:przebieg AND f.grupa=:grupa AND d.status IS NULL" + sql)
+    return int(con.execute(
+        q, par | {"przebieg": przebieg, "grupa": grupa}).fetchone()[0])
 
 
 def lista_produktami(con: sqlite3.Connection, przebieg: int, fl: Filtr
@@ -378,6 +414,7 @@ def statystyki_decyzji(con: sqlite3.Connection) -> dict:
         "zastosowane": d.get("zastosowana", 0),
         "falszywe": d.get("falszywy_alarm", 0),
         "odlozone": d.get("odlozona", 0),
+        "do_importu": d.get("do_importu", 0),
         "czeka_na_eksport": int(con.execute(
             "SELECT COUNT(*) FROM decyzje WHERE status='zastosowana'"
             " AND nowa_wartosc IS NOT NULL AND partia_id IS NULL").fetchone()[0]),
