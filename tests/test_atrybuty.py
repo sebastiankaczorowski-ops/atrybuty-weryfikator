@@ -1694,3 +1694,70 @@ def test_lista_zakresow_pokazuje_tylko_to_co_czeka(tmp_path, monkeypatch):
     assert z["kategorie"] == [("lawa", 1)]          # szafa nic nie czeka
     assert z["producenci"] == [("Halmar", 1)]
     con.close()
+
+
+# --- zasięg licznika grupy i zapis wartości per produkt -------------------
+
+def _grupa_z_filtrem(tmp_path, monkeypatch):
+    """Grupa rozłożona na dwie kategorie — filtr pokazuje część, decyzja
+    obejmuje całość."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "z.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    produkty, findingi = [], []
+    for i in range(1, 6):
+        kat = "lozko" if i <= 2 else "komoda"
+        produkty.append(Produkt(id=str(i), nazwa=f"Mebel {i}", producent="BRW",
+                                kolekcja="", zdjecie="", styl="", kategoria=kat))
+        findingi.append(Finding(str(i), "Styl", "L0-KONFLIKT", "L0", "krytyczna", 0.5,
+                                "tkanina", "tapicerowane", "", grupa="G"))
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    return con, baza, app_mod
+
+
+def test_licznik_grupy_znaczy_to_samo_co_zasieg_decyzji(tmp_path, monkeypatch):
+    """×N musi obejmować całą otwartą grupę, nie tylko wiersze pasujące do
+    filtra — inaczej przycisk mówi ×8, a rozstrzyga 1569 produktów."""
+    from atrybuty import zapytania
+    con, _, _ = _grupa_z_filtrem(tmp_path, monkeypatch)
+    fl = zapytania.Filtr(grupuj=True, kategoria="lozko")   # widać 2 z 5
+    wiersz = zapytania.lista(con, 1, fl)[0]
+    assert wiersz["ile_w_grupie"] == 5
+    assert len(zapytania.czlonkowie_grupy(con, 1, "G")) == 5
+    con.close()
+
+
+def test_podglad_grupy_rozdaje_wpisana_wartosc(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    con, _, app_mod = _grupa_z_filtrem(tmp_path, monkeypatch)
+    con.close()
+    strona = TestClient(app_mod.app).get(
+        "/grupa", params={"grupa": "G", "nr": "1", "wartosc": "welur"}).text
+    assert strona.count('name="nowa"') == 5
+    assert strona.count('value="welur"') >= 5          # w każdym wierszu
+    assert "Zapisz wszystkie (5)" in strona
+
+
+def test_zapis_grupy_bierze_wartosc_z_kazdego_wiersza(tmp_path, monkeypatch):
+    """Wartość rozdana na grupę, ale jeden produkt poprawiony ręcznie
+    i jeden zostawiony pusty."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    con, baza, app_mod = _grupa_z_filtrem(tmp_path, monkeypatch)
+    con.close()
+    odp = TestClient(app_mod.app).post("/decyzja/grupa-reczna", data={
+        "produkt_id": ["1", "2", "3"], "atrybut": ["Styl"] * 3,
+        "stara": ["tkanina"] * 3, "nowa": ["welur", "skóra", "  "],
+        "regula_id": ["L0-KONFLIKT"] * 3})
+    assert "zapisano 2 poprawek" in odp.text and "1 zostawionych" in odp.text
+
+    con = db.polacz(baza)
+    wg = {r["produkt_id"]: r["nowa_wartosc"] for r in con.execute(
+        "SELECT produkt_id, nowa_wartosc FROM decyzje")}
+    assert wg == {"1": "welur", "2": "skóra"}          # pusty nie zapisany
+    con.close()

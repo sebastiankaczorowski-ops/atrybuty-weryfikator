@@ -194,18 +194,55 @@ def decyzja_produkt(produkt_id: str = Form(...), status: str = Form("zastosowana
 
 
 @app.get("/grupa", response_class=HTMLResponse)
-def grupa_podglad(request: Request, grupa: str = "", nr: str = ""):
-    """Fragment HTMX: co dokładnie siedzi w tej grupie findingów."""
+def grupa_podglad(request: Request, grupa: str = "", nr: str = "", wartosc: str = ""):
+    """Fragment HTMX: co dokładnie siedzi w tej grupie findingów.
+
+    `wartosc` rozdaje jedną wpisaną wartość na wszystkie wiersze — do
+    poprawienia pojedynczych przed zapisem całej grupy.
+    """
     if not grupa:                      # pusty klucz = „zwiń"
         return HTMLResponse("")
     con = _con()
     przebieg = _przebieg(con)
     czlonkowie = zapytania.podglad_grupy(con, przebieg, grupa) if przebieg else []
     ile = zapytania.policz_grupe(con, przebieg, grupa) if przebieg else 0
+
+    atrybut = czlonkowie[0]["atrybut"] if czlonkowie else ""
+    slownik = panel_format.wczytaj_slownik()
+    podpowiedzi = sorted((panel_format.wczytaj_etykiety().get(atrybut) or {}).get(k, k)
+                         for k in slownik.get(atrybut, {}))
     con.close()
     return szablony.TemplateResponse(request, "_grupa.html", {
         "request": request, "czlonkowie": czlonkowie, "ile": ile,
-        "grupa": grupa, "nr": nr, "nazwy_kat": kategorie.nazwy_kategorii()})
+        "grupa": grupa, "nr": nr, "wartosc": wartosc,
+        "podpowiedzi": podpowiedzi,
+        "nazwy_kat": kategorie.nazwy_kategorii()})
+
+
+@app.post("/decyzja/grupa-reczna", response_class=HTMLResponse)
+def decyzja_grupa_reczna(produkt_id: list[str] = Form(...),
+                         atrybut: list[str] = Form(...),
+                         stara: list[str] = Form(...),
+                         nowa: list[str] = Form(...),
+                         regula_id: list[str] = Form(...)):
+    """Zapisuje wartości wpisane per produkt w podglądzie grupy.
+
+    Inaczej niż „Zastosuj ×N", tutaj każdy wiersz niesie własną wartość —
+    jedną wpisaną u góry i rozdaną na resztę, albo poprawioną ręcznie.
+    Puste pole znaczy „zostaw otwarte", nie „wyczyść".
+    """
+    con = _con()
+    wiersze = [(p, a, s or None, n.strip(), r or None)
+               for p, a, s, n, r in zip(produkt_id, atrybut, stara, nowa, regula_id)
+               if n.strip()]
+    ile = db.zapisz_decyzje_grupowo(con, wiersze, "zastosowana") if wiersze else 0
+    pominiete = len(produkt_id) - ile
+    con.close()
+
+    tresc = f"✓ zapisano {ile} poprawek"
+    if pominiete:
+        tresc += f" · {pominiete} zostawionych bez wartości"
+    return HTMLResponse(f'<div class="zrobione">{tresc}</div>')
 
 
 @app.get("/produkt/{pid}", response_class=HTMLResponse)

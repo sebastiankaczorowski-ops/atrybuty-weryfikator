@@ -50,6 +50,28 @@ WHERE f.przebieg_id = :przebieg
 """
 
 
+# Statystyki grupy liczone po CAŁEJ otwartej grupie — niezależnie od filtrów
+# kolejki, bo taki jest zasięg decyzji hurtowej. Jednorodność też: grupa
+# z różnymi wartościami jest niejednorodna także wtedy, gdy filtr akurat
+# pokazuje z niej same identyczne wiersze.
+# Liczone jednym przejściem po wszystkich grupach i dołączane JOIN-em.
+# Trzy skorelowane podzapytania na wiersz dawały te same liczby, ale 5 sekund
+# na stronę — tu jest jedno grupowanie po 69 tys. findingów i join po kluczu.
+STATY_GRUP = """
+WITH staty AS (
+    SELECT g.grupa,
+           COUNT(*) AS ile_w_grupie,
+           COUNT(DISTINCT IFNULL(g.proponowana_wartosc,'')) AS roznych_propozycji,
+           COUNT(DISTINCT IFNULL(g.stara_wartosc,'')) AS roznych_starych
+    FROM findingi g
+    LEFT JOIN decyzje gd ON gd.produkt_id=g.produkt_id AND gd.atrybut=g.atrybut
+                        AND gd.hasz_starej=g.hasz_starej
+    WHERE g.przebieg_id = :przebieg AND gd.status IS NULL
+    GROUP BY g.grupa
+)
+"""
+
+
 def _warunki(fl: Filtr) -> tuple[str, dict]:
     sql, par = "", {}
     if fl.kategoria:
@@ -117,17 +139,19 @@ def lista(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> list[dict]:
              " GROUP BY f.grupa"
              " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
              " COUNT(*) DESC LIMIT :limit OFFSET :offset")
-        # Grupa łączy po (reguła, atrybut, stara wartość) i przy cechach
-        # opisowych to znaczy „te same przypadki". Przy liczbach już nie:
-        # 269 produktów z popsutą wagą ma 207 różnych wag i 207 różnych
-        # poprawek. Liczymy więc, czy członkowie faktycznie są jednakowi —
-        # jeśli nie, decyzja hurtowa jest klikaniem w ciemno i UI ma ją
-        # zablokować.
+        # UWAGA na zasięg. Licznik MUSI znaczyć to samo, co „Zastosuj ×N",
+        # a decyzja hurtowa obejmuje całą otwartą grupę, nie tylko wiersze
+        # pasujące do filtrów kolejki. Liczony po staremu, COUNT(*) po
+        # przefiltrowanych wierszach, pokazywał ×8 przy grupie, która
+        # rozstrzygała 1569 produktów.
         q = q.replace(
             "SELECT f.*,",
-            "SELECT f.*, COUNT(*) AS ile_w_grupie,"
-            " COUNT(DISTINCT IFNULL(f.proponowana_wartosc,'')) AS roznych_propozycji,"
-            " COUNT(DISTINCT IFNULL(f.stara_wartosc,'')) AS roznych_starych,")
+            "SELECT f.*, staty.ile_w_grupie, staty.roznych_propozycji,"
+            " staty.roznych_starych,")
+        q = q.replace("WHERE f.przebieg_id = :przebieg",
+                      "LEFT JOIN staty ON staty.grupa = f.grupa\n"
+                      "WHERE f.przebieg_id = :przebieg")
+        q = STATY_GRUP + q
     else:
         q = (BAZA_SQL + sql +
              " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"

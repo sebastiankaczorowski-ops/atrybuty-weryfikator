@@ -63,6 +63,15 @@ Grupowanie to najważniejsza liczba w tej tabeli: 17 575 findingów to 2 400
 realnych decyzji, bo ponad tysiąc produktów z `drewno, drewno` rozstrzyga się
 jednym kliknięciem, nie tysiącem.
 
+Licznik `×N` liczy **całą otwartą grupę**, nie tylko wiersze pasujące do
+filtrów kolejki — bo taki jest zasięg decyzji hurtowej. Liczony po staremu
+pokazywał `×8` przy grupie, która rozstrzygała 1 569 produktów.
+
+W rozwiniętym podglądzie każdy wiersz ma własne pole wartości. Wpisanie
+jednej wartości w kolejce („rozdaj na grupę ×N") wypełnia je wszystkie,
+potem poprawia się pojedyncze i zapisuje całość jednym kliknięciem. Puste
+pole zostawia produkt otwarty — zapis niczego nie czyści.
+
 Licznik `×N identycznych` w kolejce jest klikalny: rozwija listę wszystkich
 produktów z tym samym problemem — ze zdjęciem, kategorią i linkiem do panelu.
 Zanim ktoś rozstrzygnie grupę hurtem, widzi, co w niej siedzi, i może
