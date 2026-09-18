@@ -144,6 +144,53 @@ details .tresc{padding:16px 18px}
 </section>
 
 <section>
+  <h2>Atrybuty wyjęte z obiegu</h2>
+  <p class="pod">Coś innego niż wyłączona reguła. Regułę wyłączasz, gdy źle
+  działa; atrybut — gdy nie da się go poprawić niezależnie od reguł, bo problem
+  siedzi poza nami. Wyjęty atrybut nie produkuje findingów, nie idzie do wizji
+  i nie wychodzi do importu, także tam, gdzie decyzje zapadły wcześniej.
+  Nic nie jest kasowane: po przywróceniu findingi wracają przy najbliższym
+  przeliczeniu przebiegu.</p>
+
+  {% if atrybuty_wylaczone %}
+  <table>
+    <thead><tr><th>Atrybut</th><th class="kol-szt"></th></tr></thead>
+    <tbody>
+    {% for a in atrybuty_wylaczone %}
+      <tr>
+        <td>{{ a }}</td>
+        <td>
+          <form class="inline" method="post" action="/reguly/przelacz-atrybut">
+            <input type="hidden" name="atrybut" value="{{ a }}">
+            <input type="hidden" name="aktywny" value="1">
+            <button class="mini" type="submit">Przywróć</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="pod">Na razie żaden atrybut nie jest wyjęty.</p>
+  {% endif %}
+
+  <form method="post" action="/reguly/przelacz-atrybut">
+    <input type="hidden" name="aktywny" value="0">
+    <label>Wyjmij atrybut
+      <select name="atrybut" required>
+        <option value="">— wybierz —</option>
+        {% for a in atrybuty_wszystkie %}
+          {% if a not in atrybuty_wylaczone %}
+            <option value="{{ a }}">{{ a }}</option>
+          {% endif %}
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Wyjmij z obiegu</button>
+  </form>
+</section>
+
+<section>
   <h2>Dodaj regułę</h2>
   <p class="pod">Wbudowanych reguł nie da się dodać z tego miejsca — to logika
   w kodzie detektorów. Dodawać można trzy rodzaje opisane danymi: sprzeczność,

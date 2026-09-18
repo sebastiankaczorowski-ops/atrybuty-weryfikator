@@ -68,6 +68,7 @@ NAGLOWEK_REGUL = """# Reguły edytowalne z poziomu podstrony /reguly.
 # sprzecznosci       — "jeśli atrybut ma wartość X, to atrybut Y nie może istnieć"
 # relacje            — nierówności między atrybutami liczbowymi tego samego produktu
 # wylaczone          — identyfikatory reguł (także wbudowanych), które mają nie działać
+# atrybuty_wylaczone — atrybuty wyjęte z obiegu: bez findingów i bez eksportu
 """
 
 
@@ -93,6 +94,20 @@ def zapisz_reguly(dane: dict[str, Any]) -> Path:
 
 def wylaczone() -> set[str]:
     return set(reguly().get("wylaczone") or [])
+
+
+def atrybuty_wylaczone() -> set[str]:
+    """Atrybuty wyjęte z obiegu — nie sprawdzamy ich i nie eksportujemy.
+
+    Nie to samo, co wyłączona reguła. Regułę wyłącza się, gdy źle działa;
+    atrybut — gdy nie da się go sensownie poprawić niezależnie od reguł,
+    bo problem siedzi poza nami. Tak jest ze „Stylem": słownik w panelu ma
+    tę samą nazwę pod kilkoma ID, więc nie wiadomo, które wpisać, i żadna
+    poprawka i tak nie przejdzie importem. Wyłączenie jest zdejmowalne
+    jednym kliknięciem na /reguly — findingi wrócą przy najbliższym
+    przeliczeniu, a nic po drodze nie jest kasowane.
+    """
+    return set(reguly().get("atrybuty_wylaczone") or [])
 
 
 @functools.lru_cache(maxsize=None)

@@ -108,7 +108,8 @@ def pytanie_dla(atrybut: str) -> str | None:
 
 
 def obslugiwane_atrybuty() -> set[str]:
-    return set(PYTANIA) & WIDOCZNE_NA_ZDJECIU
+    from . import config
+    return set(PYTANIA) & WIDOCZNE_NA_ZDJECIU - config.atrybuty_wylaczone()
 
 
 # --- klucz API ------------------------------------------------------------

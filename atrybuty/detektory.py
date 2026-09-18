@@ -366,4 +366,11 @@ def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = 
     wylaczone = config.wylaczone()
     if wylaczone:
         out = [f for f in out if f.regula_id not in wylaczone]
+
+    # Atrybut wyjęty z obiegu nie produkuje findingów w ogóle — żadna reguła,
+    # żadna warstwa. Dzięki temu nie trafia też do wizji, więc nie płacimy za
+    # zdjęcia, których i tak nie da się wykorzystać.
+    bez_atrybutow = config.atrybuty_wylaczone()
+    if bez_atrybutow:
+        out = [f for f in out if f.atrybut not in bez_atrybutow]
     return out

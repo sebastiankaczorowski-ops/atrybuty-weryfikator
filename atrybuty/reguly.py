@@ -161,6 +161,23 @@ def przelacz(rid: str, aktywna: bool) -> None:
     config.zapisz_reguly(d)
 
 
+def przelacz_atrybut(nazwa: str, aktywny: bool) -> None:
+    """Wyjmuje atrybut z obiegu albo go przywraca.
+
+    Nic nie kasuje: decyzje i findingi sprzed wyłączenia zostają w bazie,
+    tylko przestają być pokazywane i eksportowane. Przywrócenie wymaga
+    przeliczenia przebiegu, żeby findingi wróciły do kolejki.
+    """
+    nazwa = (nazwa or "").strip()
+    if not nazwa:
+        return
+    d = dict(config.reguly())
+    wyl = set(d.get("atrybuty_wylaczone") or [])
+    wyl.discard(nazwa) if aktywny else wyl.add(nazwa)
+    d["atrybuty_wylaczone"] = sorted(wyl)
+    config.zapisz_reguly(d)
+
+
 def usun(rid: str) -> bool:
     d = dict(config.reguly())
     przed = (len(d.get("sprzecznosci") or []) + len(d.get("relacje") or [])

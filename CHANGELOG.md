@@ -3,6 +3,26 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-18 · Atrybut można wyjąć z obiegu
+
+- **Nowa sekcja na `/reguly`: „Atrybuty wyjęte z obiegu".** To coś innego niż
+  wyłączona reguła. Regułę wyłącza się, gdy źle działa; atrybut — gdy nie da
+  się go poprawić niezależnie od reguł, bo problem siedzi poza nami.
+- Wyjęty atrybut **nie produkuje findingów** (żadna reguła, żadna warstwa),
+  **nie idzie do wizji** (więc nie płacimy za zdjęcia, których i tak nie da
+  się wykorzystać) i **nie wychodzi do importu** — także tam, gdzie decyzje
+  zapadły przed wyłączeniem. Na stronie eksportu takie pozycje pokazują się
+  jako pominięte z powodem, a nie znikają po cichu.
+- **Nic nie jest kasowane.** Findingi i decyzje zostają w bazie. Przywrócenie
+  to jedno kliknięcie „Przywróć"; findingi wracają przy najbliższym
+  przeliczeniu przebiegu.
+- Powód wprowadzenia: **Styl**. W słowniku panelu ta sama nazwa siedzi pod
+  kilkoma ID (każdy polski styl w 2–3 egzemplarzach, plus wartości rumuńskie),
+  więc nie da się ustalić, którą wpisać, i żadna poprawka i tak nie przeszłaby
+  importem. Do czasu posprzątania słownika w panelu Styl jest wyjęty.
+- Przełącznik siedzi w `config/reguly.yaml` (`atrybuty_wylaczone`) i jest
+  sterowany z UI, więc wyłączenie i przywrócenie nie wymaga wdrożenia.
+
 ## 2026-09-18 · Nowy słownik z panelu i liczniki, które nie kłamią
 
 - **Słownik wczytuje się z najnowszego zrzutu.** Panel dokłada kolejne zrzuty

@@ -2092,3 +2092,62 @@ def test_wybrana_opcja_zostaje_w_liscie_mimo_zera(tmp_path, monkeypatch):
     sl = zapytania.slowniki_filtrow(con, przebieg, zapytania.Filtr(kategoria="stolik"))
     assert dict(sl.kategorie)["stolik"] == 0
     con.close()
+
+
+# --- atrybut wyjęty z obiegu ---------------------------------------------
+
+def _reguly_w_tmp(tmp_path, monkeypatch, dane):
+    import yaml
+    from atrybuty import config
+    monkeypatch.setattr(config, "KATALOG_CONFIG", tmp_path)
+    (tmp_path / "reguly.yaml").write_text(yaml.safe_dump(dane, allow_unicode=True),
+                                          encoding="utf-8")
+    config.wyczysc_cache()
+    return config
+
+
+def test_wylaczony_atrybut_nie_produkuje_findingow(tmp_path, monkeypatch):
+    """Styl: słownik w panelu ma tę samą nazwę pod kilkoma ID, więc żadna
+    poprawka i tak nie przejdzie importem — nie ma po co jej pokazywać."""
+    from atrybuty import detektory
+    _reguly_w_tmp(tmp_path, monkeypatch, {"atrybuty_wylaczone": ["Styl"]})
+    try:
+        produkty = [_p(id="1", nazwa="Komoda", kategoria="komoda",
+                       atrybuty={"Styl": "Nowoczesny", "Materiał": "plyta"})]
+        atrybuty = {f.atrybut for f in detektory.uruchom(produkty)}
+        assert "Styl" not in atrybuty
+    finally:
+        from atrybuty import config
+        config.wyczysc_cache()
+
+
+def test_wylaczony_atrybut_nie_wychodzi_do_importu(tmp_path, monkeypatch):
+    """Decyzje sprzed wyłączenia zostają w bazie, ale nie wsiąkają do pliku."""
+    from atrybuty import config, eksport_panelu
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+    con, _ = _baza_z_decyzjami(tmp_path, monkeypatch)
+
+    monkeypatch.setattr(config, "atrybuty_wylaczone", lambda: {"Materiał"})
+    plan = eksport_panelu.zaplanuj(con, 50)
+    assert plan.pozycje == []
+    assert plan.pominiete and "wyłączony z obiegu" in plan.pominiete[0]["powod"]
+    con.close()
+
+
+def test_przywrocenie_atrybutu_zdejmuje_go_z_listy(tmp_path, monkeypatch):
+    """Wyjęcie ma być odwracalne jednym kliknięciem, bez deploya."""
+    from atrybuty import reguly as reguly_mod
+    config = _reguly_w_tmp(tmp_path, monkeypatch, {"wylaczone": []})
+    try:
+        reguly_mod.przelacz_atrybut("Styl", aktywny=False)
+        config.wyczysc_cache()
+        assert config.atrybuty_wylaczone() == {"Styl"}
+
+        reguly_mod.przelacz_atrybut("Styl", aktywny=True)
+        config.wyczysc_cache()
+        assert config.atrybuty_wylaczone() == set()
+        # reguły obok zostają nietknięte
+        assert "wylaczone" in config.reguly()
+    finally:
+        config.wyczysc_cache()

@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
+from . import config
 from . import panel_format as pf
 
 
@@ -261,13 +262,20 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50,
                          "WHERE partia_id IS NOT NULL"):
         wczesniej.setdefault(r["produkt_id"], r["partia_id"])
 
+    # Decyzje na atrybucie wyjętym z obiegu zostają w bazie, ale nie wychodzą
+    # do pliku. W bazie mogą siedzieć rozstrzygnięcia sprzed wyłączenia —
+    # bez tego przeszłyby importem mimo decyzji, żeby ich nie wysyłać.
+    bez_atrybutow = config.atrybuty_wylaczone()
+
     filtr, par = _filtr_zakresu(kategoria, producent)
     for r in con.execute(SQL_CZEKAJACE.format(filtr=filtr), par):
         plan.czekajacych += 1
         kolumna = r["atrybut"]
         powod = ""
 
-        if znane and kolumna not in znane:
+        if kolumna in bez_atrybutow:
+            powod = "atrybut wyłączony z obiegu na /reguly"
+        elif znane and kolumna not in znane:
             powod = "kolumny nie ma w formacie panelu"
         else:
             wartosc, powod = pf.wartosc_do_pliku(

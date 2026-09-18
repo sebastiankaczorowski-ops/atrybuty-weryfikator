@@ -721,6 +721,8 @@ def lista_regul(request: Request, komunikat: str = "", blad: str = ""):
         "atrybuty_enum": sorted(k for k, v in atr.items()
                                 if v.get("typ") in ("enum", "multi_enum")),
         "atrybuty_liczbowe": sorted(k for k, v in atr.items() if v.get("typ") == "liczba"),
+        "atrybuty_wszystkie": sorted(atr),
+        "atrybuty_wylaczone": sorted(config.atrybuty_wylaczone()),
     })
 
 
@@ -739,6 +741,18 @@ def przelacz_regule(rid: str = Form(...), aktywna: str = Form(...)):
     reguly_mod.przelacz(rid, aktywna == "1")
     return _wroc(None, f"Reguła {rid} {'włączona' if aktywna == '1' else 'wyłączona'}. "
                        f"Zadziała przy następnym imporcie.")
+
+
+@app.post("/reguly/przelacz-atrybut")
+def przelacz_atrybut(atrybut: str = Form(...), aktywny: str = Form("0")):
+    reguly_mod.przelacz_atrybut(atrybut, aktywny == "1")
+    czasownik = "wrócił do obiegu" if aktywny == "1" else "wyjęty z obiegu"
+    return RedirectResponse(
+        "/reguly?komunikat=" + quote(
+            f"Atrybut „{atrybut}” {czasownik}. "
+            "Findingi zmienią się przy najbliższym przeliczeniu przebiegu; "
+            "nic nie zostało skasowane."),
+        status_code=303)
 
 
 @app.post("/reguly/usun")

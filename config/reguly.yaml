@@ -8,6 +8,7 @@
 # sprzecznosci       — "jeśli atrybut ma wartość X, to atrybut Y nie może istnieć"
 # relacje            — nierówności między atrybutami liczbowymi tego samego produktu
 # wylaczone          — identyfikatory reguł (także wbudowanych), które mają nie działać
+# atrybuty_wylaczone — atrybuty wyjęte z obiegu: bez findingów i bez eksportu
 klucze_do_usuniecia:
   Do poprawy:
     powod: 'Ślad po zepsutej migracji: wartości to nazwy podparcia ("stojące (podparcie)"), a nie osobna
@@ -76,3 +77,4 @@ relacje:
   prawa: Szerokość
   opis: Siedzisko węższe od mebla
 wylaczone: []
+atrybuty_wylaczone: []
