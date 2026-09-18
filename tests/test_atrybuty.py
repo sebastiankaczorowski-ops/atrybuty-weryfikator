@@ -1316,3 +1316,88 @@ def test_finding_l0_mowi_ktora_wartosc_skad():
     f = skladowe.znajdz([p], SLOWNIK_TESTOWY, STATUSY_TESTOWE)[0]
     assert "W atrybutach produktu: „metal”" in f.dowod
     assert "W składowych: „drewno”" in f.dowod
+
+
+# --- wymiary z rysunku technicznego ---------------------------------------
+
+def test_wymiary_z_rysunku_przeliczaja_milimetry():
+    """Rysunki bywają w mm, sklep trzyma centymetry."""
+    from atrybuty import wizja
+    assert wizja._na_centymetry("1100", "mm") == "110"
+    assert wizja._na_centymetry("110", "cm") == "110"
+    assert wizja._na_centymetry("", "cm") == ""          # brak to brak, nie zero
+
+
+def test_odczyt_wymiarow_parsuje_odpowiedz():
+    from atrybuty import wizja
+    surowe = {"candidates": [{"content": {"parts": [{"text": json.dumps({
+        "szerokosc": "1100", "wysokosc": "430", "glebokosc": "",
+        "jednostka": "mm", "pewnosc": 0.9, "uzasadnienie": "wymiary na rzucie"})}]}}],
+        "usageMetadata": {"promptTokenCount": 300, "candidatesTokenCount": 40}}
+    o = wizja._zparsuj_wymiary(surowe)
+    assert o.wymiary == {"Szerokość": "110", "Wysokość": "43", "Głębokość": ""}
+    assert o.cokolwiek and o.pewnosc == 0.9
+
+
+def test_wymiary_bez_rysunku_mowia_wprost(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    import atrybuty.app as app_mod
+    baza = tmp_path / "r.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", [_prod_ze_skladowymi("1", {}, {})], [])
+    con.close()
+
+    odp = TestClient(app_mod.app).post("/wizja/wymiary", data={"produkt_id": "1"})
+    assert "nie ma rysunku technicznego" in odp.text
+
+
+# --- widok produktowy -----------------------------------------------------
+
+def _kolejka_z_produktem(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding
+    import atrybuty.app as app_mod
+    baza = tmp_path / "v.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    p = _prod_ze_skladowymi("500", {}, {})
+    findingi = [
+        Finding("500", "Szerokość", "L0-ZE-SKLADOWYCH", "L0", "srednia", 0.9,
+                None, "110", "ze składowych"),
+        Finding("500", "Wysokość", "L0-ZE-SKLADOWYCH", "L0", "srednia", 0.9,
+                None, "43", "ze składowych"),
+        Finding("500", "Materiał", "L2-OUTLIER", "L2", "krytyczna", 0.4,
+                "metal", None, "odstaje od kategorii"),
+    ]
+    db.zapisz_przebieg(con, "t.csv", [p], findingi)
+    return con, baza, app_mod
+
+
+def test_widok_produktowy_zbiera_bledy_jednego_produktu(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    con, _, app_mod = _kolejka_z_produktem(tmp_path, monkeypatch)
+    con.close()
+    strona = TestClient(app_mod.app).get("/anomalie?widok=produkt").text
+    assert strona.count('class="karta-produktu"') == 1
+    assert "3 błędów" in strona
+    assert "Zastosuj 2 gotowych" in strona     # trzeci nie ma propozycji
+
+
+def test_hurt_na_produkcie_omija_niepewne(tmp_path, monkeypatch):
+    """Hurtowe zatwierdzanie bierze tylko to, czego system jest pewien —
+    reszta zostaje otwarta, bo inaczej to klikanie w ciemno."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    con, baza, app_mod = _kolejka_z_produktem(tmp_path, monkeypatch)
+    con.close()
+    odp = TestClient(app_mod.app).post("/decyzja/produkt", data={"produkt_id": "500"})
+    assert "2 poprawek" in odp.text and "1 zostaje" in odp.text
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 2
+    con.close()

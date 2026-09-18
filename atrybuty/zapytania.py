@@ -156,6 +156,66 @@ def policz_grupe(con: sqlite3.Connection, przebieg: int, grupa: str) -> int:
     return int(con.execute(q, {"przebieg": przebieg, "grupa": grupa}).fetchone()[0])
 
 
+def lista_produktami(con: sqlite3.Connection, przebieg: int, fl: Filtr
+                     ) -> tuple[list[dict], int]:
+    """Kolejka zwinięta do produktów: jeden kafel = jeden mebel, w środku
+    wszystkie jego otwarte findingi.
+
+    Tryb pomocniczy, nie zamiennik grupowania. Grupy schodzą 69 tys. findingów
+    do 5,3 tys. decyzji, bo ta sama pomyłka siedzi na tysiącach produktów —
+    praca produktami to 28 tys. wizyt, pięć razy więcej. Ale przy produkcie
+    z dziesięcioma brakami klikanie ich pojedynczo w ogólnej kolejce jest
+    absurdem i po to jest ten widok.
+    """
+    sql, par = _warunki(fl)
+    par["przebieg"] = przebieg
+
+    ile = int(con.execute(
+        "SELECT COUNT(DISTINCT f.produkt_id) FROM findingi f "
+        "JOIN produkty p ON p.id=f.produkt_id "
+        "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
+        "AND d.hasz_starej=f.hasz_starej "
+        "LEFT JOIN werdykty_wizji w ON w.produkt_id=f.produkt_id AND w.atrybut=f.atrybut "
+        f"WHERE f.przebieg_id=:przebieg{sql}", par).fetchone()[0])
+
+    # najpierw wybieramy produkty (strona), potem dociągamy ich findingi —
+    # inaczej limit ucinałby produkt w połowie
+    q_prod = (
+        "SELECT f.produkt_id, COUNT(*) AS ile_findingow, "
+        " MIN(CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END) AS waga_min "
+        "FROM findingi f JOIN produkty p ON p.id=f.produkt_id "
+        "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
+        "AND d.hasz_starej=f.hasz_starej "
+        "LEFT JOIN werdykty_wizji w ON w.produkt_id=f.produkt_id AND w.atrybut=f.atrybut "
+        f"WHERE f.przebieg_id=:przebieg{sql} "
+        "GROUP BY f.produkt_id ORDER BY waga_min, ile_findingow DESC, f.produkt_id "
+        "LIMIT :limit OFFSET :offset")
+    par_prod = par | {"limit": fl.limit, "offset": fl.offset}
+    kolejnosc = [r["produkt_id"] for r in con.execute(q_prod, par_prod)]
+    if not kolejnosc:
+        return [], ile
+
+    miejsca = ",".join(f":p{i}" for i in range(len(kolejnosc)))
+    par_f = {"przebieg": przebieg} | {f"p{i}": v for i, v in enumerate(kolejnosc)}
+    q = (BAZA_SQL + f" AND f.produkt_id IN ({miejsca}) AND d.status IS NULL"
+         " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
+         " f.atrybut")
+    wg_produktu: dict[str, dict] = {}
+    for r in con.execute(q, par_f):
+        w = dict(r)
+        poz = wg_produktu.setdefault(w["produkt_id"], {
+            "produkt_id": w["produkt_id"], "nazwa": w["nazwa"],
+            "producent": w["producent"], "kolekcja": w["kolekcja"],
+            "kategoria": w["kategoria"], "zdjecie": w["zdjecie"], "findingi": []})
+        poz["findingi"].append(w)
+
+    produkty = [wg_produktu[pid] for pid in kolejnosc if pid in wg_produktu]
+    for poz in produkty:
+        poz["gotowe"] = [f for f in poz["findingi"]
+                         if f["proponowana_wartosc"] and f["pewnosc"] >= PROG_DO_WIZJI]
+    return produkty, ile
+
+
 @dataclass
 class Slowniki:
     kategorie: list[tuple[str, int]] = field(default_factory=list)

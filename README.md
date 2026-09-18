@@ -100,6 +100,35 @@ Konflikty nie są jedną kupką i dlatego mają różne wagi: „90,5 vs 90" to
 zaokrąglenie (info), a „Głębokość 102 vs 200" to błąd, który ktoś musi
 zobaczyć (krytyczna).
 
+## Wymiary z rysunku technicznego
+
+Gdy w bazie brakuje wymiaru, a produkt ma rysunek techniczny, w kolejce jest
+przycisk „Wymiary z rysunku". To osobna ścieżka od reszty warstwy L3: tam
+model ocenia wartość z bazy, tu w bazie nie ma czego oceniać, a na rysunku
+wymiary są **wypisane liczbami** — model je odczytuje, nie szacuje.
+
+Trzy wymiary lecą jednym zapytaniem (są na tym samym rysunku, więc trzy
+osobne wywołania to trzykrotny koszt za to samo zdjęcie), wynik przelicza się
+z milimetrów na centymetry, a do zatwierdzenia trafiają tylko te wymiary,
+których w bazie faktycznie brakuje — ta ścieżka uzupełnia, nie nadpisuje.
+Brak wymiaru na rysunku zostaje pustym polem: zmyślona liczba trafiłaby
+wprost do sklepu.
+
+## Dwa widoki kolejki: grupy i produkty
+
+Domyślny widok grupuje findingi — i tak ma zostać, bo to on decyduje
+o ekonomii pracy. Na eksporcie z 17.09: **69 507 findingów to 5 291 grup,
+ale 28 358 produktów**. Praca produktami to pięć razy więcej kliknięć, bo ta
+sama pomyłka siedzi na tysiącach mebli i rozstrzyga się raz.
+
+Widok produktowy (`?widok=produkt`) jest pomocniczy i ma sens tam, gdzie
+grupowanie nie pomaga: produkt z dziesięcioma brakami ze składowych
+(1 791 produktów ma ich 5 lub więcej, średnio 4,6). Kafel pokazuje wszystkie
+błędy jednego mebla razem, z przyciskiem „Zastosuj N gotowych" — biorącym
+tylko te z propozycją i pewnością powyżej progu. Reszta zostaje otwarta,
+bo hurtowe zatwierdzanie czegoś, czego system nie jest pewien, to klikanie
+w ciemno.
+
 ## Rozstrzygnięte i eksport do sklepu
 
 `/rozstrzygniete` pokazuje każdą podjętą decyzję razem ze zmianą

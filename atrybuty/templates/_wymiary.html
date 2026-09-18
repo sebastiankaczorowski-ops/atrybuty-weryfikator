@@ -1,0 +1,40 @@
+{# Odczyt wymiarów z rysunku technicznego — wynik jednego zapytania. #}
+{% if blad %}
+  <div class="wizja blad">Nie udało się: {{ blad }}</div>
+{% elif not odp.cokolwiek %}
+  <div class="wizja">
+    <span class="werdykt nie_widac">rysunek nic nie mówi</span>
+    {{ odp.uzasadnienie }}
+  </div>
+{% else %}
+  <div class="wizja">
+    <span class="werdykt zgodne">z rysunku</span>
+    {{ odp.uzasadnienie }}
+    <span class="meta-wizji">pewność {{ '%.0f'|format(odp.pewnosc * 100) }}%
+      · {{ odp.jednostka }} · ${{ '%.4f'|format(koszt) }}</span>
+    {% if rysunek %}
+      · <a href="{{ rysunek.url }}" target="_blank" rel="noopener">zobacz rysunek ↗</a>
+    {% endif %}
+  </div>
+
+  {% if not braki %}
+    <div class="dowod">Wszystkie odczytane wymiary już są w bazie — nic do wpisania.</div>
+  {% else %}
+  <div class="po-wizji akcje">
+    {% for atrybut, wartosc in braki.items() %}
+      <form hx-post="/decyzja" hx-target="this" hx-swap="outerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ produkt_id }}">
+        <input type="hidden" name="atrybut" value="{{ atrybut }}">
+        <input type="hidden" name="stara" value="">
+        <input type="hidden" name="nowa" value="{{ wartosc }}">
+        <input type="hidden" name="regula_id" value="L3-RYSUNEK">
+        <input type="hidden" name="zakres" value="pojedynczo">
+        <input type="hidden" name="status" value="zastosowana">
+        <button class="p mini" type="submit">{{ atrybut }}: {{ wartosc }}</button>
+      </form>
+    {% endfor %}
+  </div>
+  <div class="dowod">Każdy przycisk zapisuje jeden wymiar. Wartości, które już
+    są w bazie, celowo pominięte — ta ścieżka uzupełnia braki, nie nadpisuje.</div>
+  {% endif %}
+{% endif %}

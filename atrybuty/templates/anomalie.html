@@ -80,6 +80,18 @@ tbody tr:hover{background:var(--surface-2)}
 .skad{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
       font-weight:600}
 .akcje{display:flex;gap:4px;flex-wrap:wrap}
+.produkty{display:flex;flex-direction:column;gap:12px}
+.karta-produktu{background:var(--surface);border:1px solid var(--line);border-radius:3px}
+.karta-produktu .glowka{display:flex;gap:12px;align-items:flex-start;padding:10px 12px;
+                        border-bottom:1px solid var(--line)}
+.karta-produktu .glowka b{font-weight:600}
+.karta-produktu .hurt{margin-left:auto;display:flex;gap:8px;align-items:center;
+                      white-space:nowrap}
+table.findingi-produktu{border:none;border-radius:0}
+table.findingi-produktu td{border-bottom:1px solid var(--line);padding:7px 12px}
+table.findingi-produktu tr:last-child td{border-bottom:none}
+table.findingi-produktu .kol-atr{width:210px}
+table.findingi-produktu .kol-akcja{text-align:right;white-space:nowrap}
 .zrobione{color:var(--ok);font-weight:600;font-size:12.5px}
 .werdykt{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
 .werdykt.niezgodne{background:var(--crit-soft);color:var(--crit)}
@@ -241,11 +253,99 @@ tr.htmx-request .szkielet{display:flex}
 </form>
 
 <div class="pasek">
-  <span>{{ ile }} {{ 'grup' if fl.grupuj else 'findingów' }} po filtrach</span>
-  {% if fl.grupuj %}<span>· jedna decyzja rozstrzyga całą grupę</span>{% endif %}
+  <span>{{ ile }} {{ 'produktów' if widok == 'produkt' else ('grup' if fl.grupuj else 'findingów') }} po filtrach</span>
+  {% if widok == 'produkt' %}
+    <span>· wszystkie błędy produktu razem</span>
+    <a href="/anomalie?{{ fl.jako_query(widok='findingi', grupuj=1, strona=1) }}">→ wróć do grup</a>
+  {% else %}
+    {% if fl.grupuj %}<span>· jedna decyzja rozstrzyga całą grupę</span>{% endif %}
+    <a href="/anomalie?{{ fl.jako_query(widok='produkt', strona=1) }}"
+       title="Ten sam zestaw findingów zwinięty do produktów">→ pokaż produktami</a>
+  {% endif %}
 </div>
 
-{% if not wiersze %}
+{% if widok == 'produkt' %}
+<div class="produkty">
+  {% for poz in produkty %}
+  <section class="karta-produktu">
+    <div class="glowka">
+      {% if poz.zdjecie %}<img class="mini-foto" src="{{ poz.zdjecie }}" alt="" loading="lazy">
+      {% else %}<div class="brakfoto">brak</div>{% endif %}
+      <div>
+        <a href="/produkt/{{ poz.produkt_id }}" target="_blank"><code>{{ poz.produkt_id }}</code></a>
+        <b>{{ poz.nazwa }}</b>
+        <div class="dowod">{{ poz.producent }}{% if poz.kolekcja %} · {{ poz.kolekcja }}{% endif %}
+          · {{ nazwy_kat.get(poz.kategoria, poz.kategoria) }}
+          · <a class="panel" href="{{ link_panelu(poz.produkt_id) }}" target="_blank"
+               rel="noopener">edytuj w panelu ↗</a></div>
+      </div>
+      <div class="hurt" id="hurt-{{ poz.produkt_id }}">
+        <span class="grupa-licznik">{{ poz.findingi|length }} błędów</span>
+        {% if poz.gotowe %}
+        <form hx-post="/decyzja/produkt" hx-target="#hurt-{{ poz.produkt_id }}"
+              hx-swap="innerHTML" hx-disabled-elt="find button">
+          <input type="hidden" name="produkt_id" value="{{ poz.produkt_id }}">
+          <input type="hidden" name="status" value="zastosowana">
+          <button class="p mini" type="submit"
+                  title="Tylko te z gotową propozycją i pewnością powyżej progu">
+            Zastosuj {{ poz.gotowe|length }} gotowych</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    <table class="findingi-produktu">
+      {% for f in poz.findingi %}
+      <tr>
+        <td class="kol-atr"><b>{{ f.atrybut }}</b>
+          <div class="dowod"><code>{{ f.regula_id }}</code></div></td>
+        <td>
+          {% if f.warstwa == 'L0' %}<span class="skad">atrybuty:</span>{% endif %}
+          {% if f.stara_wartosc %}<span class="stara">{{ f.stara_wartosc }}</span>
+          {% else %}<span class="dowod">(puste)</span>{% endif %}
+          {% if f.proponowana_wartosc %}→
+            {% if f.warstwa == 'L0' %}<span class="skad">składowe:</span>{% endif %}
+            <span class="nowa">{{ f.proponowana_wartosc }}</span>{% endif %}
+          <div class="dowod">{{ f.dowod }}</div>
+        </td>
+        <td><span class="sev {{ f.waga }}">{{ f.waga }}</span></td>
+        <td class="kol-akcja">
+          <div class="akcje" id="pa-{{ poz.produkt_id }}-{{ loop.index }}">
+            {% if f.proponowana_wartosc %}
+            <form hx-post="/decyzja" hx-target="#pa-{{ poz.produkt_id }}-{{ loop.index }}"
+                  hx-swap="innerHTML" hx-disabled-elt="find button">
+              <input type="hidden" name="produkt_id" value="{{ f.produkt_id }}">
+              <input type="hidden" name="atrybut" value="{{ f.atrybut }}">
+              <input type="hidden" name="stara" value="{{ f.stara_wartosc or '' }}">
+              <input type="hidden" name="nowa" value="{{ f.proponowana_wartosc }}">
+              <input type="hidden" name="regula_id" value="{{ f.regula_id }}">
+              <input type="hidden" name="zakres" value="pojedynczo">
+              <input type="hidden" name="status" value="zastosowana">
+              <button class="p mini" type="submit">Zastosuj</button>
+            </form>
+            {% endif %}
+            <form hx-post="/decyzja" hx-target="#pa-{{ poz.produkt_id }}-{{ loop.index }}"
+                  hx-swap="innerHTML" hx-disabled-elt="find button">
+              <input type="hidden" name="produkt_id" value="{{ f.produkt_id }}">
+              <input type="hidden" name="atrybut" value="{{ f.atrybut }}">
+              <input type="hidden" name="stara" value="{{ f.stara_wartosc or '' }}">
+              <input type="hidden" name="regula_id" value="{{ f.regula_id }}">
+              <input type="hidden" name="zakres" value="pojedynczo">
+              <input type="hidden" name="status" value="falszywy_alarm">
+              <button class="mini" type="submit">Fałszywy alarm</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </section>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if widok == 'produkt' %}
+  {% if not produkty %}<div class="pusto">Nic nie pasuje do tych filtrów.</div>{% endif %}
+{% elif not wiersze %}
   <div class="pusto">Nic nie pasuje do tych filtrów.</div>
 {% else %}
 <table>
@@ -319,6 +419,20 @@ tr.htmx-request .szkielet{display:flex}
   <td>
     <div class="akcje" id="akcje-{{ loop.index }}">
       {% set zakres = 'grupa' if (fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1) else 'pojedynczo' %}
+      {# Brakujący wymiar ma własną ścieżkę: na rysunku technicznym wymiary
+         są wypisane liczbami, więc jedno zapytanie zdejmuje wszystkie trzy. #}
+      {% if w.atrybut in ('Szerokość', 'Wysokość', 'Głębokość') and not w.stara_wartosc %}
+      <form hx-post="/wizja/wymiary" hx-target="#wizja-{{ loop.index }}" hx-swap="innerHTML"
+            hx-indicator="#w-{{ loop.index }}" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <input type="hidden" name="nr" value="{{ loop.index }}">
+        <button class="mini wizja-btn" type="submit"
+                title="Odczytaj wymiary z rysunku technicznego — jedno zapytanie na trzy pola">
+          <span class="etykieta">Wymiary z rysunku</span>
+          <span class="trwa"><span class="kolo"></span>Czytam rysunek…</span>
+        </button>
+      </form>
+      {% endif %}
       {% if w.zdjecie and w.atrybut in pytania_wizji
             and (not w.werdykt_wizji or w.werdykt_wizji == 'blad') %}
       <form hx-post="/wizja/sprawdz" hx-target="#wizja-{{ loop.index }}" hx-swap="innerHTML"

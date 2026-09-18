@@ -30,6 +30,7 @@ from typing import Iterable
 
 from . import config, zdjecia as zdjecia_mod
 from .model import WIDOCZNE_NA_ZDJECIU
+from .tekst import do_liczby
 
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
@@ -558,3 +559,135 @@ def raport_kalibracji(sciezka: Path) -> dict:
         "per_werdykt": {k: {"n": sum(v.values()), "trafnosc": trafnosc(v)}
                         for k, v in sorted(per_werdykt.items())},
     }
+
+
+# --- wymiary z rysunku technicznego ---------------------------------------
+#
+# Osobna ścieżka, bo to inne zadanie niż reszta warstwy L3. Tam model ocenia
+# JEDNĄ cechę i odpowiada zgodne/niezgodne. Tu nie ma czego oceniać — wymiaru
+# w bazie po prostu nie ma — a na rysunku technicznym wymiary są WYPISANE
+# liczbami, więc model ich nie szacuje, tylko odczytuje.
+#
+# Trzy wymiary lecą jednym zapytaniem: są na tym samym rysunku, a trzy osobne
+# wywołania to trzykrotny koszt za to samo zdjęcie.
+
+WYMIARY = ("Szerokość", "Wysokość", "Głębokość")
+
+SCHEMAT_WYMIARY = {
+    "type": "object",
+    "properties": {
+        "szerokosc": {"type": "string"},
+        "wysokosc": {"type": "string"},
+        "glebokosc": {"type": "string"},
+        "jednostka": {"type": "string"},
+        "pewnosc": {"type": "number"},
+        "uzasadnienie": {"type": "string"},
+    },
+    "required": ["szerokosc", "wysokosc", "glebokosc", "jednostka",
+                 "pewnosc", "uzasadnienie"],
+}
+
+INSTRUKCJA_WYMIARY = (
+    "Odczytujesz wymiary mebla z rysunku technicznego albo schematu. "
+    "Wymiary są na nim WYPISANE liczbami — masz je przepisać, nie szacować.\n\n"
+    "Zasady:\n"
+    "- Podaj samą liczbę, bez jednostki (np. „110”, nie „110 cm”).\n"
+    "- Jednostkę podaj osobno w polu 'jednostka': cm albo mm.\n"
+    "- Jeśli któregoś wymiaru na rysunku NIE MA, zostaw to pole puste. "
+    "Pusta odpowiedź jest poprawna — zmyślona liczba trafi wprost do sklepu.\n"
+    "- Szerokość to wymiar poziomy widoku z przodu, wysokość pionowy, "
+    "głębokość to wymiar z widoku z boku albo z góry.\n"
+    "- Gdy rysunek pokazuje zakres albo kilka wariantów, zostaw pole puste.\n"
+    "- 'pewnosc' 0-1 dotyczy całego odczytu.\n"
+    "- 'uzasadnienie' to jedno krótkie zdanie po polsku: skąd te liczby."
+)
+
+
+@dataclass
+class OdpowiedzWymiary:
+    wymiary: dict[str, str]          # nazwa atrybutu -> wartość w cm
+    jednostka: str
+    pewnosc: float
+    uzasadnienie: str
+    tokenow_wejscia: int = 0
+    tokenow_wyjscia: int = 0
+
+    @property
+    def cokolwiek(self) -> bool:
+        return any(self.wymiary.values())
+
+
+def _na_centymetry(wartosc: str, jednostka: str) -> str:
+    """Sklep trzyma wymiary w centymetrach; rysunki bywają w milimetrach."""
+    liczba = do_liczby(wartosc)
+    if liczba is None:
+        return ""
+    if jednostka.strip().lower() in ("mm", "milimetry", "milimetr"):
+        liczba = liczba / 10
+    return f"{liczba:g}"
+
+
+def odczytaj_wymiary(zdjecie: bytes, nazwa_produktu: str = "",
+                     model: str = MODEL_WOLUMEN, timeout: int = 60,
+                     prob: int = 3) -> OdpowiedzWymiary:
+    ciało = {
+        "systemInstruction": {"parts": [{"text": INSTRUKCJA_WYMIARY}]},
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"inline_data": {"mime_type": "image/jpeg",
+                                 "data": base64.b64encode(zdjecie).decode("ascii")}},
+                {"text": f"Mebel: {nazwa_produktu}\n"
+                         "Odczytaj z rysunku szerokość, wysokość i głębokość."},
+            ],
+        }],
+        "generationConfig": {
+            "temperature": 0,
+            "responseMimeType": "application/json",
+            "responseSchema": SCHEMAT_WYMIARY,
+        },
+    }
+    dane = json.dumps(ciało).encode("utf-8")
+    zadanie = urllib.request.Request(
+        API_URL.format(model=model), data=dane,
+        headers={"Content-Type": "application/json", "x-goog-api-key": klucz_api()})
+
+    ostatni: Exception | None = None
+    for proba in range(prob):
+        try:
+            with urllib.request.urlopen(zadanie, timeout=timeout) as odp:
+                surowe = json.loads(odp.read())
+            return _zparsuj_wymiary(surowe)
+        except urllib.error.HTTPError as e:
+            ostatni = e
+            if e.code in (429, 500, 503):
+                time.sleep(2 ** proba * 2)
+                continue
+            raise
+        except (urllib.error.URLError, TimeoutError) as e:
+            ostatni = e
+            time.sleep(2 ** proba)
+    raise RuntimeError(f"Gemini nie odpowiedział po {prob} próbach: {ostatni}")
+
+
+def _zparsuj_wymiary(surowe: dict) -> OdpowiedzWymiary:
+    kand = surowe.get("candidates") or []
+    if not kand:
+        raise RuntimeError(f"Pusta odpowiedź modelu: {json.dumps(surowe)[:300]}")
+    tekst = "".join(c.get("text", "") for c in
+                    (kand[0].get("content", {}).get("parts") or []))
+    dane = json.loads(tekst)
+    uzycie = surowe.get("usageMetadata") or {}
+    jednostka = str(dane.get("jednostka") or "cm").strip()
+    return OdpowiedzWymiary(
+        wymiary={
+            "Szerokość": _na_centymetry(str(dane.get("szerokosc") or ""), jednostka),
+            "Wysokość": _na_centymetry(str(dane.get("wysokosc") or ""), jednostka),
+            "Głębokość": _na_centymetry(str(dane.get("glebokosc") or ""), jednostka),
+        },
+        jednostka=jednostka,
+        pewnosc=float(dane.get("pewnosc") or 0.0),
+        uzasadnienie=str(dane.get("uzasadnienie") or "").strip(),
+        tokenow_wejscia=int(uzycie.get("promptTokenCount") or 0),
+        tokenow_wyjscia=int(uzycie.get("candidatesTokenCount") or 0),
+    )

@@ -7,6 +7,7 @@ przeniesienie na Mac Mini to później tylko Dockerfile.
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
@@ -19,7 +20,7 @@ from fastapi.templating import Jinja2Templates
 
 from . import (config, db, eksport, eksport_panelu, importer, kategorie,
                panel_format, reguly as reguly_mod, weryfikacja as weryfikacja_mod,
-               wizja, zapytania, zrodla as zrodla_mod)
+               wizja, zapytania, zdjecia as zdjecia_mod, zrodla as zrodla_mod)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
 from .tekst import norm
 from .pipeline import BAZA
@@ -64,7 +65,8 @@ def anomalie(request: Request,
              kategoria: str = "", producent: str = "", regula: str = "",
              warstwa: str = "", waga: str = "", atrybut: str = "",
              status: str = "otwarte", routing: str = "", ma_zdjecie: str = "",
-             werdykt: str = "", szukaj: str = "", grupuj: str = "1", strona: int = 1):
+             werdykt: str = "", szukaj: str = "", grupuj: str = "1", strona: int = 1,
+             widok: str = "findingi"):
     con = _con()
     przebieg = _przebieg(con)
     if not przebieg:
@@ -77,8 +79,16 @@ def anomalie(request: Request,
         ma_zdjecie=ma_zdjecie, werdykt=werdykt, szukaj=szukaj, grupuj=(grupuj == "1"),
         limit=50, offset=(max(1, strona) - 1) * 50)
 
-    wiersze = zapytania.lista(con, przebieg, fl)
-    ile = zapytania.policz(con, przebieg, fl)
+    if widok == "produkt":
+        fl.grupuj = False
+        fl.limit = 25                     # kafel produktu jest wyższy niż wiersz
+        fl.offset = (max(1, strona) - 1) * 25
+        produkty, ile = zapytania.lista_produktami(con, przebieg, fl)
+        wiersze = [f for poz in produkty for f in poz["findingi"]]
+    else:
+        produkty = []
+        wiersze = zapytania.lista(con, przebieg, fl)
+        ile = zapytania.policz(con, przebieg, fl)
 
     # Podpowiedzi do „własnej wartości" — tylko dla atrybutów widocznych na tej
     # stronie, żeby nie wstawiać 473 wartości w każdy wiersz.
@@ -99,7 +109,9 @@ def anomalie(request: Request,
         "wiersze": wiersze,
         "ile": ile,
         "strona": strona,
-        "stron": max(1, (ile + 49) // 50),
+        "stron": max(1, (ile + fl.limit - 1) // fl.limit),
+        "widok": widok,
+        "produkty": produkty,
         "fl": fl,
         "slowniki": zapytania.slowniki_filtrow(con, przebieg),
         "stat": zapytania.statystyki(con, przebieg),
@@ -143,6 +155,33 @@ def decyzja(request: Request,
     con.close()
     return HTMLResponse(
         f'<div class="zrobione">✓ {komunikat}</div>', status_code=200)
+
+
+@app.post("/decyzja/produkt", response_class=HTMLResponse)
+def decyzja_produkt(produkt_id: str = Form(...), status: str = Form("zastosowana")):
+    """Rozstrzyga naraz wszystkie gotowe findingi jednego produktu.
+
+    „Gotowe" to te z propozycją i pewnością powyżej progu — reszta zostaje
+    otwarta, bo hurtowe zatwierdzanie czegoś, czego system sam nie jest
+    pewien, byłoby klikaniem w ciemno.
+    """
+    con = _con()
+    przebieg = _przebieg(con)
+    wiersze = [dict(r) for r in con.execute(
+        zapytania.BAZA_SQL + " AND f.produkt_id = :pid AND d.status IS NULL",
+        {"przebieg": przebieg, "pid": produkt_id})]
+    gotowe = [w for w in wiersze
+              if w["proponowana_wartosc"] and w["pewnosc"] >= PROG_DO_WIZJI]
+    ile = db.zapisz_decyzje_grupowo(
+        con, [(w["produkt_id"], w["atrybut"], w["stara_wartosc"],
+               (w["proponowana_wartosc"] if status == "zastosowana" else None),
+               w["regula_id"]) for w in gotowe], status)
+    zostalo = len(wiersze) - ile
+    con.close()
+    tresc = f"✓ {status}: {ile} poprawek"
+    if zostalo:
+        tresc += f" · {zostalo} zostaje do ręcznej oceny"
+    return HTMLResponse(f'<div class="zrobione">{tresc}</div>')
 
 
 @app.get("/grupa", response_class=HTMLResponse)
@@ -462,6 +501,48 @@ def wizja_sprawdz(request: Request,
         "model_krotki": "Pro" if sporne else "Flash",
         "produkt_id": produkt_id, "atrybut": atrybut, "stara": stara, "nr": nr,
         "blad": None,
+    })
+
+
+@app.post("/wizja/wymiary", response_class=HTMLResponse)
+def wizja_wymiary(request: Request, produkt_id: str = Form(...), nr: str = Form("0")):
+    """Odczyt wymiarów z rysunku technicznego — jedno zapytanie na trzy pola.
+
+    Osobno od `/wizja/sprawdz`, bo to inne zadanie: tam model ocenia wartość
+    z bazy, tu w bazie nie ma czego oceniać. Na rysunku wymiary są wypisane
+    liczbami, więc model je odczytuje, a nie szacuje.
+    """
+    con = _con()
+    p = zapytania.produkt(con, produkt_id)
+    con.close()
+    if not p:
+        return szablony.TemplateResponse(request, "_wymiary.html",
+                                         {"request": request, "blad": "nie ma takiego produktu"})
+
+    galeria = [zdjecia_mod.Zdjecie(e, u) for e, u in json.loads(p.get("zdjecia") or "[]")]
+    rysunek = next((z for z in galeria if z.rodzaj == "rysunek"), None)
+    if rysunek is None:
+        return szablony.TemplateResponse(
+            request, "_wymiary.html",
+            {"request": request,
+             "blad": "ten produkt nie ma rysunku technicznego — wymiary trzeba wziąć skądinąd"})
+
+    try:
+        wizja.klucz_api()
+        obraz = wizja.pobierz_zdjecie(rysunek.url, KATALOG.parent / "dane" / "cache_zdjec")
+        odp = wizja.odczytaj_wymiary(obraz, p["nazwa"])
+    except Exception as e:                                   # noqa: BLE001
+        return szablony.TemplateResponse(request, "_wymiary.html",
+                                         {"request": request, "blad": str(e)[:200]})
+
+    # pokazujemy tylko te wymiary, których w bazie faktycznie brakuje
+    braki = {k: v for k, v in odp.wymiary.items()
+             if v and not (p["atrybuty_surowe"].get(k) or "").strip()}
+    return szablony.TemplateResponse(request, "_wymiary.html", {
+        "request": request, "odp": odp, "braki": braki, "rysunek": rysunek,
+        "produkt_id": produkt_id, "nr": nr, "blad": None,
+        "koszt": wizja.koszt_usd(wizja.MODEL_WOLUMEN, odp.tokenow_wejscia,
+                                 odp.tokenow_wyjscia),
     })
 
 
