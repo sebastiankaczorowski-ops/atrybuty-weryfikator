@@ -1865,3 +1865,73 @@ def test_changelog_nie_wpuszcza_html_z_pliku(tmp_path, monkeypatch):
     wynik = app_mod._markdown_lite("- **a** `b` <script>alert(1)</script>")
     assert "<b>a</b>" in wynik and "<code>b</code>" in wynik
     assert "<script>" not in wynik and "&lt;script&gt;" in wynik
+
+
+def _baza_do_czyszczenia(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, eksport_panelu, wizja
+    from atrybuty.model import Finding, Produkt
+    baza = tmp_path / "c.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con); eksport_panelu.przygotuj_baze(con)
+    p = Produkt(id="1", nazwa="Ława", producent="BRW", kolekcja="", zdjecie="",
+                styl="", kategoria="lawa", atrybuty={"Szerokość": "110"},
+                atrybuty_surowe={"Szerokość": "110"})
+    f = Finding("1", "Styl", "L1-BRAK", "L1", "srednia", 0.4, "", None, "", grupa="G")
+    db.zapisz_przebieg(con, "t.csv", [p], [f])
+    db.zapisz_decyzje(con, "1", "Styl", None, "zastosowana", "nowoczesny", "R")
+    eksport_panelu.zglos_produkt(con, "1", "test")
+    con.execute("INSERT INTO cache_wizji (hasz, odpowiedz, utworzono)"
+                " VALUES ('k','{}','2026-01-01')")
+    con.commit()
+    return con, baza, pipeline
+
+
+def test_czyszczenie_zostawia_cache_wizji_i_liczy_co_ubylo(tmp_path, monkeypatch):
+    """Reset po testach. Cache Gemini zostaje — kasowanie go znaczy płacenie
+    drugi raz za te same zdjęcia."""
+    con, _, pipeline = _baza_do_czyszczenia(tmp_path, monkeypatch)
+    ubylo = pipeline.wyczysc(con, pipeline.TABELE_DO_CZYSZCZENIA)
+    assert ubylo["decyzje"] == 1 and ubylo["przebiegi"] == 1
+    assert ubylo["findingi"] == 1 and ubylo["produkty"] == 1 and ubylo["zgloszenia"] == 1
+    assert con.execute("SELECT COUNT(*) FROM cache_wizji").fetchone()[0] == 1
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 0
+    con.close()
+
+
+def test_czyszczenie_samej_historii_nie_rusza_decyzji(tmp_path, monkeypatch):
+    con, _, pipeline = _baza_do_czyszczenia(tmp_path, monkeypatch)
+    pipeline.wyczysc(con, pipeline.TABELE_HISTORII)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 1
+    assert con.execute("SELECT COUNT(*) FROM przebiegi").fetchone()[0] == 0
+    con.close()
+
+
+def test_czyszczenie_bez_potwierdzenia_nic_nie_kasuje(tmp_path, monkeypatch, capsys):
+    """Komenda kasuje bazę produkcyjną — samo wpisanie jej to za mało."""
+    con, baza, pipeline = _baza_do_czyszczenia(tmp_path, monkeypatch)
+    con.close()
+    pipeline.main(["wyczysc"])
+    assert "Nic nie skasowano" in capsys.readouterr().out
+    from atrybuty import db
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 1
+    con.close()
+
+
+def test_czyszczenie_robi_kopie_bazy(tmp_path, monkeypatch, capsys):
+    """Jedyna droga powrotu, gdy ktoś się rozpędzi."""
+    con, baza, pipeline = _baza_do_czyszczenia(tmp_path, monkeypatch)
+    con.close()
+    pipeline.main(["wyczysc", "--potwierdzam", "TAK"])
+    assert "Kopia bazy" in capsys.readouterr().out
+    kopie = list(baza.parent.glob("c-przed-czyszczeniem-*.db"))
+    assert len(kopie) == 1
+
+    from atrybuty import db
+    stara = db.polacz(kopie[0])
+    assert stara.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 1
+    stara.close()
+    nowa = db.polacz(baza)
+    assert nowa.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 0
+    nowa.close()

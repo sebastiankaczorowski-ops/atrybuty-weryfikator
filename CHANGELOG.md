@@ -3,6 +3,21 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-18 · Reset bazy po testach
+
+- Komenda `wyczysc` czyści bazę po fazie testów: decyzje, zgłoszenia do
+  importu, partie eksportu, historię importów, findingi, produkty,
+  weryfikacje i werdykty wizji.
+- **Reguły zostają** — siedzą w `config/reguly.yaml`, baza ich nie dotyczy.
+  Słowniki panelu też zostają.
+- **Cache odpowiedzi Gemini zostaje** domyślnie: kasowanie go znaczy
+  płacenie drugi raz za te same zdjęcia (`--z-wizja`, jeśli mimo to trzeba).
+- Przed kasowaniem powstaje kopia bazy, a bez `--potwierdzam TAK` komenda
+  nie kasuje niczego.
+- `--zakres historia` czyści samą historię eksportów i importów, zostawiając
+  rozstrzygnięcia.
+- `--pliki-partii` usuwa też wygenerowane xlsx-y z `dane/eksport`.
+
 ## 2026-09-18 · Grupy idą za filtrem, a „do importu" zamyka finding
 
 - **Grupa nie wychodzi poza filtr.** Filtrując kategorię „łóżka" licznik ×N,

@@ -310,6 +310,88 @@ def komenda_raport() -> None:
     con.close()
 
 
+# Co czyścimy przy resecie po testach i — ważniejsze — czego NIE ruszamy.
+# Reguły siedzą w config/reguly.yaml, więc reset bazy ich nie dotyka.
+# `cache_wizji` to opłacone odpowiedzi Gemini: kasowanie go znaczy płacenie
+# drugi raz za te same zdjęcia, więc wylatuje tylko na wyraźne życzenie.
+TABELE_DO_CZYSZCZENIA = [
+    "decyzje", "zgloszenia", "partie", "przebiegi", "findingi", "produkty",
+    "weryfikacje", "werdykty_wizji", "zrodla", "pozycje_zrodla",
+]
+TABELE_HISTORII = ["zgloszenia", "partie", "przebiegi"]
+
+
+def wyczysc(con, co: list[str]) -> dict[str, int]:
+    """Kasuje zawartość wskazanych tabel i zwraca, ile czego ubyło.
+
+    Liczby są policzone przed kasowaniem po to, żeby wywołujący miał co
+    pokazać człowiekowi — „wyczyszczono" bez liczb nie daje się sprawdzić.
+    """
+    istniejace = {r[0] for r in con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    ubylo: dict[str, int] = {}
+    for tabela in co:
+        if tabela not in istniejace:
+            continue
+        ile = int(con.execute(f"SELECT COUNT(*) FROM {tabela}").fetchone()[0])
+        if ile:
+            con.execute(f"DELETE FROM {tabela}")
+            ubylo[tabela] = ile
+    # Liczniki AUTOINCREMENT też, żeby partie i przebiegi zaczęły od 1.
+    if "sqlite_sequence" in istniejace:
+        for tabela in co:
+            con.execute("DELETE FROM sqlite_sequence WHERE name=?", (tabela,))
+    con.commit()
+    con.execute("VACUUM")
+    return ubylo
+
+
+def komenda_wyczysc(zakres: str, z_wizja: bool, pliki_partii: bool,
+                    potwierdzenie: str) -> None:
+    import shutil
+    from datetime import datetime
+
+    if potwierdzenie != "TAK":
+        print("Nic nie skasowano. Dopisz --potwierdzam TAK, jeśli na pewno.")
+        return
+
+    co = list(TABELE_HISTORII if zakres == "historia" else TABELE_DO_CZYSZCZENIA)
+    if z_wizja:
+        co.append("cache_wizji")
+
+    # Kopia przed kasowaniem. To jedyna droga powrotu, gdy ktoś się rozpędzi.
+    # Ląduje w katalogu danych, bo ten jest widoczny na hoście — kopia
+    # schowana w wolumenie kontenera niewiele daje temu, kto jej szuka.
+    if BAZA.exists():
+        nazwa = f"{BAZA.stem}-przed-czyszczeniem-{datetime.now():%Y%m%d_%H%M%S}.db"
+        dane = Path(__file__).resolve().parent.parent / "dane"
+        # ATRYBUTY_DB ustawia tylko kontener — i tylko tam baza leży poza
+        # katalogiem danych, więc tylko tam kopia musi wędrować gdzie indziej.
+        w_kontenerze = bool(os.environ.get("ATRYBUTY_DB")) and dane.is_dir()
+        kopia = (dane / nazwa) if w_kontenerze else BAZA.with_name(nazwa)
+        shutil.copy2(BAZA, kopia)
+        print(f"Kopia bazy: {kopia}")
+
+    con = db.polacz(BAZA)
+    ubylo = wyczysc(con, co)
+    con.close()
+    for tabela, ile in sorted(ubylo.items(), key=lambda x: -x[1]):
+        print(f"  -{ile:8d}  {tabela}")
+    if not ubylo:
+        print("  (baza była już pusta)")
+
+    if pliki_partii:
+        # Ten sam katalog, do którego pisze panel — nie obok bazy, bo baza
+        # w kontenerze siedzi na osobnym wolumenie.
+        katalog = Path(__file__).resolve().parent.parent / "dane" / "eksport"
+        pliki = sorted(katalog.glob("*.xlsx")) if katalog.exists() else []
+        for p in pliki:
+            p.unlink()
+        print(f"  -{len(pliki):8d}  plików partii w {katalog}")
+
+    print("Reguły (config/reguly.yaml) i słowniki panelu nietknięte.")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="atrybuty")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -338,6 +420,17 @@ def main(argv: list[str] | None = None) -> int:
     k.add_argument("akcja", choices=["eksport", "raport"])
     k.add_argument("--plik", default=None)
 
+    c = sub.add_parser("wyczysc", help="reset po testach — bez reguł i bez cache wizji")
+    c.add_argument("--zakres", choices=["wszystko", "historia"], default="wszystko",
+                   help="wszystko = z decyzjami; historia = tylko partie, "
+                        "zgłoszenia i przebiegi")
+    c.add_argument("--z-wizja", action="store_true",
+                   help="skasuj też cache odpowiedzi Gemini (płatne ponownie)")
+    c.add_argument("--pliki-partii", action="store_true",
+                   help="skasuj też wygenerowane xlsx-y z dane/eksport")
+    c.add_argument("--potwierdzam", default="", metavar="TAK",
+                   help="bez tego nic się nie kasuje")
+
     args = ap.parse_args(argv)
     if args.cmd == "import":
         komenda_import(args.plik, args.kategorie)
@@ -349,6 +442,9 @@ def main(argv: list[str] | None = None) -> int:
                       args.na_sucho, args.losowo, args.wszystko)
     elif args.cmd == "kalibracja":
         komenda_kalibracja(args.akcja, args.plik)
+    elif args.cmd == "wyczysc":
+        komenda_wyczysc(args.zakres, args.z_wizja, args.pliki_partii,
+                        args.potwierdzam)
     else:
         komenda_raport()
     return 0
