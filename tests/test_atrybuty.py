@@ -1032,9 +1032,9 @@ def test_wlasna_wartosc_zapisuje_poprawke_a_nie_odklada(tmp_path, monkeypatch):
     con.execute("DELETE FROM decyzje"); con.commit(); con.close()
 
     klient = TestClient(app_mod.app)
-    strona = klient.get("/anomalie").text
+    # Bez grupowania pole zapisuje wprost — i to jako decyzję, nie odłożenie.
+    strona = klient.get("/anomalie?grupuj=0").text
     assert 'placeholder="własna wartość"' in strona
-    # formularz z tym polem musi wysyłać status zastosowana
     kawalek = strona[:strona.find('placeholder="własna wartość"')]
     assert kawalek.rsplit('name="status"', 1)[1].startswith(' value="zastosowana"')
 
@@ -1741,6 +1741,22 @@ def test_podglad_grupy_rozdaje_wpisana_wartosc(tmp_path, monkeypatch):
     assert strona.count('name="nowa"') == 5
     assert strona.count('value="welur"') >= 5          # w każdym wierszu
     assert "Zapisz wszystkie (5)" in strona
+
+
+def test_wlasna_wartosc_przy_grupie_nie_zapisuje_jednego_produktu(
+        tmp_path, monkeypatch):
+    """W widoku grupowym pole „własna wartość" prowadzi do podglądu całej
+    grupy, a nie do cichego zapisu dla pierwszego produktu."""
+    from fastapi.testclient import TestClient
+    con, _, app_mod = _grupa_z_filtrem(tmp_path, monkeypatch)
+    con.close()
+    strona = TestClient(app_mod.app).get("/anomalie").text
+    i = strona.find('placeholder="własna wartość"')
+    assert i > 0
+    formularz = strona[strona.rfind("<form", 0, i):strona.find("</form>", i)]
+    assert 'hx-get="/grupa"' in formularz
+    assert 'name="status"' not in formularz          # nic się nie zapisuje
+    assert "rozdaj na ×" in formularz
 
 
 def test_zapis_grupy_bierze_wartosc_z_kazdego_wiersza(tmp_path, monkeypatch):

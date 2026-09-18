@@ -533,7 +533,25 @@ tr.htmx-request .szkielet{display:flex}
       </form>
       {% endif %}
       {# Własna wartość zapisuje poprawkę, nie odkłada jej — wpisanie czegoś
-         w to pole jest decyzją, a nie odłożeniem decyzji na później. #}
+         w to pole jest decyzją, a nie odłożeniem decyzji na później.
+         Przy grupie to pole nie zapisuje od razu: rozdaje wartość na wszystkie
+         produkty do podglądu, gdzie widać każdy z osobna i da się poprawić
+         pojedyncze przed zapisem. Dwa podobne pola obok siebie myliły. #}
+      {% if fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1 %}
+      <form hx-get="/grupa" hx-target="#grupa-{{ loop.index }}" hx-swap="innerHTML"
+            hx-disabled-elt="find button">
+        <input type="hidden" name="grupa" value="{{ w.grupa }}">
+        <input type="hidden" name="nr" value="{{ loop.index }}">
+        <input type="text" name="wartosc" placeholder="własna wartość" required
+               style="width:130px"
+               {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"
+               title="Podpowiedzi to wartości, które sklep ma w słowniku"{% endif %}>
+        <button class="p mini" type="submit"
+                title="Rozda tę wartość na wszystkie {{ w.ile_w_grupie }} produktów —
+                       zobaczysz listę, poprawisz pojedyncze i zapiszesz całość">
+          rozdaj na ×{{ w.ile_w_grupie }} →</button>
+      </form>
+      {% else %}
       <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
         <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
         <input type="hidden" name="atrybut" value="{{ w.atrybut }}">
@@ -546,22 +564,6 @@ tr.htmx-request .szkielet{display:flex}
                {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"
                title="Podpowiedzi to wartości, które sklep ma w słowniku"{% endif %}>
         <button class="p mini" type="submit">Zapisz</button>
-      </form>
-      {# Przy grupie sama wartość rzadko wystarcza na jeden wiersz — rozdajemy
-         ją na całą grupę do podglądu, gdzie da się poprawić pojedyncze
-         produkty przed zapisem. #}
-      {% if fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1 %}
-      <form hx-get="/grupa" hx-target="#grupa-{{ loop.index }}" hx-swap="innerHTML"
-            hx-disabled-elt="find button">
-        <input type="hidden" name="grupa" value="{{ w.grupa }}">
-        <input type="hidden" name="nr" value="{{ loop.index }}">
-        <input type="text" name="wartosc" placeholder="wartość na całą grupę"
-               style="width:150px" required
-               {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"{% endif %}>
-        <button class="mini" type="submit"
-                title="Rozdaj tę wartość na wszystkie {{ w.ile_w_grupie }} produktów —
-                       zobaczysz listę i poprawisz pojedyncze przed zapisem">
-          rozdaj na grupę ×{{ w.ile_w_grupie }}</button>
       </form>
       {% endif %}
       <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">
