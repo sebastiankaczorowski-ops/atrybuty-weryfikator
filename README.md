@@ -153,6 +153,11 @@ było, a partię, która nie weszła do sklepu, można wycofać — decyzje wrac
 kolejki eksportu. Obok pliku poprawek powstaje plik cofający ze starymi
 wartościami.
 
+Partię można **zawęzić do kategorii albo producenta** — gdy nad importem
+pracuje kilka osób, każda bierze swój wycinek i nikt nie wgrywa cudzych
+produktów. Decyzje spoza zakresu zostają nietknięte i wejdą w swojej partii.
+Lista zakresów pokazuje tylko te kategorie, w których naprawdę coś czeka.
+
 ### Produkt bez poprawek też może pójść do importu
 
 Przycisk „Dodaj do importu bez zmian" (karta produktu i widok produktowy
@@ -160,6 +165,11 @@ kolejki) dopisuje mebel do najbliższej partii, choć nic w nim nie
 poprawiamy — po to, żeby panel dostał jego wiersz i mógł mu postawić flagę
 `omit_components_in_attributes`. Produkt sprawdzony i uznany za poprawny też
 musi przez import przejść, inaczej zostanie ze składowymi na froncie na zawsze.
+
+Przycisk jest też w kolejce przy każdym findingu, a na grupie działa hurtem
+(„do importu ×N") — zgłoszenie nie jest decyzją o wartości, tylko „przepuść
+te produkty przez import z tym, co mają teraz", więc wolno je zrobić także
+na grupie o różnych wartościach, w odróżnieniu od „Zastosuj".
 
 Wiersz musi nieść **co najmniej jeden atrybut** — panel stawia flagę przy
 okazji zapisu atrybutów, więc pusty wiersz nic nie da. Produkty bez żadnego

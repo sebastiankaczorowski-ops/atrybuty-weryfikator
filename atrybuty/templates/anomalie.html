@@ -506,6 +506,28 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="status" value="falszywy_alarm">
         <button class="mini" type="submit">Fałszywy alarm</button>
       </form>
+      {# Zgłoszenie do importu to nie decyzja o wartości, tylko „przepuść ten
+         produkt przez import z tym, co ma teraz" — dlatego wolno je zrobić
+         hurtem także na grupie o różnych wartościach. #}
+      {% if fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1 %}
+      <form hx-post="/zglos-grupe" hx-target="#akcje-{{ loop.index }}"
+            hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="grupa" value="{{ w.grupa }}">
+        <button class="mini" type="submit"
+                title="Wyślij wszystkie produkty z tej grupy przez import
+                       z ich obecnymi atrybutami — po to, żeby panel mógł im
+                       postawić flagę odcięcia składowych">
+          do importu ×{{ w.ile_w_grupie }}</button>
+      </form>
+      {% else %}
+      <form hx-post="/zglos-produkt" hx-target="#akcje-{{ loop.index }}"
+            hx-swap="innerHTML" hx-disabled-elt="find button">
+        <input type="hidden" name="produkt_id" value="{{ w.produkt_id }}">
+        <button class="mini" type="submit"
+                title="Wyślij ten produkt przez import z obecnymi atrybutami">
+          do importu</button>
+      </form>
+      {% endif %}
       {# Własna wartość zapisuje poprawkę, nie odkłada jej — wpisanie czegoś
          w to pole jest decyzją, a nie odłożeniem decyzji na później. #}
       <form hx-post="/decyzja" hx-target="#akcje-{{ loop.index }}" hx-swap="innerHTML" hx-disabled-elt="find button">

@@ -82,10 +82,19 @@ LEFT JOIN produkty p ON p.id = d.produkt_id
 LEFT JOIN findingi f ON f.produkt_id = d.produkt_id AND f.atrybut = d.atrybut
                     AND f.hasz_starej = d.hasz_starej
 WHERE d.status = 'zastosowana' AND d.nowa_wartosc IS NOT NULL
-  AND d.partia_id IS NULL
+  AND d.partia_id IS NULL{filtr}
 GROUP BY d.produkt_id, d.atrybut, d.hasz_starej
 ORDER BY d.utworzono
 """
+
+
+def _filtr_zakresu(kategoria: str, producent: str) -> tuple[str, dict]:
+    sql, par = "", {}
+    if kategoria:
+        sql += " AND p.kategoria = :kategoria"; par["kategoria"] = kategoria
+    if producent:
+        sql += " AND p.producent = :producent"; par["producent"] = producent
+    return sql, par
 
 
 # Zgłoszenia ręczne: produkt trafia do importu, choć nic w nim nie
@@ -108,7 +117,29 @@ def przygotuj_baze(con: sqlite3.Connection) -> None:
     con.commit()
 
 
-def atrybuty_do_pliku(con: sqlite3.Connection, produkt_id: str
+@dataclass
+class Kontekst:
+    """Słowniki wczytane raz. Bez tego zgłoszenie grupy na tysiąc produktów
+    czytało cztery pliki YAML tysiąc razy i po prostu stawało."""
+    slownik: dict
+    kol_slownikowe: set
+    kol_surowe: set
+    znane: set
+    etykiety: dict
+
+    @classmethod
+    def wczytaj(cls) -> "Kontekst":
+        slownik = pf.wczytaj_slownik()
+        wzorzec = pf.wczytaj_wzorzec()
+        return cls(slownik=slownik,
+                   kol_slownikowe=pf.kolumny_slownikowe(slownik),
+                   kol_surowe=set(wzorzec.surowe),
+                   znane=set(wzorzec.naglowki),
+                   etykiety=pf.wczytaj_etykiety())
+
+
+def atrybuty_do_pliku(con: sqlite3.Connection, produkt_id: str,
+                      ctx: "Kontekst | None" = None
                       ) -> tuple[dict[str, str], list[dict]]:
     """Komplet atrybutów produktu przełożony na format panelu.
 
@@ -126,11 +157,9 @@ def atrybuty_do_pliku(con: sqlite3.Connection, produkt_id: str
     except ValueError:
         atrybuty = {}
 
-    slownik = pf.wczytaj_slownik()
-    kol_slownikowe = pf.kolumny_slownikowe(slownik)
-    wzorzec = pf.wczytaj_wzorzec()
-    znane, kol_surowe = set(wzorzec.naglowki), set(wzorzec.surowe)
-    etykiety = pf.wczytaj_etykiety()
+    ctx = ctx or Kontekst.wczytaj()
+    slownik, kol_slownikowe = ctx.slownik, ctx.kol_slownikowe
+    znane, kol_surowe, etykiety = ctx.znane, ctx.kol_surowe, ctx.etykiety
 
     wchodzi: dict[str, str] = {}
     odpada: list[dict] = []
@@ -172,6 +201,27 @@ def czeka_zgloszonych(con: sqlite3.Connection) -> int:
         "SELECT COUNT(*) FROM zgloszenia WHERE partia_id IS NULL").fetchone()[0])
 
 
+def zakresy_do_wyboru(con: sqlite3.Connection) -> dict:
+    """Kategorie i producenci, w których naprawdę coś czeka na eksport.
+
+    Lista bierze się z czekających decyzji i zgłoszeń, nie z całego katalogu —
+    inaczej wybór byłby listą stu pozycji, z których połowa jest pusta.
+    """
+    przygotuj_baze(con)
+    q = """
+    SELECT p.{kol} AS k, COUNT(DISTINCT p.id) AS n FROM produkty p
+    WHERE p.id IN (
+        SELECT produkt_id FROM decyzje
+        WHERE status='zastosowana' AND nowa_wartosc IS NOT NULL AND partia_id IS NULL
+        UNION SELECT produkt_id FROM zgloszenia WHERE partia_id IS NULL)
+      AND p.{kol} <> '' GROUP BY 1 ORDER BY 2 DESC
+    """
+    return {
+        "kategorie": [(r["k"], r["n"]) for r in con.execute(q.format(kol="kategoria"))],
+        "producenci": [(r["k"], r["n"]) for r in con.execute(q.format(kol="producent"))],
+    }
+
+
 def _kody(surowe: str | None) -> dict:
     import json
     try:
@@ -180,12 +230,17 @@ def _kody(surowe: str | None) -> dict:
         return {}
 
 
-def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
+def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50,
+             kategoria: str = "", producent: str = "") -> Plan:
     """Buduje plan partii: `limit_produktow` produktów, wszystkie ich zmiany.
 
     Partia liczy się w produktach, nie w decyzjach — bo wiersz w pliku to
     produkt, i rozbicie jednego produktu na dwie partie znaczyłoby dwa
     importy tego samego wiersza.
+
+    `kategoria` i `producent` zawężają partię, gdy nad importem pracuje kilka
+    osób: każda bierze swój wycinek i nikt nie wgrywa cudzych produktów.
+    Decyzje spoza wycinka zostają nietknięte i wejdą w swojej partii.
     """
     slownik = pf.wczytaj_slownik()
     kol_slownikowe = pf.kolumny_slownikowe(slownik)
@@ -206,7 +261,8 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
                          "WHERE partia_id IS NOT NULL"):
         wczesniej.setdefault(r["produkt_id"], r["partia_id"])
 
-    for r in con.execute(SQL_CZEKAJACE):
+    filtr, par = _filtr_zakresu(kategoria, producent)
+    for r in con.execute(SQL_CZEKAJACE.format(filtr=filtr), par):
         plan.czekajacych += 1
         kolumna = r["atrybut"]
         powod = ""
@@ -244,13 +300,13 @@ def zaplanuj(con: sqlite3.Connection, limit_produktow: int = 50) -> Plan:
         poz.stare[kolumna] = stara_do_pliku or stara
         poz.klucze.append((r["produkt_id"], r["atrybut"], r["hasz_starej"]))
 
-    _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, slownik,
-                       kol_slownikowe, kol_surowe, etykiety, znane, wczesniej)
+    _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, wczesniej,
+                       filtr, par)
     return plan
 
 
-def _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, slownik,
-                       kol_slownikowe, kol_surowe, etykiety, znane, wczesniej) -> None:
+def _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, wczesniej,
+                       filtr: str = "", par: dict | None = None) -> None:
     """Dokłada produkty zgłoszone ręcznie — z KOMPLETEM ich atrybutów.
 
     Tu wiersz nie niesie poprawki, tylko aktualny stan: to, co i tak jest
@@ -261,13 +317,14 @@ def _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, slownik,
     odcięcia składowych, jeśli nie dostanie czego zapisać. Taki produkt
     wypada z partii z wyraźnym powodem i zostaje w kolejce zgłoszeń.
     """
-    for r in con.execute(
-            "SELECT z.produkt_id, z.powod, p.nazwa, p.kody "
-            "FROM zgloszenia z LEFT JOIN produkty p ON p.id = z.produkt_id "
-            "WHERE z.partia_id IS NULL ORDER BY z.utworzono"):
+    ctx = Kontekst.wczytaj()
+    q = ("SELECT z.produkt_id, z.powod, p.nazwa, p.kody "
+         "FROM zgloszenia z LEFT JOIN produkty p ON p.id = z.produkt_id "
+         "WHERE z.partia_id IS NULL" + filtr + " ORDER BY z.utworzono")
+    for r in con.execute(q, par or {}):
         plan.zgloszonych += 1
         pid = r["produkt_id"]
-        wchodzi, odpada = atrybuty_do_pliku(con, pid)
+        wchodzi, odpada = atrybuty_do_pliku(con, pid, ctx)
         plan.pominiete.extend(odpada)
 
         poz = wg_produktu.get(pid)
@@ -340,7 +397,8 @@ def _arkusz(wzorzec: pf.Wzorzec, pozycje: list[Pozycja], pole: str, stempel: str
 
 
 def zapisz_partie(con: sqlite3.Connection, katalog: str | Path,
-                  limit_produktow: int = 50, uwagi: str = "") -> dict:
+                  limit_produktow: int = 50, uwagi: str = "",
+                  kategoria: str = "", producent: str = "") -> dict:
     """Tworzy partię: pliki na dysku + oznaczenie decyzji w bazie."""
     wzorzec = pf.wczytaj_wzorzec()
     if not wzorzec.ok:
@@ -348,7 +406,7 @@ def zapisz_partie(con: sqlite3.Connection, katalog: str | Path,
             "Brak wzorca formatu panelu — wgraj najpierw plik z panelu "
             "(admin-product-product-*.xlsx) na stronie importu.")
 
-    plan = zaplanuj(con, limit_produktow)
+    plan = zaplanuj(con, limit_produktow, kategoria, producent)
     if not plan.pozycje:
         return {"ile": 0, "pominietych": len(plan.pominiete), "plan": plan}
 

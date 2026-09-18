@@ -1613,3 +1613,84 @@ def test_zgloszenie_pustego_produktu_jest_odrzucane_od_razu(tmp_path, monkeypatc
     con = db.polacz(baza)
     assert eksport_panelu.czeka_zgloszonych(con) == 0    # nic nie zapisano
     con.close()
+
+
+def test_zgloszenie_grupy_dodaje_wszystkie_produkty(tmp_path, monkeypatch):
+    """Zgłoszenie do importu nie jest decyzją o wartości, więc wolno je zrobić
+    hurtem także na grupie o różnych wartościach."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db, eksport_panelu, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.pipeline as pipeline
+    import atrybuty.app as app_mod
+
+    pf = _panel_w_tmp(tmp_path, monkeypatch)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "e.yaml")
+    monkeypatch.setattr(pf, "PLIK_ATRYBUTOW", tmp_path / "a.yaml")
+    pf.naucz_z_pliku(_plik_panelu(tmp_path, [[9, "A", "A", "X", 10, "2104|drewno"]]))
+
+    baza = tmp_path / "gr.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    produkty = [Produkt(id=str(i), nazwa=f"Mebel {i}", producent="BRW", kolekcja="",
+                        zdjecie="", styl="", kategoria="komoda",
+                        atrybuty={"Szerokość": str(100 + i)},
+                        atrybuty_surowe={"Szerokość": str(100 + i)}) for i in (1, 2, 3)]
+    # celowo różne wartości — hurtowe „Zastosuj" byłoby zablokowane, to nie
+    findingi = [Finding(str(i), "Waga", "L1-FORMAT-DUBEL", "L1", "srednia", 0.9,
+                        f"{i}, {i}", str(i), "", grupa="G") for i in (1, 2, 3)]
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    con.close()
+
+    odp = TestClient(app_mod.app).post("/zglos-grupe", data={"grupa": "G"})
+    assert "3 produktów w kolejce" in odp.text
+    con = db.polacz(baza)
+    assert eksport_panelu.czeka_zgloszonych(con) == 3
+    con.close()
+
+
+def test_partia_da_sie_zawezic_do_kategorii(tmp_path, monkeypatch):
+    """Trzy osoby, trzy rozłączne zakresy — nikt nie wgrywa cudzych produktów."""
+    from atrybuty import db, eksport_panelu
+    from atrybuty.model import Produkt
+    con, baza, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    db.zapisz_przebieg(con, "t.csv", [
+        Produkt(id="1", nazwa="Ława", producent="Halmar", kolekcja="", zdjecie="",
+                styl="", kategoria="lawa", atrybuty={"Szerokość": "110"},
+                atrybuty_surowe={"Szerokość": "110"}),
+        Produkt(id="2", nazwa="Komoda", producent="BRW", kolekcja="", zdjecie="",
+                styl="", kategoria="komoda", atrybuty={"Szerokość": "90"},
+                atrybuty_surowe={"Szerokość": "90"}),
+    ], [])
+    eksport_panelu.zglos_produkt(con, "1")
+    eksport_panelu.zglos_produkt(con, "2")
+
+    assert len(eksport_panelu.zaplanuj(con, 50).pozycje) == 2
+    tylko_lawy = eksport_panelu.zaplanuj(con, 50, kategoria="lawa")
+    assert [p.produkt_id for p in tylko_lawy.pozycje] == ["1"]
+    tylko_brw = eksport_panelu.zaplanuj(con, 50, producent="BRW")
+    assert [p.produkt_id for p in tylko_brw.pozycje] == ["2"]
+
+    # partia z zakresu nie zabiera cudzych zgłoszeń
+    eksport_panelu.zapisz_partie(con, tmp_path / "out", 50, kategoria="lawa")
+    assert eksport_panelu.czeka_zgloszonych(con) == 1
+    assert [p.produkt_id for p in eksport_panelu.zaplanuj(con, 50).pozycje] == ["2"]
+    con.close()
+
+
+def test_lista_zakresow_pokazuje_tylko_to_co_czeka(tmp_path, monkeypatch):
+    from atrybuty import db, eksport_panelu
+    from atrybuty.model import Produkt
+    con, _, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    db.zapisz_przebieg(con, "t.csv", [
+        Produkt(id="1", nazwa="Ława", producent="Halmar", kolekcja="", zdjecie="",
+                styl="", kategoria="lawa", atrybuty_surowe={"Szerokość": "110"}),
+        Produkt(id="2", nazwa="Szafa", producent="BRW", kolekcja="", zdjecie="",
+                styl="", kategoria="szafa", atrybuty_surowe={"Szerokość": "200"}),
+    ], [])
+    eksport_panelu.zglos_produkt(con, "1")
+    z = eksport_panelu.zakresy_do_wyboru(con)
+    assert z["kategorie"] == [("lawa", 1)]          # szafa nic nie czeka
+    assert z["producenci"] == [("Halmar", 1)]
+    con.close()

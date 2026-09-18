@@ -761,6 +761,35 @@ def zglos_produkt(produkt_id: str = Form(...), powod: str = Form("")):
         f'w wierszu)</span>')
 
 
+@app.post("/zglos-grupe", response_class=HTMLResponse)
+def zglos_grupe(grupa: str = Form(...)):
+    """Dopisuje do importu wszystkie produkty z grupy findingów.
+
+    Zgłoszenie nie jest decyzją o wartości — mówi tylko „przepuść ten produkt
+    przez import z tym, co ma teraz". Dlatego wolno je zrobić hurtem także na
+    grupie o różnych wartościach, w odróżnieniu od „Zastosuj".
+    """
+    con = _con()
+    przebieg = _przebieg(con)
+    czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa)
+
+    dodane, puste = 0, 0
+    ctx = eksport_panelu.Kontekst.wczytaj()      # słowniki raz, nie na produkt
+    for pid in dict.fromkeys(c["produkt_id"] for c in czlonkowie):
+        wchodzi, _ = eksport_panelu.atrybuty_do_pliku(con, pid, ctx)
+        if not wchodzi:
+            puste += 1                     # pusty wiersz nie postawi flagi
+            continue
+        eksport_panelu.zglos_produkt(con, pid, f"grupa {grupa[:60]}")
+        dodane += 1
+    con.close()
+
+    tresc = f"✓ {dodane} produktów w kolejce do importu"
+    if puste:
+        tresc += f" · {puste} pominiętych (brak atrybutów do wpisania)"
+    return HTMLResponse(f'<span class="zrobione">{tresc}</span>')
+
+
 @app.post("/zglos-produkt/cofnij", response_class=HTMLResponse)
 def cofnij_zgloszenie_produktu(produkt_id: str = Form(...)):
     con = _con()
@@ -770,15 +799,20 @@ def cofnij_zgloszenie_produktu(produkt_id: str = Form(...)):
 
 
 @app.get("/eksport/partie", response_class=HTMLResponse)
-def strona_partii(request: Request, komunikat: str = "", blad: str = ""):
+def strona_partii(request: Request, komunikat: str = "", blad: str = "",
+                  kategoria: str = "", producent: str = ""):
     con = _con()
-    plan = eksport_panelu.zaplanuj(con, limit_produktow=10**6)   # tylko podgląd
+    plan = eksport_panelu.zaplanuj(con, limit_produktow=10**6,   # tylko podgląd
+                                   kategoria=kategoria, producent=producent)
     kontekst = {
         "request": request,
         "partie": eksport_panelu.partie(con),
         "stat": zapytania.statystyki_decyzji(con),
         "plan": plan,
         "zgloszonych": eksport_panelu.czeka_zgloszonych(con),
+        "zakres": {"kategoria": kategoria, "producent": producent},
+        "kategorie": eksport_panelu.zakresy_do_wyboru(con),
+        "nazwy_kat": kategorie.nazwy_kategorii(),
         "wzorzec": panel_format.wczytaj_wzorzec(),
         "slownik_ile": sum(len(v) for v in panel_format.wczytaj_slownik().values()),
         "duplikaty": panel_format.duplikaty(),
@@ -789,11 +823,13 @@ def strona_partii(request: Request, komunikat: str = "", blad: str = ""):
 
 
 @app.post("/eksport/partie")
-def zrob_partie(rozmiar: int = Form(50), uwagi: str = Form("")):
+def zrob_partie(rozmiar: int = Form(50), uwagi: str = Form(""),
+                kategoria: str = Form(""), producent: str = Form("")):
     con = _con()
     try:
-        wynik = eksport_panelu.zapisz_partie(con, KATALOG_PARTII,
-                                             limit_produktow=max(1, rozmiar), uwagi=uwagi)
+        wynik = eksport_panelu.zapisz_partie(
+            con, KATALOG_PARTII, limit_produktow=max(1, rozmiar), uwagi=uwagi,
+            kategoria=kategoria, producent=producent)
     except ValueError as e:
         con.close()
         return RedirectResponse(f"/eksport/partie?blad={quote(str(e))}", status_code=303)
@@ -803,6 +839,8 @@ def zrob_partie(rozmiar: int = Form(50), uwagi: str = Form("")):
             "/eksport/partie?blad=" + quote("Nic do wyeksportowania."), status_code=303)
     tresc = (f"Partia {wynik['partia_id']}: {wynik['ile']} produktów, "
              f"{wynik['zmian']} zmian.")
+    if kategoria or producent:
+        tresc += f" Zakres: {kategoria or ''}{' · ' if kategoria and producent else ''}{producent or ''}."
     return RedirectResponse(f"/eksport/partie?komunikat={quote(tresc)}", status_code=303)
 
 

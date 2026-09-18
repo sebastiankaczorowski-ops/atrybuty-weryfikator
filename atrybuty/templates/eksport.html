@@ -61,7 +61,33 @@
   zawiera tylko kolumny klucza i te atrybuty, które zmieniamy, a reszta zostaje
   pusta. Jeśli panel potraktuje pustą komórkę jako „wyczyść", zobaczysz to na
   dwudziestu produktach, nie na tysiącu.</p>
+  <p class="pod">Gdy nad importem pracuje kilka osób, zawęź partię do swojej
+  kategorii albo producenta — każdy bierze swój wycinek i nikt nie wgrywa
+  cudzych produktów. Reszta decyzji czeka nietknięta na swoją partię.</p>
+  <form method="get" action="/eksport/partie" class="pola" style="margin-bottom:10px">
+    <div class="pole"><label>zakres: kategoria</label>
+      <select name="kategoria" onchange="this.form.submit()">
+        <option value="">— wszystkie ({{ plan.pozycje|length }}) —</option>
+        {% for k, n in kategorie.kategorie %}
+          <option value="{{ k }}" {{ 'selected' if zakres.kategoria == k }}>
+            {{ nazwy_kat.get(k, k) }} ({{ n }})</option>
+        {% endfor %}</select></div>
+    <div class="pole"><label>zakres: producent</label>
+      <select name="producent" onchange="this.form.submit()">
+        <option value="">— wszyscy —</option>
+        {% for k, n in kategorie.producenci %}
+          <option value="{{ k }}" {{ 'selected' if zakres.producent == k }}>
+            {{ k }} ({{ n }})</option>
+        {% endfor %}</select></div>
+    <noscript><button type="submit">Pokaż</button></noscript>
+    {% if zakres.kategoria or zakres.producent %}
+      <a href="/eksport/partie"><button type="button">Wyczyść zakres</button></a>
+    {% endif %}
+  </form>
+
   <form method="post" action="/eksport/partie" class="pola">
+    <input type="hidden" name="kategoria" value="{{ zakres.kategoria }}">
+    <input type="hidden" name="producent" value="{{ zakres.producent }}">
     <div class="pole"><label>ile produktów</label>
       <select name="rozmiar">
         <option value="10">10 — próba</option>
@@ -74,7 +100,7 @@
     <div class="pole"><label>uwagi (opcjonalnie)</label>
       <input type="text" name="uwagi" placeholder="np. test importu, tylko materiały"></div>
     <button class="p" type="submit" {{ 'disabled' if not wzorzec.ok or not plan.pozycje }}>
-      Zrób partię</button>
+      Zrób partię{% if zakres.kategoria or zakres.producent %} z tego zakresu{% endif %}</button>
   </form>
 </section>
 

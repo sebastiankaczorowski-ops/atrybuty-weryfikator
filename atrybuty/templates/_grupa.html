@@ -4,6 +4,16 @@
     <b>{{ ile }}</b> otwartych produktów z tym samym problemem{%
       if czlonkowie|length < ile %} <span class="dowod">(pokazuję pierwsze
       {{ czlonkowie|length }})</span>{% endif %}
+    <span id="hurt-grupy-{{ nr }}">
+      <form style="display:inline" hx-post="/zglos-grupe"
+            hx-target="#hurt-grupy-{{ nr }}" hx-swap="innerHTML"
+            hx-disabled-elt="find button">
+        <input type="hidden" name="grupa" value="{{ grupa }}">
+        <button class="mini" type="submit"
+                title="Wszystkie z tej listy przez import, z obecnymi atrybutami">
+          wszystkie do importu</button>
+      </form>
+    </span>
     <button class="mini" type="button"
             hx-get="/grupa?grupa=&amp;nr={{ nr }}" hx-target="#grupa-{{ nr }}"
             hx-swap="innerHTML">zwiń</button>
