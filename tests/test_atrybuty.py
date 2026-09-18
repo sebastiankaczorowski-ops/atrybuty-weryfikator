@@ -1570,3 +1570,46 @@ def test_zgloszenie_z_karty_produktu(tmp_path, monkeypatch):
     klient.post("/zglos-produkt/cofnij", data={"produkt_id": "77"})
     assert eksport_panelu.czeka_zgloszonych(con) == 0
     con.close()
+
+
+def test_zgloszenie_bez_atrybutow_nie_wchodzi_do_partii(tmp_path, monkeypatch):
+    """Panel stawia flagę odcięcia składowych przy zapisie atrybutów, więc
+    pusty wiersz nic nie da — taki produkt zostaje w kolejce zgłoszeń."""
+    from atrybuty import db, eksport_panelu
+    from atrybuty.model import Produkt
+    con, baza, _ = _baza_do_zgloszen(tmp_path, monkeypatch)
+    pusty = Produkt(id="90", nazwa="Kosz na śmieci", producent="X", kolekcja="",
+                    zdjecie="", styl="", kategoria="akcesoria")
+    z_atrybutami = Produkt(id="77", nazwa="Ława", producent="Halmar", kolekcja="",
+                           zdjecie="", styl="", kategoria="lawa",
+                           atrybuty={"Szerokość": "110"},
+                           atrybuty_surowe={"Szerokość": "110"})
+    db.zapisz_przebieg(con, "t.csv", [pusty, z_atrybutami], [])
+
+    eksport_panelu.zglos_produkt(con, "90")
+    eksport_panelu.zglos_produkt(con, "77")
+    plan = eksport_panelu.zaplanuj(con, 50)
+    assert [z["produkt_id"] for z in plan.puste_zgloszenia] == ["90"]
+    assert [p.produkt_id for p in plan.pozycje] == ["77"]
+
+    # po wyeksportowaniu puste zgłoszenie dalej czeka, a nie znika po cichu
+    eksport_panelu.zapisz_partie(con, tmp_path / "out", limit_produktow=50)
+    assert eksport_panelu.czeka_zgloszonych(con) == 1
+    con.close()
+
+
+def test_zgloszenie_pustego_produktu_jest_odrzucane_od_razu(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import db, eksport_panelu
+    from atrybuty.model import Produkt
+    con, baza, app_mod = _baza_do_zgloszen(tmp_path, monkeypatch)
+    db.zapisz_przebieg(con, "t.csv", [Produkt(
+        id="90", nazwa="Kosz", producent="X", kolekcja="", zdjecie="", styl="",
+        kategoria="akcesoria")], [])
+    con.close()
+
+    odp = TestClient(app_mod.app).post("/zglos-produkt", data={"produkt_id": "90"})
+    assert "nie postawi flagi na pustym wierszu" in odp.text
+    con = db.polacz(baza)
+    assert eksport_panelu.czeka_zgloszonych(con) == 0    # nic nie zapisano
+    con.close()

@@ -44,6 +44,8 @@ class Plan:
     pominiete: list[dict] = field(default_factory=list)
     czekajacych: int = 0
     zgloszonych: int = 0          # produkty dopisane ręcznie, bez poprawek
+    # zgłoszenia, których wiersz byłby pusty — panel nie ma czego zapisać
+    puste_zgloszenia: list[dict] = field(default_factory=list)
 
     @property
     def powtorki(self) -> list[Pozycja]:
@@ -104,6 +106,48 @@ CREATE INDEX IF NOT EXISTS ix_zgl_partia ON zgloszenia(partia_id);
 def przygotuj_baze(con: sqlite3.Connection) -> None:
     con.executescript(SCHEMA_ZGLOSZEN)
     con.commit()
+
+
+def atrybuty_do_pliku(con: sqlite3.Connection, produkt_id: str
+                      ) -> tuple[dict[str, str], list[dict]]:
+    """Komplet atrybutów produktu przełożony na format panelu.
+
+    Zwraca (co wejdzie do wiersza, co odpadło i dlaczego). Używane w dwóch
+    miejscach — przy zgłaszaniu produktu, żeby od razu powiedzieć, czy to
+    ma sens, i przy budowaniu partii.
+    """
+    import json
+    r = con.execute("SELECT nazwa, atrybuty_surowe FROM produkty WHERE id=?",
+                    (produkt_id,)).fetchone()
+    if not r:
+        return {}, []
+    try:
+        atrybuty = json.loads(r["atrybuty_surowe"] or "{}")
+    except ValueError:
+        atrybuty = {}
+
+    slownik = pf.wczytaj_slownik()
+    kol_slownikowe = pf.kolumny_slownikowe(slownik)
+    wzorzec = pf.wczytaj_wzorzec()
+    znane, kol_surowe = set(wzorzec.naglowki), set(wzorzec.surowe)
+    etykiety = pf.wczytaj_etykiety()
+
+    wchodzi: dict[str, str] = {}
+    odpada: list[dict] = []
+    for kolumna, wartosc in atrybuty.items():
+        if znane and kolumna not in znane:
+            odpada.append({"produkt_id": produkt_id, "nazwa": r["nazwa"] or "",
+                           "atrybut": kolumna, "nowa_wartosc": wartosc,
+                           "powod": "kolumny nie ma w formacie panelu"})
+            continue
+        wart, powod = pf.wartosc_do_pliku(slownik, kolumna, wartosc,
+                                          kol_slownikowe, kol_surowe, etykiety)
+        if powod:
+            odpada.append({"produkt_id": produkt_id, "nazwa": r["nazwa"] or "",
+                           "atrybut": kolumna, "nowa_wartosc": wartosc, "powod": powod})
+            continue
+        wchodzi[kolumna] = wart
+    return wchodzi, odpada
 
 
 def zglos_produkt(con: sqlite3.Connection, produkt_id: str, powod: str = "") -> None:
@@ -212,44 +256,45 @@ def _dolacz_zgloszenia(con, plan, wg_produktu, limit_produktow, slownik,
     Tu wiersz nie niesie poprawki, tylko aktualny stan: to, co i tak jest
     w sklepie w legitnym miejscu. Dzięki temu import jest bezpieczny do
     powtórzenia i nie zależy od tego, co poszło we wcześniejszej partii.
+
+    Wiersz bez ani jednego atrybutu nie ma sensu: panel nie postawi flagi
+    odcięcia składowych, jeśli nie dostanie czego zapisać. Taki produkt
+    wypada z partii z wyraźnym powodem i zostaje w kolejce zgłoszeń.
     """
-    import json
     for r in con.execute(
-            "SELECT z.produkt_id, z.powod, p.nazwa, p.kody, p.atrybuty_surowe "
+            "SELECT z.produkt_id, z.powod, p.nazwa, p.kody "
             "FROM zgloszenia z LEFT JOIN produkty p ON p.id = z.produkt_id "
             "WHERE z.partia_id IS NULL ORDER BY z.utworzono"):
         plan.zgloszonych += 1
-        poz = wg_produktu.get(r["produkt_id"])
+        pid = r["produkt_id"]
+        wchodzi, odpada = atrybuty_do_pliku(con, pid)
+        plan.pominiete.extend(odpada)
+
+        poz = wg_produktu.get(pid)
+        if not wchodzi and poz is None:
+            plan.puste_zgloszenia.append({
+                "produkt_id": pid, "nazwa": r["nazwa"] or "",
+                "powod": "produkt nie ma żadnego atrybutu, który da się wpisać "
+                         "— panel nie postawi flagi na pustym wierszu"})
+            continue
+
         if poz is None:
             if len(wg_produktu) >= limit_produktow:
                 continue
             kody = _kody(r["kody"])
-            poz = Pozycja(produkt_id=r["produkt_id"], nazwa=r["nazwa"] or "",
+            poz = Pozycja(produkt_id=pid, nazwa=r["nazwa"] or "",
                           kod=kody.get("kod produktu", ""),
                           kod_producenta=kody.get("kod producenta", ""),
-                          byl_w_partii=wczesniej.get(r["produkt_id"], 0))
-            wg_produktu[r["produkt_id"]] = poz
+                          byl_w_partii=wczesniej.get(pid, 0))
+            wg_produktu[pid] = poz
             plan.pozycje.append(poz)
 
         poz.komplet = True
-        try:
-            atrybuty = json.loads(r["atrybuty_surowe"] or "{}")
-        except ValueError:
-            atrybuty = {}
-        for kolumna, wartosc in atrybuty.items():
+        for kolumna, wartosc in wchodzi.items():
             if kolumna in poz.zmiany:          # świeża poprawka ma pierwszeństwo
                 continue
-            if znane and kolumna not in znane:
-                continue
-            wart, powod = pf.wartosc_do_pliku(slownik, kolumna, wartosc,
-                                              kol_slownikowe, kol_surowe, etykiety)
-            if powod:
-                plan.pominiete.append({
-                    "produkt_id": r["produkt_id"], "nazwa": r["nazwa"] or "",
-                    "atrybut": kolumna, "nowa_wartosc": wartosc, "powod": powod})
-                continue
-            poz.zmiany[kolumna] = wart
-            poz.stare[kolumna] = wart          # nic nie zmieniamy, więc cofka = to samo
+            poz.zmiany[kolumna] = wartosc
+            poz.stare[kolumna] = wartosc       # nic nie zmieniamy, więc cofka = to samo
 
 
 def _arkusz(wzorzec: pf.Wzorzec, pozycje: list[Pozycja], pole: str, stempel: str):

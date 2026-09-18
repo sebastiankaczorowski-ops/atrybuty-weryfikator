@@ -161,6 +161,13 @@ poprawiamy — po to, żeby panel dostał jego wiersz i mógł mu postawić flag
 `omit_components_in_attributes`. Produkt sprawdzony i uznany za poprawny też
 musi przez import przejść, inaczej zostanie ze składowymi na froncie na zawsze.
 
+Wiersz musi nieść **co najmniej jeden atrybut** — panel stawia flagę przy
+okazji zapisu atrybutów, więc pusty wiersz nic nie da. Produkty bez żadnego
+atrybutu (na eksporcie z 17.09 jest ich 1 516, głównie akcesoria: nogi,
+amortyzatory, szablony) są odrzucane od razu przy zgłaszaniu i wymienione
+osobno na stronie eksportu. Wejdą, gdy dostaną choć jeden atrybut —
+najczęściej przez przepisanie ze składowych.
+
 Taki wiersz niesie **komplet obecnych atrybutów**, nie pojedynczą poprawkę.
 To jest też odpowiedź na pytanie, czy produkt może wpaść do importu kilka
 razy: w obrębie jednej partii nie (jeden produkt = jeden wiersz), ale w dwóch

@@ -96,6 +96,26 @@
   {% endif %}
 </section>
 
+{% if plan.puste_zgloszenia %}
+<section>
+  <h2>Zgłoszenia, które nie wejdą do partii ({{ plan.puste_zgloszenia|length }})</h2>
+  <p class="pod">Panel stawia flagę odcięcia składowych przy okazji zapisu atrybutów,
+  więc wiersz musi nieść co najmniej jeden. Te produkty nie mają czego wpisać —
+  zostają w kolejce zgłoszeń i wejdą, gdy dostaną choć jeden atrybut, najczęściej
+  przez przepisanie ze składowych.</p>
+  <table class="pominiete">
+    <thead><tr><th>produkt</th><th>powód</th></tr></thead>
+    <tbody>
+    {% for z in plan.puste_zgloszenia[:60] %}
+      <tr><td><a href="/produkt/{{ z.produkt_id }}" target="_blank">
+            <code>{{ z.produkt_id }}</code></a> {{ z.nazwa }}</td>
+          <td class="dowod">{{ z.powod }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
 {% if plan.powtorki %}
 <section>
   <h2>Produkty, które szły już wcześniej ({{ plan.powtorki|length }})</h2>

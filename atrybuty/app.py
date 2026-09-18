@@ -743,11 +743,22 @@ def zglos_produkt(produkt_id: str = Form(...), powod: str = Form("")):
     if not p:
         con.close()
         return HTMLResponse('<span class="dowod">nie ma takiego produktu</span>')
+    # Panel nie postawi flagi na pustym wierszu — musi dostać co zapisać.
+    wchodzi, odpada = eksport_panelu.atrybuty_do_pliku(con, produkt_id)
+    if not wchodzi:
+        con.close()
+        powod_braku = (f"żadnego z {len(odpada)} atrybutów nie da się wpisać"
+                       if odpada else "produkt nie ma żadnych atrybutów")
+        return HTMLResponse(
+            f'<span class="dowod">Nie dodano: {powod_braku}, a panel nie postawi '
+            f'flagi na pustym wierszu. Najpierw uzupełnij atrybuty — np. '
+            f'przepisując je ze składowych.</span>')
+
     eksport_panelu.zglos_produkt(con, produkt_id, powod or "zweryfikowany ręcznie")
-    ile = len(p["atrybuty_surowe"])
     con.close()
     return HTMLResponse(
-        f'<span class="zrobione">✓ w kolejce do importu ({ile} atrybutów)</span>')
+        f'<span class="zrobione">✓ w kolejce do importu ({len(wchodzi)} atrybutów '
+        f'w wierszu)</span>')
 
 
 @app.post("/zglos-produkt/cofnij", response_class=HTMLResponse)
