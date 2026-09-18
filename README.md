@@ -121,6 +121,16 @@ o ekonomii pracy. Na eksporcie z 17.09: **69 507 findingów to 5 291 grup,
 ale 28 358 produktów**. Praca produktami to pięć razy więcej kliknięć, bo ta
 sama pomyłka siedzi na tysiącach mebli i rozstrzyga się raz.
 
+Grupa łączy findingi po (reguła, atrybut, stara wartość) i przy cechach
+opisowych znaczy to „te same przypadki". **Przy liczbach już nie** —
+269 produktów z popsutą wagą ma 226 różnych wag i 207 różnych poprawek,
+a licznik pisał „×269 identycznych". Na eksporcie z 17.09 takich grup jest
+128 (2 721 findingów) i są to niemal wyłącznie wymiary, waga i relacje
+wymiarowe. Kolejka liczy teraz, czy członkowie grupy są faktycznie jednakowi:
+jeśli nie, licznik mówi „×N **podobnych**", decyzja hurtowa jest wyłączona
+(także po stronie serwera, nie tylko w szablonie), a rozstrzyga się produkt
+po produkcie — najwygodniej w widoku produktowym.
+
 Widok produktowy (`?widok=produkt`) jest pomocniczy i ma sens tam, gdzie
 grupowanie nie pomaga: produkt z dziesięcioma brakami ze składowych
 (1 791 produktów ma ich 5 lub więcej, średnio 4,6). Kafel pokazuje wszystkie

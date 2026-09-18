@@ -142,6 +142,15 @@ def decyzja(request: Request,
 
     if zakres == "grupa" and grupa:
         czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa)
+        # Blokada po stronie serwera, nie tylko w szablonie: grupa o różnych
+        # wartościach nie jest jedną decyzją, choćby ktoś podrobił formularz.
+        rozne = ({(c["stara_wartosc"] or "") for c in czlonkowie},
+                 {(c["proponowana_wartosc"] or "") for c in czlonkowie})
+        if len(rozne[0]) > 1 or len(rozne[1]) > 1:
+            con.close()
+            return HTMLResponse(
+                '<div class="dowod">Ta grupa ma różne wartości — rozstrzygnij '
+                'produkty osobno (rozwiń „×N podobnych").</div>')
         wiersze = [(c["produkt_id"], c["atrybut"], c["stara_wartosc"],
                     (c["proponowana_wartosc"] if status == "zastosowana" else None),
                     c["regula_id"]) for c in czlonkowie]

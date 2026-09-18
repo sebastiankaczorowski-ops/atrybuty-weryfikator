@@ -69,6 +69,7 @@ tbody tr:hover{background:var(--surface-2)}
                padding:1px 6px;font-size:11.5px;font-weight:600;white-space:nowrap;
                border:1px solid transparent;cursor:pointer;font-family:inherit}
 .grupa-licznik:hover{border-color:var(--accent)}
+.grupa-licznik.rozne{background:var(--warn-soft);color:var(--warn)}
 .grupa-licznik.htmx-request{opacity:.55}
 .grupa-podglad{margin-top:7px;border-left:2px solid var(--accent);padding:6px 0 4px 8px}
 .grupa-naglowek{display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:4px}
@@ -388,11 +389,19 @@ tr.htmx-request .szkielet{display:flex}
         {% if w.warstwa == 'L0' %}<span class="skad">składowe:</span>{% endif %}
         <span class="nowa">{{ w.proponowana_wartosc }}</span>{% endif %}
       {% if w.ile_w_grupie and w.ile_w_grupie > 1 %}
-        <button class="grupa-licznik" type="button"
+        <button class="grupa-licznik {{ '' if w.jednorodna else 'rozne' }}" type="button"
                 hx-get="/grupa?grupa={{ w.grupa|urlencode }}&nr={{ loop.index }}"
                 hx-target="#grupa-{{ loop.index }}" hx-swap="innerHTML"
-                title="Pokaż pozostałe produkty z tym samym problemem">
-          ×{{ w.ile_w_grupie }} identycznych ▾</button>{% endif %}
+                title="{{ 'Pokaż pozostałe produkty z tym samym problemem' if w.jednorodna
+                          else 'Ta sama reguła, ale różne wartości — każdy produkt trzeba
+                                rozstrzygnąć osobno' }}">
+          ×{{ w.ile_w_grupie }}
+          {{- ' identycznych' if w.jednorodna else ' podobnych' }} ▾</button>
+        {% if not w.jednorodna %}
+          <span class="skad" title="Wartości w tej grupie się różnią, więc decyzja
+                                    hurtowa jest wyłączona">osobno</span>
+        {% endif %}
+      {% endif %}
     </div>
     <div class="dowod">{{ w.dowod }}</div>
     <div id="grupa-{{ loop.index }}"></div>
@@ -418,7 +427,12 @@ tr.htmx-request .szkielet{display:flex}
   </td>
   <td>
     <div class="akcje" id="akcje-{{ loop.index }}">
-      {% set zakres = 'grupa' if (fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1) else 'pojedynczo' %}
+      {# Hurt tylko wtedy, gdy członkowie grupy są faktycznie jednakowi.
+         Przy wymiarach nie są: „×269 identycznych" to 207 różnych wag
+         i 207 różnych poprawek — jedno kliknięcie zatwierdzałoby je
+         wszystkie po obejrzeniu jednej. #}
+      {% set zakres = 'grupa' if (fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1
+                                  and w.jednorodna) else 'pojedynczo' %}
       {# Brakujący wymiar ma własną ścieżkę: na rysunku technicznym wymiary
          są wypisane liczbami, więc jedno zapytanie zdejmuje wszystkie trzy. #}
       {% if w.atrybut in ('Szerokość', 'Wysokość', 'Głębokość') and not w.stara_wartosc %}

@@ -1401,3 +1401,80 @@ def test_hurt_na_produkcie_omija_niepewne(tmp_path, monkeypatch):
     con = db.polacz(baza)
     assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 2
     con.close()
+
+
+# --- grupy niejednorodne: wymiary nie nadają się do decyzji hurtowych -----
+
+def _kolejka_z_grupami(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "g2.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    produkty = [Produkt(id=str(i), nazwa=f"Mebel {i}", producent="BRW", kolekcja="",
+                        zdjecie="", styl="", kategoria="komoda") for i in range(1, 5)]
+    findingi = [
+        # jednorodna: ta sama stara wartość i ta sama poprawka
+        Finding("1", "Materiał", "L1-SLOWNIK", "L1", "srednia", 0.9,
+                "plyta", "płyta meblowa", "", grupa="G-JEDNORODNA"),
+        Finding("2", "Materiał", "L1-SLOWNIK", "L1", "srednia", 0.9,
+                "plyta", "płyta meblowa", "", grupa="G-JEDNORODNA"),
+        # niejednorodna: każdy produkt ma inną wagę i inną poprawkę
+        Finding("3", "Waga", "L1-FORMAT-DUBEL", "L1", "srednia", 0.9,
+                "46, 46", "46", "", grupa="G-WAGI"),
+        Finding("4", "Waga", "L1-FORMAT-DUBEL", "L1", "srednia", 0.9,
+                "31, 31", "31", "", grupa="G-WAGI"),
+    ]
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    return con, baza, app_mod
+
+
+def test_grupa_o_roznych_wartosciach_nie_jest_jednorodna(tmp_path, monkeypatch):
+    from atrybuty import db, zapytania
+    con, _, _ = _kolejka_z_grupami(tmp_path, monkeypatch)
+    wg = {w["grupa"]: w for w in zapytania.lista(con, 1, zapytania.Filtr(grupuj=True))}
+    assert wg["G-JEDNORODNA"]["jednorodna"] is True
+    assert wg["G-WAGI"]["jednorodna"] is False
+    con.close()
+
+
+def test_kolejka_nie_oferuje_hurtu_na_roznych_wartosciach(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    con, _, app_mod = _kolejka_z_grupami(tmp_path, monkeypatch)
+    con.close()
+    strona = TestClient(app_mod.app).get("/anomalie?atrybut=Waga").text
+    assert "podobnych" in strona and "identycznych" not in strona
+    assert 'name="zakres" value="grupa"' not in strona
+
+
+def test_serwer_odrzuca_hurt_na_roznych_wartosciach(tmp_path, monkeypatch):
+    """Blokada nie może być tylko w szablonie — decyzja hurtowa na 269
+    produktach o 207 różnych wagach to zatwierdzenie ich w ciemno."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    con, baza, app_mod = _kolejka_z_grupami(tmp_path, monkeypatch)
+    con.close()
+    odp = TestClient(app_mod.app).post("/decyzja", data={
+        "produkt_id": "3", "atrybut": "Waga", "zakres": "grupa",
+        "grupa": "G-WAGI", "status": "zastosowana"})
+    assert "różne wartości" in odp.text
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 0
+    con.close()
+
+
+def test_hurt_dalej_dziala_na_jednorodnej_grupie(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    con, baza, app_mod = _kolejka_z_grupami(tmp_path, monkeypatch)
+    con.close()
+    odp = TestClient(app_mod.app).post("/decyzja", data={
+        "produkt_id": "1", "atrybut": "Materiał", "zakres": "grupa",
+        "grupa": "G-JEDNORODNA", "status": "zastosowana"})
+    assert "2 produktów w grupie" in odp.text
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 2
+    con.close()

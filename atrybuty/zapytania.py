@@ -117,14 +117,30 @@ def lista(con: sqlite3.Connection, przebieg: int, fl: Filtr) -> list[dict]:
              " GROUP BY f.grupa"
              " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
              " COUNT(*) DESC LIMIT :limit OFFSET :offset")
-        q = q.replace("SELECT f.*,", "SELECT f.*, COUNT(*) AS ile_w_grupie,")
+        # Grupa łączy po (reguła, atrybut, stara wartość) i przy cechach
+        # opisowych to znaczy „te same przypadki". Przy liczbach już nie:
+        # 269 produktów z popsutą wagą ma 207 różnych wag i 207 różnych
+        # poprawek. Liczymy więc, czy członkowie faktycznie są jednakowi —
+        # jeśli nie, decyzja hurtowa jest klikaniem w ciemno i UI ma ją
+        # zablokować.
+        q = q.replace(
+            "SELECT f.*,",
+            "SELECT f.*, COUNT(*) AS ile_w_grupie,"
+            " COUNT(DISTINCT IFNULL(f.proponowana_wartosc,'')) AS roznych_propozycji,"
+            " COUNT(DISTINCT IFNULL(f.stara_wartosc,'')) AS roznych_starych,")
     else:
         q = (BAZA_SQL + sql +
              " ORDER BY CASE f.waga WHEN 'krytyczna' THEN 0 WHEN 'srednia' THEN 1 ELSE 2 END,"
              " f.pewnosc DESC LIMIT :limit OFFSET :offset")
-        q = q.replace("SELECT f.*,", "SELECT f.*, 1 AS ile_w_grupie,")
+        q = q.replace("SELECT f.*,", "SELECT f.*, 1 AS ile_w_grupie,"
+                      " 1 AS roznych_propozycji, 1 AS roznych_starych,")
 
-    return [dict(r) for r in con.execute(q, par)]
+    wiersze = [dict(r) for r in con.execute(q, par)]
+    for w in wiersze:
+        # jednorodna = jedna stara wartość i jedna propozycja na całą grupę
+        w["jednorodna"] = (w.get("roznych_propozycji", 1) <= 1
+                           and w.get("roznych_starych", 1) <= 1)
+    return wiersze
 
 
 def czlonkowie_grupy(con: sqlite3.Connection, przebieg: int, grupa: str) -> list[dict]:
