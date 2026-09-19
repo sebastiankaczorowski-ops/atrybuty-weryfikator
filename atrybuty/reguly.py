@@ -28,6 +28,9 @@ class Regula:
     opis: str
     zrodlo: str            # wbudowana | sprzecznosc | relacja | klucz
     szczegoly: str = ""
+    # tylko relacje: operator decyduje, czy RÓWNOŚĆ jest błędem — dlatego
+    # musi dojechać do UI, a nie tylko do opisu w szczegółach.
+    operator: str = ""
     aktywna: bool = True
     # statystyki z ostatniego przebiegu
     findingow: int = 0
@@ -118,6 +121,7 @@ def katalog(con: sqlite3.Connection | None = None, przebieg: int | None = None) 
     for wpis in r.get("relacje", []) or []:
         out.append(Regula(wpis["id"], L2, KRYTYCZNA, wpis.get("opis", ""), "relacja",
                           f"{wpis['lewa']} {wpis['operator']} {wpis['prawa']}",
+                          operator=wpis["operator"],
                           aktywna=wpis["id"] not in wylaczone))
 
     for klucz, wpis in (r.get("klucze_do_usuniecia") or {}).items():
@@ -251,6 +255,42 @@ def dodaj_relacje(rid: str, lewa: str, operator: str, prawa: str, opis: str) -> 
         "id": rid, "lewa": lewa, "operator": operator, "prawa": prawa,
         "opis": opis or f"{lewa} {operator} {prawa}",
     })
+    config.zapisz_reguly(d)
+    return None
+
+
+def relacja(rid: str) -> dict | None:
+    """Surowy wpis relacji — do pokazania w formularzu edycji."""
+    for wpis in config.reguly().get("relacje", []) or []:
+        if wpis["id"] == rid:
+            return dict(wpis)
+    return None
+
+
+def zmien_relacje(rid: str, operator: str, opis: str) -> str | None:
+    """Zmienia operator (i opis) istniejącej relacji.
+
+    Operator decyduje o tym, czy RÓWNOŚĆ jest błędem: przy `<` siedzisko
+    równe szerokości mebla leci jako błąd krytyczny, przy `<=` błędem jest
+    dopiero siedzisko szersze od mebla. To jedyna różnica, a rozstrzyga
+    o tysiącach fałszywych alarmów — więc musi dać się zmienić z UI,
+    bez wdrożenia i bez kasowania reguły.
+
+    Strony relacji zostają bez zmian: zamiana atrybutu robi z tego inną
+    regułę, a na to jest „usuń" i „dodaj".
+    """
+    if operator not in OPERATORY:
+        return f"Operator musi być jednym z: {', '.join(OPERATORY)}."
+    d = dict(config.reguly())
+    relacje = [dict(x) for x in (d.get("relacje") or [])]
+    trafione = [x for x in relacje if x["id"] == rid]
+    if not trafione:
+        return f"Nie ma relacji {rid}."
+    for wpis in relacje:
+        if wpis["id"] == rid:
+            wpis["operator"] = operator
+            wpis["opis"] = (opis or "").strip() or wpis.get("opis", "")
+    d["relacje"] = relacje
     config.zapisz_reguly(d)
     return None
 

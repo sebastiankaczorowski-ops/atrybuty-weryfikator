@@ -129,6 +129,20 @@ details .tresc{padding:16px 18px}
             <input type="hidden" name="aktywna" value="{{ '0' if r.aktywna else '1' }}">
             <button class="mini" type="submit">{{ 'Wyłącz' if r.aktywna else 'Włącz' }}</button>
           </form>
+          {# Operator relacji przestawia się tu, bo to on decyduje, czy
+             wartość RÓWNA jest błędem. Siedzisko równe szerokości mebla to
+             normalny mebel, nie błąd — a przy „<" leciało jako krytyczne. #}
+          {% if r.zrodlo == 'relacja' %}
+          <form class="inline" method="post" action="/reguly/zmien-relacje">
+            <input type="hidden" name="rid" value="{{ r.id }}">
+            <select name="operator" title="&lt; — równość jest błędem;
+                   &lt;= — błąd dopiero gdy lewa strona jest większa">
+              <option value="<" {{ 'selected' if r.operator == '<' }}>&lt; (równe = błąd)</option>
+              <option value="<=" {{ 'selected' if r.operator == '<=' }}>&lt;= (równe OK)</option>
+            </select>
+            <button class="mini" type="submit">Zapisz</button>
+          </form>
+          {% endif %}
           {% if r.zrodlo != 'wbudowana' %}
           <form class="inline" method="post" action="/reguly/usun"
                 onsubmit="return confirm('Usunąć regułę {{ r.id }} na stałe?')">

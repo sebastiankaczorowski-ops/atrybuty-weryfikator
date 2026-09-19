@@ -2151,3 +2151,48 @@ def test_przywrocenie_atrybutu_zdejmuje_go_z_listy(tmp_path, monkeypatch):
         assert "wylaczone" in config.reguly()
     finally:
         config.wyczysc_cache()
+
+
+def test_operator_relacji_decyduje_o_rownosci(tmp_path, monkeypatch):
+    """Siedzisko RÓWNE szerokości mebla to normalny mebel, nie błąd.
+
+    Przy `<` taki produkt leciał jako krytyczny; przy `<=` błędem jest
+    dopiero siedzisko szersze od mebla.
+    """
+    from atrybuty import detektory, reguly
+    relacja = {"id": "REL-SIEDZ-SZER", "lewa": "Szerokość siedziska",
+               "operator": "<", "prawa": "Szerokość", "opis": "test"}
+    _reguly_w_tmp(tmp_path, monkeypatch, {"relacje": [relacja], "wylaczone": []})
+    try:
+        rowne = _p(liczby={"Szerokość siedziska": 60.0, "Szerokość": 60.0})
+        szersze = _p(liczby={"Szerokość siedziska": 70.0, "Szerokość": 60.0})
+        wezsze = _p(liczby={"Szerokość siedziska": 50.0, "Szerokość": 60.0})
+
+        assert detektory.l1_relacje(rowne), "przy < równość jest błędem"
+
+        assert reguly.zmien_relacje("REL-SIEDZ-SZER", "<=", "") is None
+        assert detektory.l1_relacje(rowne) == []      # równe — już nie błąd
+        assert detektory.l1_relacje(wezsze) == []
+        f = detektory.l1_relacje(szersze)
+        assert f and f[0].regula_id == "REL-SIEDZ-SZER"   # szersze — nadal błąd
+
+        assert reguly.relacja("REL-SIEDZ-SZER")["operator"] == "<="
+    finally:
+        from atrybuty import config
+        config.wyczysc_cache()
+
+
+def test_zmiana_relacji_pilnuje_operatora_i_istnienia(tmp_path, monkeypatch):
+    from atrybuty import reguly
+    _reguly_w_tmp(tmp_path, monkeypatch, {"relacje": [
+        {"id": "R1", "lewa": "A", "operator": "<", "prawa": "B", "opis": "o"}]})
+    try:
+        assert "Operator" in reguly.zmien_relacje("R1", ">", "")
+        assert "Nie ma relacji" in reguly.zmien_relacje("R2", "<=", "")
+        assert reguly.relacja("R1")["operator"] == "<"     # nic się nie zmieniło
+        # pusty opis zostawia stary, nie kasuje go
+        reguly.zmien_relacje("R1", "<=", "")
+        assert reguly.relacja("R1")["opis"] == "o"
+    finally:
+        from atrybuty import config
+        config.wyczysc_cache()

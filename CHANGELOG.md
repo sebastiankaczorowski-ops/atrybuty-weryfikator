@@ -3,6 +3,18 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-19 · Operator relacji da się zmienić z panelu
+
+- Na `/reguly` przy każdej regule relacyjnej jest teraz wybór operatora:
+  `<` (wartość równa = błąd) albo `<=` (błąd dopiero gdy lewa strona jest
+  większa). Zmiana działa od następnego przeliczenia, bez wdrożenia.
+- Po co: `REL-SIEDZ-SZER` zgłaszał jako błąd krytyczny meble, w których
+  szerokość siedziska jest **równa** szerokości mebla — a to normalny mebel.
+  Błędem jest dopiero siedzisko szersze od mebla. To samo dotyczyło
+  `REL-SIEDZ-GLEB` (ławka bez oparcia) i `REL-WYS-SIEDZ` (taboret, pufa).
+- Strony relacji zostają bez zmian — zamiana atrybutu robi z tego inną
+  regułę, a na to jest „usuń" i „dodaj".
+
 ## 2026-09-18 · Atrybut można wyjąć z obiegu
 
 - **Nowa sekcja na `/reguly`: „Atrybuty wyjęte z obiegu".** To coś innego niż

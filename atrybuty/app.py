@@ -778,6 +778,15 @@ def dodaj_relacje(rid: str = Form(...), lewa: str = Form(...), operator: str = F
     return _wroc(blad, f"Dodano relację {rid.upper()}. Zadziała przy następnym imporcie.")
 
 
+@app.post("/reguly/zmien-relacje")
+def zmien_relacje(rid: str = Form(...), operator: str = Form(...),
+                  opis: str = Form("")):
+    """Operator relacji decyduje, czy RÓWNOŚĆ jest błędem — a to rozstrzyga
+    o tysiącach fałszywych alarmów, więc zmiana musi być na jedno kliknięcie."""
+    blad = reguly_mod.zmien_relacje(rid, operator, opis)
+    return _wroc(blad, f"Zmieniono relację {rid}. Zadziała przy następnym imporcie.")
+
+
 @app.post("/reguly/dodaj-klucz")
 def dodaj_klucz(klucz: str = Form(...), powod: str = Form(""), propozycja: str = Form("")):
     blad = reguly_mod.dodaj_klucz(klucz, powod, propozycja)
