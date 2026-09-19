@@ -1835,9 +1835,8 @@ def test_zapis_grupy_bierze_wartosc_z_kazdego_wiersza(tmp_path, monkeypatch):
     con, baza, app_mod = _grupa_z_filtrem(tmp_path, monkeypatch)
     con.close()
     odp = TestClient(app_mod.app).post("/decyzja/grupa-reczna", data={
-        "produkt_id": ["1", "2", "3"], "atrybut": ["Styl"] * 3,
-        "stara": ["tkanina"] * 3, "nowa": ["welur", "skóra", "  "],
-        "regula_id": ["L0-KONFLIKT"] * 3})
+        "grupa": "G", "nr": "1",
+        "produkt_id": ["1", "2", "3"], "nowa": ["welur", "skóra", "  "]})
     assert "zapisano 2 poprawek" in odp.text and "1 zostawionych" in odp.text
 
     con = db.polacz(baza)
@@ -2278,3 +2277,113 @@ def test_strona_druga_nie_gubi_filtrow(tmp_path, monkeypatch):
     stopka = strona.split('class="strony"')[-1]
     assert "następna" in stopka
     assert "kategoria=lozko" in stopka
+
+
+def _wielka_grupa(tmp_path, monkeypatch, ile=250):
+    """Grupa większa niż limit podglądu (200)."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "w.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    produkty = [Produkt(id=str(i), nazwa=f"Szafa {i}", producent="ADRK", kolekcja="",
+                        zdjecie="", styl="", kategoria="szafa") for i in range(1, ile + 1)]
+    findingi = [Finding(str(i), "Materiał", "L1-LISTA-KOLEJNOSC", "L1", "info", 0.99,
+                        "szkło, płyta meblowa", "płyta meblowa, szkło", "", grupa="G")
+                for i in range(1, ile + 1)]
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    con.close()
+    return baza, app_mod
+
+
+def test_grupa_wieksza_niz_podglad_da_sie_zapisac_w_calosci(tmp_path, monkeypatch):
+    """298 produktów, podgląd pokazuje 200 — reszty nie było jak zapisać."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db, zapytania
+    baza, app_mod = _wielka_grupa(tmp_path, monkeypatch, ile=250)
+    klient = TestClient(app_mod.app)
+
+    podglad = klient.get("/grupa", params={"grupa": "G", "nr": "1"}).text
+    assert podglad.count('name="nowa"') == 200          # lista przycięta
+    assert "Zapisz całą grupę (250)" in podglad         # ale jest wyjście
+
+    odp = klient.post("/decyzja/grupa-wartosc", data={
+        "grupa": "G", "nr": "1", "wartosc": "płyta meblowa"})
+    assert "zapisano 250 poprawek w całej grupie" in odp.text
+
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 250
+    assert con.execute(
+        "SELECT COUNT(DISTINCT nowa_wartosc) FROM decyzje").fetchone()[0] == 1
+    assert zapytania.policz_grupe(con, 1, "G") == 0     # nic nie zostało otwarte
+    con.close()
+
+
+def test_zapis_czesci_grupy_pokazuje_reszte(tmp_path, monkeypatch):
+    """Po zapisaniu widocznych 200 kolejne wchodzą na listę od razu —
+    bez tego trzeba było zgadywać, że grupa ma jeszcze resztę."""
+    from fastapi.testclient import TestClient
+    baza, app_mod = _wielka_grupa(tmp_path, monkeypatch, ile=250)
+    klient = TestClient(app_mod.app)
+
+    dane = {
+        "grupa": "G", "nr": "1", "filtr": "", "wartosc": "płyta meblowa",
+        "produkt_id": [str(i) for i in range(1, 201)],
+        "nowa": ["płyta meblowa"] * 200,
+    }
+    odp = klient.post("/decyzja/grupa-reczna", data=dane).text
+
+    assert "zapisano 200 poprawek" in odp
+    assert "<b>50</b> otwartych produktów" in odp       # reszta już na liście
+    assert odp.count('name="nowa"') == 50
+    assert odp.count('value="płyta meblowa"') >= 50     # i od razu wypełniona
+
+
+def test_zapis_calej_grupy_wymaga_wartosci(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    baza, app_mod = _wielka_grupa(tmp_path, monkeypatch, ile=210)
+    odp = TestClient(app_mod.app).post("/decyzja/grupa-wartosc", data={
+        "grupa": "G", "nr": "1", "wartosc": "   "})
+    assert "Wpisz wartość" in odp.text
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 0
+    con.close()
+
+
+def test_zapis_grupy_miesci_sie_w_limicie_pol_formularza(tmp_path, monkeypatch):
+    """Starlette przyjmuje najwyżej 1000 pól formularza. Przy pięciu polach
+    na wiersz 200 wierszy trafiało w limit co do jednego — jedno pole więcej
+    i zapis wracał błędem „Too many fields". Dwa pola na wiersz dają zapas."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    baza, app_mod = _wielka_grupa(tmp_path, monkeypatch, ile=250)
+    dane = {"grupa": "G", "nr": "1", "filtr": "", "wartosc": "płyta meblowa",
+            "produkt_id": [str(i) for i in range(1, 201)],
+            "nowa": ["płyta meblowa"] * 200}
+    pol = 4 + 200 * 2
+    assert pol < 1000, "zapas na limit pól zniknął"
+
+    odp = TestClient(app_mod.app).post("/decyzja/grupa-reczna", data=dane)
+    assert odp.status_code == 200 and "Too many fields" not in odp.text
+    con = db.polacz(baza)
+    assert con.execute("SELECT COUNT(*) FROM decyzje").fetchone()[0] == 200
+    con.close()
+
+
+def test_zapis_grupy_ignoruje_obce_id(tmp_path, monkeypatch):
+    """Serwer dobiera atrybut i starą wartość z otwartych findingów grupy,
+    więc ID spoza grupy nie może niczego zapisać."""
+    from fastapi.testclient import TestClient
+    from atrybuty import db
+    baza, app_mod = _wielka_grupa(tmp_path, monkeypatch, ile=210)
+    odp = TestClient(app_mod.app).post("/decyzja/grupa-reczna", data={
+        "grupa": "G", "nr": "1",
+        "produkt_id": ["1", "999999"], "nowa": ["płyta meblowa", "cokolwiek"]})
+    assert "zapisano 1 poprawek" in odp.text
+    con = db.polacz(baza)
+    assert [r[0] for r in con.execute("SELECT produkt_id FROM decyzje")] == ["1"]
+    con.close()

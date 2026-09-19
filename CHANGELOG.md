@@ -3,6 +3,18 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-19 · Grupa większa niż lista da się zapisać w całości
+
+- Podgląd grupy pokazuje najwyżej 200 wierszy. Przy grupie na 298 produktów
+  dało się zapisać widoczne 200 i **nie było jak wrócić po resztę**.
+- Doszedł przycisk **„Zapisz całą grupę (N)"** — bierze wartość z pola nad
+  listą i zapisuje ją na wszystkich produktach grupy, także tych spoza listy.
+- Po zapisaniu części podgląd przelicza się sam i pokazuje resztę, od razu
+  wypełnioną tą samą wartością — widać, ile jeszcze zostało.
+- Przy okazji: formularz wysyłał pięć pól na wiersz, czyli przy 200 wierszach
+  dokładnie 1000 — twardy limit serwera. Jedno pole więcej i zapis wracał
+  błędem. Teraz wiersz niesie ID i wartość, resztę serwer dobiera sam.
+
 ## 2026-09-19 · Filtr kategorii w rozstrzygniętych
 
 - Na `/rozstrzygniete` doszedł filtr po kategorii, a przy nazwie produktu

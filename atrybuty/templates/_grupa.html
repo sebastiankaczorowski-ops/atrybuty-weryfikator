@@ -5,10 +5,12 @@
    pojedyncze i zapisać całość jednym kliknięciem. Puste pole zostawia
    finding otwarty, nie kasuje wartości. #}
 <div class="grupa-podglad" id="podglad-{{ nr }}">
+  {% if komunikat %}<div class="zrobione">{{ komunikat }}</div>{% endif %}
   <div class="grupa-naglowek">
     <b>{{ ile }}</b> otwartych produktów z tym samym problemem{%
-      if czlonkowie|length < ile %} <span class="dowod">(pokazuję pierwsze
-      {{ czlonkowie|length }} — zapis obejmie tylko te)</span>{% endif %}
+      if czlonkowie|length < ile %} <span class="dowod">(lista pokazuje
+      {{ czlonkowie|length }} — „Zapisz wszystkie" obejmie tylko te, reszta
+      wejdzie na listę zaraz po zapisie)</span>{% endif %}
     <span id="hurt-grupy-{{ nr }}">
       <form style="display:inline" hx-post="/zglos-grupe"
             hx-target="#hurt-grupy-{{ nr }}" hx-swap="innerHTML"
@@ -27,7 +29,10 @@
 
   {% if czlonkowie %}
   <form hx-post="/decyzja/grupa-reczna" hx-target="#podglad-{{ nr }}"
-        hx-swap="innerHTML" hx-disabled-elt="find button">
+        hx-swap="outerHTML" hx-disabled-elt="find button">
+    <input type="hidden" name="grupa" value="{{ grupa }}">
+    <input type="hidden" name="nr" value="{{ nr }}">
+    <input type="hidden" name="filtr" value="{{ filtr }}">
     <div class="grupa-pasek">
       {# Rozdanie jednej wartości na wszystkie pola. Po stronie serwera to
          zwykły GET z podglądem — dzięki temu widać wynik przed zapisem. #}
@@ -74,10 +79,10 @@
           {% else %}<span class="dowod">(puste)</span>{% endif %} →
         </td>
         <td class="kol-wartosc">
+          {# Tylko ID i wartość: formularz ma twardy limit 1000 pól, a przy
+             pięciu polach na wiersz 200 wierszy trafiało w ten limit co do
+             jednego. Resztę serwer dobiera z otwartych findingów grupy. #}
           <input type="hidden" name="produkt_id" value="{{ c.produkt_id }}">
-          <input type="hidden" name="atrybut" value="{{ c.atrybut }}">
-          <input type="hidden" name="stara" value="{{ c.stara_wartosc or '' }}">
-          <input type="hidden" name="regula_id" value="{{ c.regula_id or '' }}">
           <input type="text" name="nowa" class="wart"
                  value="{{ wartosc or c.proponowana_wartosc or '' }}"
                  {% if podpowiedzi %}list="dl-grupa-{{ nr }}"{% endif %}>
@@ -90,6 +95,23 @@
       {% endfor %}
     </table>
   </form>
+
+  {# Poza formularzem wierszy celowo: ten przycisk nie wysyła 200 pól,
+     tylko jedną wartość na całą grupę. #}
+  {% if czlonkowie|length < ile %}
+  <div class="grupa-pasek grupa-calosc">
+    <span class="dowod">Ta sama wartość dla wszystkich {{ ile }} produktów,
+      także tych spoza listy:</span>
+    <button class="mini" type="button"
+            hx-post="/decyzja/grupa-wartosc" hx-target="#podglad-{{ nr }}"
+            hx-swap="outerHTML" hx-disabled-elt="this"
+            hx-include="#rozdaj-{{ nr }}"
+            hx-confirm="Zapisać tę wartość na wszystkich {{ ile }} produktach w grupie?"
+            hx-vals='{"grupa": {{ grupa|tojson }}, "nr": {{ nr|tojson }},
+                      "filtr": {{ filtr|tojson }}}'>
+      Zapisz całą grupę ({{ ile }})</button>
+  </div>
+  {% endif %}
 
   <div class="dowod grupa-stopka">
     Klucz grupy: <code>{{ grupa }}</code>. Puste pole zostawia produkt otwarty

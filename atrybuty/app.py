@@ -207,6 +207,17 @@ def grupa_podglad(request: Request, grupa: str = "", nr: str = "",
     """
     if not grupa:                      # pusty klucz = „zwiń"
         return HTMLResponse("")
+    return _fragment_grupy(request, grupa, nr, wartosc, filtr)
+
+
+def _fragment_grupy(request: Request, grupa: str, nr: str, wartosc: str,
+                    filtr: str, komunikat: str = ""):
+    """Podgląd grupy — jedno miejsce, bo wraca i po GET, i po zapisie.
+
+    Po zapisie pokazuje RESZTĘ: zapisane findingi przestają być otwarte,
+    więc kolejne 200 wchodzi na ich miejsce. Bez tego przy grupie na 298
+    produktów dało się zapisać pierwsze 200 i nie było jak wrócić po resztę.
+    """
     con = _con()
     przebieg = _przebieg(con)
     fl = zapytania.Filtr.z_query(filtr) if filtr else None
@@ -221,26 +232,41 @@ def grupa_podglad(request: Request, grupa: str = "", nr: str = "",
     return szablony.TemplateResponse(request, "_grupa.html", {
         "request": request, "czlonkowie": czlonkowie, "ile": ile,
         "grupa": grupa, "nr": nr, "wartosc": wartosc, "filtr": filtr,
-        "podpowiedzi": podpowiedzi,
+        "podpowiedzi": podpowiedzi, "komunikat": komunikat,
         "nazwy_kat": kategorie.nazwy_kategorii()})
 
 
 @app.post("/decyzja/grupa-reczna", response_class=HTMLResponse)
-def decyzja_grupa_reczna(produkt_id: list[str] = Form(...),
-                         atrybut: list[str] = Form(...),
-                         stara: list[str] = Form(...),
-                         nowa: list[str] = Form(...),
-                         regula_id: list[str] = Form(...)):
+def decyzja_grupa_reczna(request: Request,
+                         grupa: str = Form(...), nr: str = Form(""),
+                         filtr: str = Form(""), wartosc: str = Form(""),
+                         produkt_id: list[str] = Form(default=[]),
+                         nowa: list[str] = Form(default=[])):
     """Zapisuje wartości wpisane per produkt w podglądzie grupy.
 
-    Inaczej niż „Zastosuj ×N", tutaj każdy wiersz niesie własną wartość —
-    jedną wpisaną u góry i rozdaną na resztę, albo poprawioną ręcznie.
-    Puste pole znaczy „zostaw otwarte", nie „wyczyść".
+    Wiersz niesie tylko ID produktu i wartość. Atrybut, stara wartość
+    i reguła dobierane są po stronie serwera z otwartych findingów tej
+    grupy — bo formularz ma twardy limit 1000 pól (Starlette), a przy
+    pięciu polach na wiersz 200 wierszy trafiało dokładnie w ten limit.
+    Jedno pole więcej i zapis wracał błędem „Too many fields".
+
+    Puste pole znaczy „zostaw otwarte", nie „wyczyść". Odpowiedzią jest
+    przeliczony podgląd, a nie sam komunikat: przy grupie większej niż
+    lista pokazuje od razu resztę, gotową do zapisu.
     """
     con = _con()
-    wiersze = [(p, a, s or None, n.strip(), r or None)
-               for p, a, s, n, r in zip(produkt_id, atrybut, stara, nowa, regula_id)
-               if n.strip()]
+    przebieg = _przebieg(con)
+    fl = zapytania.Filtr.z_query(filtr) if filtr else None
+    otwarte: dict[str, dict] = {}
+    for c in zapytania.czlonkowie_grupy(con, przebieg, grupa, fl):
+        otwarte.setdefault(c["produkt_id"], c)
+
+    wiersze = []
+    for pid, n in zip(produkt_id, nowa):
+        c = otwarte.get(pid)
+        if c and n.strip():
+            wiersze.append((pid, c["atrybut"], c["stara_wartosc"], n.strip(),
+                            c["regula_id"]))
     ile = db.zapisz_decyzje_grupowo(con, wiersze, "zastosowana") if wiersze else 0
     pominiete = len(produkt_id) - ile
     con.close()
@@ -248,7 +274,35 @@ def decyzja_grupa_reczna(produkt_id: list[str] = Form(...),
     tresc = f"✓ zapisano {ile} poprawek"
     if pominiete:
         tresc += f" · {pominiete} zostawionych bez wartości"
-    return HTMLResponse(f'<div class="zrobione">{tresc}</div>')
+    return _fragment_grupy(request, grupa, nr, wartosc, filtr, komunikat=tresc)
+
+
+@app.post("/decyzja/grupa-wartosc", response_class=HTMLResponse)
+def decyzja_grupa_wartosc(request: Request, grupa: str = Form(...),
+                          wartosc: str = Form(...), nr: str = Form(""),
+                          filtr: str = Form("")):
+    """Jedna wpisana wartość na CAŁĄ grupę — bez limitu podglądu.
+
+    Podgląd pokazuje 200 wierszy, żeby strona się nie zatkała, ale przy
+    grupie na 298 produktów człowiek chce jednego kliknięcia, a nie dwóch
+    rund po 200. Tu wartość jest wpisana ręcznie, więc niejednorodność
+    grupy nie przeszkadza — to nie jest zatwierdzanie cudzej propozycji.
+    """
+    con = _con()
+    przebieg = _przebieg(con)
+    fl = zapytania.Filtr.z_query(filtr) if filtr else None
+    czlonkowie = zapytania.czlonkowie_grupy(con, przebieg, grupa, fl)
+    nowa = wartosc.strip()
+    if not nowa:
+        con.close()
+        return HTMLResponse('<div class="dowod">Wpisz wartość, zanim zapiszesz '
+                            'całą grupę.</div>')
+    ile = db.zapisz_decyzje_grupowo(
+        con, [(c["produkt_id"], c["atrybut"], c["stara_wartosc"], nowa,
+               c["regula_id"]) for c in czlonkowie], "zastosowana")
+    con.close()
+    return _fragment_grupy(request, grupa, nr, "", filtr,
+                           komunikat=f"✓ zapisano {ile} poprawek w całej grupie")
 
 
 @app.get("/produkt/{pid}", response_class=HTMLResponse)
