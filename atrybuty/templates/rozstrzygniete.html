@@ -86,6 +86,12 @@
     {% for a, n in slowniki.producenci %}
       <option value="{{ a }}" {{ 'selected' if fl.producent==a }}>{{ a }} ({{ n }})</option>
     {% endfor %}</select></div>
+  <div class="pole"><label>kategoria</label>
+    <select name="kategoria"><option value="">— wszystkie —</option>
+    {% for a, n in slowniki.kategorie %}
+      <option value="{{ a }}" {{ 'selected' if fl.kategoria==a }}>
+        {{ nazwy_kat.get(a, a) }} ({{ n }})</option>
+    {% endfor %}</select></div>
   <input type="hidden" name="status" value="{{ fl.status }}">
   <input type="hidden" name="eksport_stan" value="{{ fl.eksport_stan }}">
   <button class="p" type="submit">Filtruj</button>
@@ -111,7 +117,7 @@
     <td>
       <a href="/produkt/{{ w.produkt_id }}" target="_blank"><code>{{ w.produkt_id }}</code></a>
       {{ w.nazwa }}
-      <div class="dowod">{{ w.producent }}
+      <div class="dowod">{{ w.producent }}{% if w.kategoria %} · {{ nazwy_kat.get(w.kategoria, w.kategoria) }}{% endif %}
         · <a href="{{ link_panelu(w.produkt_id) }}" target="_blank" rel="noopener">panel ↗</a></div>
     </td>
     <td>
@@ -157,9 +163,9 @@
 </table>
 
 <div class="stronicowanie">
-  {% if strona > 1 %}<a href="/rozstrzygniete?strona={{ strona-1 }}">← poprzednia</a>{% endif %}
+  {% if strona > 1 %}<a href="/rozstrzygniete?{{ qs }}{% if qs %}&amp;{% endif %}strona={{ strona-1 }}">← poprzednia</a>{% endif %}
   <span class="dowod">strona {{ strona }} z {{ stron }}</span>
-  {% if strona < stron %}<a href="/rozstrzygniete?strona={{ strona+1 }}">następna →</a>{% endif %}
+  {% if strona < stron %}<a href="/rozstrzygniete?{{ qs }}{% if qs %}&amp;{% endif %}strona={{ strona+1 }}">następna →</a>{% endif %}
 </div>
 {% endif %}
 

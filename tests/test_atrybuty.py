@@ -2196,3 +2196,85 @@ def test_zmiana_relacji_pilnuje_operatora_i_istnienia(tmp_path, monkeypatch):
     finally:
         from atrybuty import config
         config.wyczysc_cache()
+
+
+def _decyzje_w_dwoch_kategoriach(tmp_path, monkeypatch):
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "r.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    produkty, findingi = [], []
+    for i in range(1, 6):
+        kat = "lozko" if i <= 2 else "komoda"
+        prod = "BRW" if i != 5 else "Halmar"
+        produkty.append(Produkt(id=str(i), nazwa=f"Mebel {i}", producent=prod,
+                                kolekcja="", zdjecie="", styl="", kategoria=kat))
+        findingi.append(Finding(str(i), "Styl", "L1-BRAK", "L1", "srednia", 0.5,
+                                "stary", "nowy", "", grupa="G"))
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    for i in range(1, 6):
+        db.zapisz_decyzje(con, str(i), "Styl", "stary", "zastosowana", "nowy", "L1-BRAK")
+    return con, baza, app_mod
+
+
+def test_rozstrzygniete_filtruja_sie_po_kategorii(tmp_path, monkeypatch):
+    from atrybuty import zapytania
+    con, _, _ = _decyzje_w_dwoch_kategoriach(tmp_path, monkeypatch)
+    wszystkie, ile = zapytania.rozstrzygniete(con)
+    assert ile == 5 and len(wszystkie) == 5
+
+    lozka, ile_lozek = zapytania.rozstrzygniete(con, kategoria="lozko")
+    assert ile_lozek == 2
+    assert {w["produkt_id"] for w in lozka} == {"1", "2"}
+    con.close()
+
+
+def test_licznik_kategorii_liczy_w_zakresie_innych_filtrow(tmp_path, monkeypatch):
+    """Po wybraniu producenta kategorie mają pokazywać JEGO kategorie.
+
+    Licznik liczony globalnie obiecywał „komoda (3)" przy producencie, który
+    ma tam jeden produkt — i lista po kliknięciu nie zgadzała się z liczbą.
+    """
+    from atrybuty import zapytania
+    con, _, _ = _decyzje_w_dwoch_kategoriach(tmp_path, monkeypatch)
+    wg = dict(zapytania.slowniki_decyzji(con)["kategorie"])
+    assert wg == {"lozko": 2, "komoda": 3}
+
+    halmar = dict(zapytania.slowniki_decyzji(con, {"producent": "Halmar"})["kategorie"])
+    assert halmar == {"komoda": 1}
+
+    # własny wymiar zostaje pełny, żeby dało się zmienić wybór
+    przy_lozku = zapytania.slowniki_decyzji(con, {"kategoria": "lozko"})
+    assert dict(przy_lozku["kategorie"]) == {"lozko": 2, "komoda": 3}
+    con.close()
+
+
+def test_strona_druga_nie_gubi_filtrow(tmp_path, monkeypatch):
+    """Przejście na stronę 2 kasowało wybór filtrów — lista wyglądała, jakby
+    zmieniła się sama."""
+    from fastapi.testclient import TestClient
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "s.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    produkty = [Produkt(id=str(i), nazwa=f"Łóżko {i}", producent="BRW", kolekcja="",
+                        zdjecie="", styl="", kategoria="lozko") for i in range(1, 106)]
+    findingi = [Finding(str(i), "Styl", "L1-BRAK", "L1", "srednia", 0.5,
+                        "stary", "nowy", "", grupa="G") for i in range(1, 106)]
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+    for i in range(1, 106):
+        db.zapisz_decyzje(con, str(i), "Styl", "stary", "zastosowana", "nowy", "L1-BRAK")
+    con.close()
+
+    strona = TestClient(app_mod.app).get("/rozstrzygniete?kategoria=lozko").text
+    stopka = strona.split('class="strony"')[-1]
+    assert "następna" in stopka
+    assert "kategoria=lozko" in stopka

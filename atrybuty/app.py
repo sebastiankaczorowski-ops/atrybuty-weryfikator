@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import (FileResponse, HTMLResponse, RedirectResponse,
@@ -339,7 +339,6 @@ def podglad_zrodla(request: Request, zid: int):
 
 
 def _wroc_zrodla(blad: str | None, ok: str, zid: int | None = None) -> RedirectResponse:
-    from urllib.parse import urlencode
     baza = f"/zrodla/{zid}" if zid else "/zrodla"
     q = urlencode({"komunikat": blad or ok, "blad": "1" if blad else ""})
     return RedirectResponse(f"{baza}?{q}", status_code=303)
@@ -602,7 +601,6 @@ def wizja_wymiary(request: Request, produkt_id: str = Form(...), nr: str = Form(
 def braki(request: Request, producent: str = "", kategoria: str = "", rodzaj: str = "",
           szukaj: str = "", strona: int = 1):
     """Produkty, których nie ma sensu analizować — do zaciągnięcia ze źródła."""
-    from urllib.parse import urlencode
     con = _con()
     na_stronie = 100
     wiersze, ile = zapytania.braki(con, producent, kategoria, rodzaj, szukaj,
@@ -727,7 +725,6 @@ def lista_regul(request: Request, komunikat: str = "", blad: str = ""):
 
 
 def _wroc(blad: str | None, ok: str) -> RedirectResponse:
-    from urllib.parse import urlencode
     q = urlencode({"komunikat": blad or ok, "blad": "1" if blad else ""})
     return RedirectResponse(f"/reguly?{q}", status_code=303)
 
@@ -809,20 +806,31 @@ KATALOG_PARTII = KATALOG.parent / "dane" / "eksport"
 
 @app.get("/rozstrzygniete", response_class=HTMLResponse)
 def strona_rozstrzygnietych(request: Request, status: str = "", atrybut: str = "",
-                            regula: str = "", producent: str = "", eksport_stan: str = "",
+                            regula: str = "", producent: str = "", kategoria: str = "",
+                            eksport_stan: str = "",
                             szukaj: str = "", strona: int = 1):
     con = _con()
     offset = (max(1, strona) - 1) * 100
-    wiersze, ile = zapytania.rozstrzygniete(
-        con, status=status, atrybut=atrybut, regula=regula, producent=producent,
-        eksport=eksport_stan, szukaj=szukaj, limit=100, offset=offset)
+    # Jeden zestaw filtrów dla listy i dla liczników przy selectach — inaczej
+    # select obiecuje „Stolik (39)", a lista pokazuje co innego.
+    filtry = {"status": status, "atrybut": atrybut, "regula": regula,
+              "producent": producent, "kategoria": kategoria,
+              "eksport": eksport_stan, "szukaj": szukaj}
+    wiersze, ile = zapytania.rozstrzygniete(con, limit=100, offset=offset, **filtry)
     kontekst = {
         "request": request, "wiersze": wiersze, "ile": ile, "strona": strona,
         "stron": max(1, (ile + 99) // 100),
         "fl": {"status": status, "atrybut": atrybut, "regula": regula,
-               "producent": producent, "eksport_stan": eksport_stan, "szukaj": szukaj},
+               "producent": producent, "kategoria": kategoria,
+               "eksport_stan": eksport_stan, "szukaj": szukaj},
+        # Strona 2 musi zostać w tych samych filtrach — bez tego przejście
+        # dalej kasowało wybór i wyglądało, jakby lista zmieniła się sama.
+        "qs": urlencode({k: v for k, v in (
+            ("status", status), ("atrybut", atrybut), ("regula", regula),
+            ("producent", producent), ("kategoria", kategoria),
+            ("eksport_stan", eksport_stan), ("szukaj", szukaj)) if v}),
         "stat": zapytania.statystyki_decyzji(con),
-        "slowniki": zapytania.slowniki_decyzji(con),
+        "slowniki": zapytania.slowniki_decyzji(con, filtry),
         "nazwy_kat": kategorie.nazwy_kategorii(),
     }
     con.close()

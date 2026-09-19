@@ -3,6 +3,16 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-19 · Filtr kategorii w rozstrzygniętych
+
+- Na `/rozstrzygniete` doszedł filtr po kategorii, a przy nazwie produktu
+  widać kategorię obok producenta.
+- Liczby przy filtrach liczą się w zakresie pozostałych filtrów — po
+  wybraniu producenta kategorie pokazują jego kategorie, nie wszystkie.
+  Wybrana opcja nie znika przy zerze, żeby dało się zmienić wybór.
+- **Strona 2 nie gubi już filtrów.** Przejście dalej kasowało wybór i lista
+  wyglądała, jakby zmieniła się sama.
+
 ## 2026-09-19 · Operator relacji da się zmienić z panelu
 
 - Na `/reguly` przy każdej regule relacyjnej jest teraz wybór operatora:

@@ -392,14 +392,11 @@ LEFT JOIN partie b ON b.id = d.partia_id
 """
 
 
-def rozstrzygniete(con: sqlite3.Connection, status: str = "", atrybut: str = "",
-                   regula: str = "", producent: str = "", eksport: str = "",
-                   szukaj: str = "", limit: int = 100, offset: int = 0
-                   ) -> tuple[list[dict], int]:
-    """Co zostało rozstrzygnięte i jak — z widoczną zmianą stara → nowa.
-
-    `eksport`: czeka | wyslane — czy decyzja trafiła już do partii.
-    """
+def _warunki_decyzji(status: str = "", atrybut: str = "", regula: str = "",
+                     producent: str = "", kategoria: str = "", eksport: str = "",
+                     szukaj: str = "") -> tuple[str, dict]:
+    """Jedno miejsce na warunki listy rozstrzygniętych — używa ich i lista,
+    i liczniki przy filtrach, więc nie mogą się rozjechać."""
     sql, par = "", {}
     if status:
         sql += " AND d.status = :status"; par["status"] = status
@@ -409,6 +406,8 @@ def rozstrzygniete(con: sqlite3.Connection, status: str = "", atrybut: str = "",
         sql += " AND d.regula_id = :regula"; par["regula"] = regula
     if producent:
         sql += " AND p.producent = :producent"; par["producent"] = producent
+    if kategoria:
+        sql += " AND p.kategoria = :kategoria"; par["kategoria"] = kategoria
     if eksport == "czeka":
         sql += " AND d.partia_id IS NULL AND d.status = 'zastosowana'"
     elif eksport == "wyslane":
@@ -416,7 +415,20 @@ def rozstrzygniete(con: sqlite3.Connection, status: str = "", atrybut: str = "",
     if szukaj:
         sql += " AND (p.nazwa LIKE :szukaj OR d.produkt_id = :dokladnie)"
         par["szukaj"] = f"%{szukaj}%"; par["dokladnie"] = szukaj
+    return sql, par
 
+
+def rozstrzygniete(con: sqlite3.Connection, status: str = "", atrybut: str = "",
+                   regula: str = "", producent: str = "", kategoria: str = "",
+                   eksport: str = "", szukaj: str = "",
+                   limit: int = 100, offset: int = 0
+                   ) -> tuple[list[dict], int]:
+    """Co zostało rozstrzygnięte i jak — z widoczną zmianą stara → nowa.
+
+    `eksport`: czeka | wyslane — czy decyzja trafiła już do partii.
+    """
+    sql, par = _warunki_decyzji(status, atrybut, regula, producent, kategoria,
+                                eksport, szukaj)
     warunek = " WHERE 1=1" + sql
     ile = int(con.execute(
         "SELECT COUNT(*) FROM decyzje d LEFT JOIN produkty p ON p.id=d.produkt_id"
@@ -445,15 +457,36 @@ def statystyki_decyzji(con: sqlite3.Connection) -> dict:
     }
 
 
-def slowniki_decyzji(con: sqlite3.Connection) -> dict:
-    def zbierz(q):
-        return [(r[0], r[1]) for r in con.execute(q) if r[0]]
+def slowniki_decyzji(con: sqlite3.Connection, fl: dict | None = None) -> dict:
+    """Opcje filtrów wraz z liczbami — każda w zakresie POZOSTAŁYCH filtrów.
+
+    Tak samo jak w kolejce: po wybraniu producenta kategorie pokazują jego
+    kategorie, a nie wszystkie. Własny wymiar zostaje pełny, żeby dało się
+    zmienić wybór, a wybrana opcja nie znika przy zerze — inaczej select
+    gubi swoją wartość.
+    """
+    baza = dict(fl or {})
+
+    def zbierz(wymiar: str, kolumna: str, limit: int | None = None
+               ) -> list[tuple[str, int]]:
+        bez = {k: v for k, v in baza.items() if k != wymiar}
+        sql, par = _warunki_decyzji(**bez)
+        q = (f"SELECT {kolumna} AS k, COUNT(*) n FROM decyzje d "
+             "LEFT JOIN produkty p ON p.id=d.produkt_id"
+             f" WHERE 1=1{sql} GROUP BY 1 ORDER BY 2 DESC")
+        if limit:
+            q += f" LIMIT {int(limit)}"
+        out = [(r["k"], r["n"]) for r in con.execute(q, par) if r["k"]]
+        wybrane = baza.get(wymiar) or ""
+        if wybrane and wybrane not in {k for k, _ in out}:
+            out.append((wybrane, 0))
+        return out
+
     return {
-        "atrybuty": zbierz("SELECT atrybut, COUNT(*) FROM decyzje GROUP BY 1 ORDER BY 2 DESC"),
-        "reguly": zbierz("SELECT regula_id, COUNT(*) FROM decyzje GROUP BY 1 ORDER BY 2 DESC"),
-        "producenci": zbierz("SELECT p.producent, COUNT(*) FROM decyzje d "
-                             "JOIN produkty p ON p.id=d.produkt_id GROUP BY 1 "
-                             "ORDER BY 2 DESC LIMIT 40"),
+        "atrybuty": zbierz("atrybut", "d.atrybut"),
+        "reguly": zbierz("regula", "d.regula_id"),
+        "producenci": zbierz("producent", "p.producent", limit=40),
+        "kategorie": zbierz("kategoria", "p.kategoria"),
     }
 
 
