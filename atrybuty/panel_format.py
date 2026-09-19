@@ -63,12 +63,23 @@ class Wzorzec:
 
 
 def wczytaj_wzorzec() -> Wzorzec:
+    """Układ pliku panelu, z nazwami kolumn doprowadzonymi do dzisiejszych.
+
+    Nagłówki pochodzą z eksportu produktów, więc zamarzają na dzień, w którym
+    ten eksport powstał. Po przemianowaniu atrybutu w panelu zostawała stara
+    nazwa kolumny („Ilość osób"), a słownik znał już nową („Liczba miejsc") —
+    i atrybut po cichu wypadał z pliku importu jako „kolumny nie ma
+    w formacie panelu". Mapa przemianowań jest tu stosowana przy każdym
+    odczycie, więc naprawia się samo, nawet bez ponownego wgrania eksportu.
+    """
     if not PLIK_WZORCA.exists():
         return Wzorzec()
     d = yaml.safe_load(PLIK_WZORCA.read_text(encoding="utf-8")) or {}
-    return Wzorzec(naglowki=list(d.get("naglowki") or []),
+    mapa = wczytaj_zmiany_nazw()["atrybuty"]
+    pod_nowa = (lambda x: mapa.get(x, x)) if mapa else (lambda x: x)
+    return Wzorzec(naglowki=[pod_nowa(k) for k in (d.get("naglowki") or [])],
                    preambula=[list(w) for w in (d.get("preambula") or [])],
-                   surowe=list(d.get("surowe") or []))
+                   surowe=[pod_nowa(k) for k in (d.get("surowe") or [])])
 
 
 def zapisz_wzorzec(w: Wzorzec) -> None:
@@ -490,6 +501,15 @@ def migruj_config(zmiany: dict) -> list[str]:
         if nowy != reg:
             config.zapisz_reguly(nowy)
             ruszone.append("reguly.yaml")
+    # Nagłówki pliku panelu też — inaczej atrybut wypada z importu jako
+    # „kolumny nie ma w formacie panelu", a odczyt i tak je już podmienia.
+    wz = wczytaj_wzorzec()
+    surowy = yaml.safe_load(PLIK_WZORCA.read_text(encoding="utf-8")) or {} \
+        if PLIK_WZORCA.exists() else {}
+    if surowy and (list(surowy.get("naglowki") or []) != wz.naglowki
+                   or list(surowy.get("surowe") or []) != wz.surowe):
+        zapisz_wzorzec(wz)
+        ruszone.append("wzorzec_panelu.yaml")
     return ruszone
 
 

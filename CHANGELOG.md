@@ -3,6 +3,18 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-19 · Przemianowane atrybuty wracają do importu
+
+- `Liczba miejsc` i `Rodzaj obicia` nie wchodziły do pliku importu. Powód:
+  nagłówki kolumn pochodzą z eksportu produktów i zamarzają na dniu, w którym
+  ten eksport powstał. Po przemianowaniu atrybutu w panelu słownik znał już
+  nową nazwę, a nagłówek został stary — atrybut wypadał jako „kolumny nie ma
+  w formacie panelu", po cichu, bo produkt i tak szedł do pliku.
+- Mapa przemianowań jest teraz stosowana przy każdym odczycie układu pliku,
+  więc naprawia się samo, bez ponownego wgrywania eksportu produktów.
+- Dotyczyło wszystkich pięciu przemianowanych atrybutów: `Liczba miejsc`,
+  `Rodzaj obicia`, `Twardość materaca`, `Z pojemnikiem`, `Marki własne`.
+
 ## 2026-09-19 · Grupa większa niż lista da się zapisać w całości
 
 - Podgląd grupy pokazuje najwyżej 200 wierszy. Przy grupie na 298 produktów

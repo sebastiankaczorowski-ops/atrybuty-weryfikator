@@ -2387,3 +2387,34 @@ def test_zapis_grupy_ignoruje_obce_id(tmp_path, monkeypatch):
     con = db.polacz(baza)
     assert [r[0] for r in con.execute("SELECT produkt_id FROM decyzje")] == ["1"]
     con.close()
+
+
+def test_przemianowany_atrybut_ma_swoja_kolumne_w_pliku(tmp_path, monkeypatch):
+    """Nagłówki pliku panelu zamarzają na dniu eksportu produktów.
+
+    Po przemianowaniu atrybutu w panelu („Ilość osób" → „Liczba miejsc")
+    słownik znał nową nazwę, a nagłówek został stary — i atrybut wypadał
+    z importu jako „kolumny nie ma w formacie panelu". Po cichu, bo produkt
+    i tak szedł do pliku, tylko bez tej kolumny.
+    """
+    import yaml
+    from atrybuty import config, panel_format as pf
+    monkeypatch.setattr(config, "KATALOG_CONFIG", tmp_path)
+    for atryb in ("PLIK_WZORCA", "PLIK_ZMIAN_NAZW"):
+        monkeypatch.setattr(pf, atryb, tmp_path / {
+            "PLIK_WZORCA": "wzorzec_panelu.yaml",
+            "PLIK_ZMIAN_NAZW": "zmiany_nazw.yaml"}[atryb])
+    (tmp_path / "wzorzec_panelu.yaml").write_text(yaml.safe_dump(
+        {"naglowki": ["ID", "Ilość osób", "Szerokość"], "surowe": ["Szerokość"],
+         "preambula": []}, allow_unicode=True), encoding="utf-8")
+    (tmp_path / "zmiany_nazw.yaml").write_text(yaml.safe_dump(
+        {"atrybuty": {"Ilość osób": "Liczba miejsc"}, "wartosci": {}},
+        allow_unicode=True), encoding="utf-8")
+    config.wyczysc_cache()
+    try:
+        wz = pf.wczytaj_wzorzec()
+        assert "Liczba miejsc" in wz.naglowki
+        assert "Ilość osób" not in wz.naglowki
+        assert wz.ok                      # kolumna ID nietknięta
+    finally:
+        config.wyczysc_cache()
