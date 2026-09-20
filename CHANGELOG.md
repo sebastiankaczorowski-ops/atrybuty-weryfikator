@@ -3,6 +3,22 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-20 · Zakładka „postęp" — statystyki dzienne
+
+- Nowa podstrona `/postep`: dzień po dniu widać, ile rozstrzygnięto w kolejce
+  (z podziałem na poprawki, fałszywe alarmy, „bez zmian" i odłożone), ile
+  poprawek i produktów poszło tego dnia partiami do sklepu, i ile kolejny
+  zrzut z bazy potwierdził jako faktycznie wprowadzone — ze skutecznością
+  w procentach.
+- U góry stan na teraz: otwarte findingi, rozstrzygnięcia razem, ile czeka
+  na eksport, ile wysłano, ile sprawdzono i jaki procent wszedł.
+- **Jak to czytać:** trzy grupy kolumn to trzy różne momenty życia jednej
+  poprawki — decyzja, wysyłka, potwierdzenie — i zdarzają się w różne dni.
+  Liczby w jednym wierszu dotyczą różnych poprawek i nie wolno ich od siebie
+  odejmować.
+- Przy okazji: na świeżej bazie brakowało tabel weryfikacji i zgłoszeń, więc
+  część stron wywalała się błędem 500, zanim cokolwiek je wypełniło.
+
 ## 2026-09-20 · Karta produktu mówi, co jest otwarte, a co już rozstrzygnięte
 
 - Karta pokazuje **wszystkie** findingi produktu, także te rozstrzygnięte,

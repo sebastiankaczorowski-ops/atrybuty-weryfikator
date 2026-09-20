@@ -1,0 +1,132 @@
+{# Postęp prac dzień po dniu.
+
+   Uwaga na czytanie: trzy liczby w wierszu to trzy różne momenty życia jednej
+   poprawki — decyzja w kolejce, wysyłka plikiem, potwierdzenie w kolejnym
+   zrzucie z bazy. Poprawka rozstrzygnięta w poniedziałek trafia do partii we
+   wtorek, a potwierdzenie przychodzi w środę. Dlatego liczby w jednym wierszu
+   nie opisują tych samych rekordów i nie wolno ich od siebie odejmować. #}
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postęp prac — atrybuty OXM</title>
+{% include "_styl.html" %}
+<style>
+table.dni{width:100%;border-collapse:collapse;background:var(--surface);
+          border:1px solid var(--line);border-radius:3px;overflow:hidden}
+table.dni th,table.dni td{padding:7px 10px;border-bottom:1px solid var(--line);
+                          text-align:right;white-space:nowrap}
+table.dni th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+             color:var(--muted);background:var(--surface-2);font-weight:600}
+table.dni td.dzien,table.dni th.dzien{text-align:left;
+  font-family:"IBM Plex Mono",monospace}
+table.dni tbody tr:hover{background:var(--surface-2)}
+table.dni td.n{font-variant-numeric:tabular-nums}
+td.pusto{color:var(--line-strong)}
+.grupa-kol{border-left:2px solid var(--line)}
+.slupek{display:block;height:6px;background:var(--accent);border-radius:1px;
+        min-width:2px;margin-top:3px}
+.skut{display:inline-block;padding:1px 6px;border-radius:2px;font-weight:600}
+.skut.dobra{background:var(--ok-soft);color:var(--ok)}
+.skut.slaba{background:var(--crit-soft);color:var(--crit)}
+.legenda{color:var(--muted);font-size:12.5px;margin:10px 0 16px;max-width:900px}
+.legenda b{color:var(--ink-2)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Postęp prac</h1>
+  <span class="zrodlo">dzień po dniu — co rozstrzygnięto, co poszło do sklepu,
+    co się potwierdziło</span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/rozstrzygniete">rozstrzygnięte</a>
+    <a href="/eksport/partie">eksport partiami</a>
+    <a href="/weryfikacja">czy weszło</a>
+    <a href="/import">wgraj plik</a>
+    <a href="/zmiany">co nowego</a>
+  </nav>
+</header>
+
+<main>
+
+<div class="kafle">
+  <div class="kafel"><b>{{ razem.otwartych }}</b><span>otwartych findingów</span></div>
+  <div class="kafel"><b>{{ razem.decyzji }}</b><span>rozstrzygnięć razem</span></div>
+  <div class="kafel"><b>{{ razem.czeka_na_eksport }}</b><span>czeka na eksport</span></div>
+  <div class="kafel"><b>{{ razem.w_partiach }}</b><span>wysłanych w partiach</span></div>
+  <div class="kafel"><b>{{ razem.sprawdzonych }}</b><span>sprawdzonych w bazie</span></div>
+  <div class="kafel"><b>{% if razem.skutecznosc is none %}—{% else %}{{
+      '%.0f'|format(razem.skutecznosc * 100) }}%{% endif %}</b>
+    <span>weszło do sklepu</span></div>
+</div>
+
+<p class="legenda">
+  Każda poprawka przechodzi trzy etapy w różne dni: <b>rozstrzygnięcie</b>
+  w kolejce, <b>partię</b> wysłaną do panelu i <b>potwierdzenie</b> w kolejnym
+  zrzucie z bazy sklepu. Liczby w jednym wierszu dotyczą więc różnych poprawek
+  — to trzy osobne strumienie, nie etapy tej samej porcji.
+</p>
+
+{% if not wiersze %}
+  <p class="pod">Jeszcze nic się nie wydarzyło — statystyki pojawią się po
+  pierwszych rozstrzygnięciach w <a href="/anomalie">kolejce</a>.</p>
+{% else %}
+<table class="dni">
+  <thead>
+    <tr>
+      <th class="dzien" rowspan="2">dzień</th>
+      <th colspan="5">rozstrzygnięte w kolejce</th>
+      <th colspan="3" class="grupa-kol">wysłane do sklepu</th>
+      <th colspan="4" class="grupa-kol">potwierdzone w kolejnym pliku</th>
+    </tr>
+    <tr>
+      <th>razem</th><th>poprawek</th><th>fałszywych</th><th>bez zmian</th><th>odłożonych</th>
+      <th class="grupa-kol">partii</th><th>poprawek</th><th>produktów</th>
+      <th class="grupa-kol">sprawdzonych</th><th>weszło</th><th>nie weszło</th><th>skuteczność</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for w in wiersze %}
+    <tr>
+      <td class="dzien">{{ w.dzien }}</td>
+      <td class="n"><b>{{ w.decyzji or '' }}</b>
+        {% if w.decyzji %}<span class="slupek"
+          style="width:{{ (w.decyzji / szczyt * 100)|round|int }}%"></span>{% endif %}</td>
+      <td class="n {{ 'pusto' if not w.poprawek }}">{{ w.poprawek or '·' }}</td>
+      <td class="n {{ 'pusto' if not w.falszywych }}">{{ w.falszywych or '·' }}</td>
+      <td class="n {{ 'pusto' if not w.bez_zmian }}">{{ w.bez_zmian or '·' }}</td>
+      <td class="n {{ 'pusto' if not w.odlozonych }}">{{ w.odlozonych or '·' }}</td>
+
+      <td class="n grupa-kol {{ 'pusto' if not w.partii }}">{{ w.partii or '·' }}</td>
+      <td class="n {{ 'pusto' if not w.w_partiach }}">{{ w.w_partiach or '·' }}</td>
+      <td class="n {{ 'pusto' if not (w.produktow_w_partiach or w.zgloszen_w_partiach) }}">
+        {{ (w.produktow_w_partiach + w.zgloszen_w_partiach) or '·' }}</td>
+
+      <td class="n grupa-kol {{ 'pusto' if not w.sprawdzonych }}">{{ w.sprawdzonych or '·' }}</td>
+      <td class="n {{ 'pusto' if not w.weszlo }}">{{ w.weszlo or '·' }}</td>
+      <td class="n {{ 'pusto' if not (w.bez_efektu + w.inna + w.zniknelo) }}">
+        {{ (w.bez_efektu + w.inna + w.zniknelo) or '·' }}</td>
+      <td class="n">
+        {% if w.skutecznosc is none %}<span class="pusto">·</span>
+        {% else %}<span class="skut {{ 'dobra' if w.skutecznosc >= 0.8 else 'slaba' }}">
+          {{ '%.0f'|format(w.skutecznosc * 100) }}%</span>{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="legenda">
+  „Bez zmian" w rozstrzygnięciach to produkty uznane za poprawne i wysłane
+  przez import po flagę odcięcia składowych. „Nie weszło" zbiera trzy
+  przypadki: wartość w bazie się nie zmieniła, zmieniła się na coś innego,
+  albo atrybutu lub produktu nie ma już w zrzucie — rozbicie jest w zakładce
+  <a href="/weryfikacja">czy weszło</a>.
+  {% if dni < 365 %}Pokazuję ostatnie {{ dni }} dni —
+  <a href="/postep?dni=365">cały rok</a>.{% endif %}
+</p>
+{% endif %}
+</main>
+</body>
+</html>

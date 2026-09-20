@@ -490,6 +490,96 @@ def slowniki_decyzji(con: sqlite3.Connection, fl: dict | None = None) -> dict:
     }
 
 
+# --- postęp prac dzień po dniu --------------------------------------------
+#
+# Trzy różne rzeczy, których nie wolno mylić:
+#   rozstrzygnięte — ile decyzji zapadło tego dnia w kolejce,
+#   w partiach     — ile z nich poszło tego dnia plikiem do sklepu,
+#   sprawdzone     — ile z wysłanych potwierdził kolejny zrzut z bazy.
+# Data przy każdej jest inna (decyzja, partia, weryfikacja), więc liczymy
+# osobno i sklejamy po dniu. Jeden wiersz dzienny nie opisuje jednej
+# poprawki — poprawka zwykle wędruje przez trzy różne dni.
+
+def statystyki_dzienne(con: sqlite3.Connection, dni: int = 60) -> list[dict]:
+    def po_dniu(q: str) -> dict[str, dict]:
+        out: dict[str, dict] = {}
+        for r in con.execute(q):
+            if r["dzien"]:
+                out[r["dzien"]] = dict(r)
+        return out
+
+    decyzje = po_dniu("""
+        SELECT substr(utworzono,1,10) AS dzien,
+               COUNT(*) AS decyzji,
+               SUM(status='zastosowana')   AS poprawek,
+               SUM(status='falszywy_alarm') AS falszywych,
+               SUM(status='odlozona')      AS odlozonych,
+               SUM(status='do_importu')    AS bez_zmian
+        FROM decyzje GROUP BY 1""")
+
+    partie = po_dniu("""
+        SELECT substr(b.utworzono,1,10) AS dzien,
+               COUNT(DISTINCT b.id) AS partii,
+               COUNT(d.produkt_id) AS w_partiach,
+               COUNT(DISTINCT d.produkt_id) AS produktow_w_partiach
+        FROM partie b LEFT JOIN decyzje d ON d.partia_id = b.id
+        WHERE b.wycofana = 0 GROUP BY 1""")
+
+    zgloszenia = po_dniu("""
+        SELECT substr(b.utworzono,1,10) AS dzien,
+               COUNT(*) AS zgloszen_w_partiach
+        FROM zgloszenia z JOIN partie b ON b.id = z.partia_id
+        WHERE b.wycofana = 0 GROUP BY 1""")
+
+    weryfikacje = po_dniu("""
+        SELECT substr(sprawdzono,1,10) AS dzien,
+               COUNT(*) AS sprawdzonych,
+               SUM(stan='weszlo') AS weszlo,
+               SUM(stan='bez_zmian') AS bez_efektu,
+               SUM(stan='inna_wartosc') AS inna,
+               SUM(stan IN ('brak_atrybutu','brak_produktu')) AS zniknelo
+        FROM weryfikacje GROUP BY 1""")
+
+    dni_wszystkie = sorted(set(decyzje) | set(partie) | set(zgloszenia)
+                           | set(weryfikacje), reverse=True)[:dni]
+    wiersze = []
+    for d in dni_wszystkie:
+        w = {"dzien": d}
+        for zrodlo in (decyzje, partie, zgloszenia, weryfikacje):
+            for k, v in (zrodlo.get(d) or {}).items():
+                if k != "dzien":
+                    w[k] = v or 0
+        for k in ("decyzji", "poprawek", "falszywych", "odlozonych", "bez_zmian",
+                  "partii", "w_partiach", "produktow_w_partiach",
+                  "zgloszen_w_partiach", "sprawdzonych", "weszlo", "bez_efektu",
+                  "inna", "zniknelo"):
+            w.setdefault(k, 0)
+        w["skutecznosc"] = (w["weszlo"] / w["sprawdzonych"]
+                            if w["sprawdzonych"] else None)
+        wiersze.append(w)
+    return wiersze
+
+
+def postep_razem(con: sqlite3.Connection, przebieg: int | None = None) -> dict:
+    """Stan na teraz — ile jeszcze zostało i ile już przeszło całą drogę."""
+    licz = lambda q: int(con.execute(q).fetchone()[0])
+    razem = {
+        "decyzji": licz("SELECT COUNT(*) FROM decyzje"),
+        "poprawek": licz("SELECT COUNT(*) FROM decyzje WHERE status='zastosowana'"),
+        "czeka_na_eksport": licz(
+            "SELECT COUNT(*) FROM decyzje WHERE status='zastosowana'"
+            " AND nowa_wartosc IS NOT NULL AND partia_id IS NULL"),
+        "w_partiach": licz("SELECT COUNT(*) FROM decyzje WHERE partia_id IS NOT NULL"),
+        "sprawdzonych": licz("SELECT COUNT(*) FROM weryfikacje"),
+        "weszlo": licz("SELECT COUNT(*) FROM weryfikacje WHERE stan='weszlo'"),
+    }
+    razem["otwartych"] = (policz(con, przebieg, Filtr(grupuj=False, status="otwarte"))
+                          if przebieg else 0)
+    razem["skutecznosc"] = (razem["weszlo"] / razem["sprawdzonych"]
+                            if razem["sprawdzonych"] else None)
+    return razem
+
+
 # --- produkty bez danych --------------------------------------------------
 
 SQL_BRAKI = """

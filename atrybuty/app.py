@@ -40,8 +40,13 @@ szablony.env.globals["link_panelu"] = config.link_produktu
 
 def _con():
     con = db.polacz(BAZA)
-    wizja.przygotuj_baze(con)       # tabele werdyktów istnieją też przed pierwszym L3
-    zrodla_mod.przygotuj_baze(con)  # to samo dla źródeł producenckich
+    # Wszystkie tabele poboczne zakładamy od razu, także na świeżej bazie:
+    # strony czytają je zanim cokolwiek je wypełni (postęp prac pyta
+    # o weryfikacje, eksport o zgłoszenia), a brak tabeli to błąd 500.
+    wizja.przygotuj_baze(con)       # werdykty wizji — też przed pierwszym L3
+    zrodla_mod.przygotuj_baze(con)  # źródła producenckie
+    weryfikacja_mod.przygotuj_baze(con)
+    eksport_panelu.przygotuj_baze(con)
     return con
 
 
@@ -753,6 +758,25 @@ def _markdown_lite(tekst: str) -> str:
     if w_liscie:
         wyjscie.append("</ul>")
     return "\n".join(wyjscie)
+
+
+@app.get("/postep", response_class=HTMLResponse)
+def postep(request: Request, dni: int = 60):
+    """Postęp prac dzień po dniu — rozstrzygnięcia, partie, potwierdzenia.
+
+    Trzy liczby w wierszu opisują trzy różne momenty życia jednej poprawki
+    (decyzja, wysyłka, potwierdzenie w kolejnym zrzucie), więc nie sumują się
+    w poprzek dnia i nie powinny być tak czytane.
+    """
+    con = _con()
+    przebieg = _przebieg(con)
+    wiersze = zapytania.statystyki_dzienne(con, dni=max(1, min(dni, 365)))
+    razem = zapytania.postep_razem(con, przebieg)
+    con.close()
+    szczyt = max([w["decyzji"] for w in wiersze] + [1])
+    return szablony.TemplateResponse(request, "postep.html", {
+        "request": request, "wiersze": wiersze, "razem": razem,
+        "szczyt": szczyt, "dni": dni})
 
 
 @app.get("/zmiany", response_class=HTMLResponse)

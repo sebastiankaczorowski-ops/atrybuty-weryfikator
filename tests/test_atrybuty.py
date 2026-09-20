@@ -2461,3 +2461,73 @@ def test_karta_produktu_odroznia_otwarte_od_rozstrzygnietych(tmp_path, monkeypat
     assert "Findingi (9)" in strona                    # karta pokazuje komplet
     assert "1 otwartych · 8 rozstrzygniętych" in strona
     assert strona.count('class="f zamkniety"') == 8    # i widać które
+
+
+def test_statystyki_dzienne_licza_trzy_strumienie_osobno(tmp_path, monkeypatch):
+    """Poprawka rozstrzygnięta w poniedziałek idzie w partii we wtorek,
+    a potwierdzenie przychodzi w środę — trzy daty, trzy wiersze."""
+    from atrybuty import db, eksport_panelu, weryfikacja, wizja, zapytania
+    import atrybuty.pipeline as pipeline
+    from atrybuty.model import Produkt
+    baza = tmp_path / "p.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con); eksport_panelu.przygotuj_baze(con)
+    weryfikacja.przygotuj_baze(con) if hasattr(weryfikacja, "przygotuj_baze") else \
+        con.executescript(weryfikacja.SCHEMA)
+    db.zapisz_przebieg(con, "t.csv", [Produkt(
+        id="1", nazwa="Szafa", producent="BRW", kolekcja="", zdjecie="", styl="",
+        kategoria="szafa")], [])
+
+    con.execute("INSERT INTO decyzje (produkt_id,atrybut,hasz_starej,status,"
+                "nowa_wartosc,regula_id,uzytkownik,utworzono,partia_id) "
+                "VALUES ('1','Materiał','h1','zastosowana','dąb','R','local',"
+                "'2026-09-14T10:00:00',7)")
+    con.execute("INSERT INTO decyzje (produkt_id,atrybut,hasz_starej,status,"
+                "nowa_wartosc,regula_id,uzytkownik,utworzono) "
+                "VALUES ('1','Styl','h2','falszywy_alarm',NULL,'R','local',"
+                "'2026-09-14T11:00:00')")
+    con.execute("INSERT INTO partie (id,utworzono,plik,ile,wycofana) "
+                "VALUES (7,'2026-09-15T09:00:00','p.xlsx',1,0)")
+    con.execute("INSERT INTO weryfikacje (partia_id,produkt_id,atrybut,hasz_starej,"
+                "stan,sprawdzono) VALUES (7,'1','Materiał','h1','weszlo',"
+                "'2026-09-16T08:00:00')")
+    con.commit()
+
+    wg = {w["dzien"]: w for w in zapytania.statystyki_dzienne(con)}
+    assert wg["2026-09-14"]["decyzji"] == 2
+    assert wg["2026-09-14"]["poprawek"] == 1 and wg["2026-09-14"]["falszywych"] == 1
+    assert wg["2026-09-14"]["w_partiach"] == 0      # wysyłka to inny dzień
+    assert wg["2026-09-15"]["partii"] == 1 and wg["2026-09-15"]["w_partiach"] == 1
+    assert wg["2026-09-15"]["decyzji"] == 0
+    assert wg["2026-09-16"]["sprawdzonych"] == 1
+    assert wg["2026-09-16"]["weszlo"] == 1
+    assert wg["2026-09-16"]["skutecznosc"] == 1.0
+    assert wg["2026-09-14"]["skutecznosc"] is None   # nic nie sprawdzano
+
+    r = zapytania.postep_razem(con, 1)
+    assert r["decyzji"] == 2 and r["w_partiach"] == 1 and r["weszlo"] == 1
+    assert r["czeka_na_eksport"] == 0               # jedyna poprawka już poszła
+    con.close()
+
+
+def test_strona_postepu_sie_renderuje(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    from atrybuty import db, eksport_panelu, wizja
+    import atrybuty.pipeline as pipeline, atrybuty.app as app_mod
+    from atrybuty.model import Produkt
+    baza = tmp_path / "ps.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con); eksport_panelu.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", [Produkt(
+        id="1", nazwa="Szafa", producent="BRW", kolekcja="", zdjecie="", styl="",
+        kategoria="szafa")], [])
+    db.zapisz_decyzje(con, "1", "Materiał", None, "zastosowana", "dąb", "R")
+    con.close()
+
+    strona = TestClient(app_mod.app).get("/postep").text
+    assert "Postęp prac" in strona
+    assert "rozstrzygnięte w kolejce" in strona
+    assert "potwierdzone w kolejnym pliku" in strona
+    # link w nawigacji innych stron
+    assert '/postep' in TestClient(app_mod.app).get("/rozstrzygniete").text
