@@ -2418,3 +2418,46 @@ def test_przemianowany_atrybut_ma_swoja_kolumne_w_pliku(tmp_path, monkeypatch):
         assert wz.ok                      # kolumna ID nietknięta
     finally:
         config.wyczysc_cache()
+
+
+def test_karta_produktu_odroznia_otwarte_od_rozstrzygnietych(tmp_path, monkeypatch):
+    """Karta pokazuje WSZYSTKIE findingi produktu, kolejka tylko otwarte.
+
+    Produkt z 13 pozycjami na karcie i jednym wierszem w kolejce wyglądał
+    na błąd kolejki — a to były 24 rozstrzygnięcia, o których karta milczała.
+    """
+    from fastapi.testclient import TestClient
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja, zapytania
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "k.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+
+    atrybuty = ["Szerokość", "Wysokość", "Głębokość", "Waga", "Kształt",
+                "Materiał", "Typ drążka", "Rodzaj drzwi", "Liczba półek"]
+    p = Produkt(id="137487", nazwa="Szafa przesuwna 220 Maxi", producent="Lenart",
+                kolekcja="Maxi", zdjecie="", styl="", kategoria="szafa")
+    # każdy atrybut to osobna grupa — inny atrybut, inna wartość
+    findingi = [Finding("137487", a, "L0-ZE-SKLADOWYCH", "L0", "srednia", 0.9,
+                        None, f"w{i}", "", grupa=f"L0-ZE-SKLADOWYCH|{a}|w{i}")
+                for i, a in enumerate(atrybuty)]
+    db.zapisz_przebieg(con, "t.csv", [p], findingi)
+
+    # wszystkie otwarte: kolejka pokazuje każdy osobno, bo to różne grupy
+    assert len(zapytania.lista(con, 1, zapytania.Filtr(szukaj="137487"))) == 9
+
+    # rozstrzygamy 8 z 9 — zostaje jeden
+    db.zapisz_decyzje_grupowo(
+        con, [("137487", a, None, f"w{i}", "L0-ZE-SKLADOWYCH")
+              for i, a in enumerate(atrybuty[:-1])], "zastosowana")
+    otwarte = zapytania.lista(con, 1, zapytania.Filtr(szukaj="137487"))
+    assert len(otwarte) == 1 and otwarte[0]["atrybut"] == "Liczba półek"
+    con.close()
+
+    strona = TestClient(app_mod.app).get("/produkt/137487").text
+    assert "Findingi (9)" in strona                    # karta pokazuje komplet
+    assert "1 otwartych · 8 rozstrzygniętych" in strona
+    assert strona.count('class="f zamkniety"') == 8    # i widać które

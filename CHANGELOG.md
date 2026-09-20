@@ -3,6 +3,17 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-20 · Karta produktu mówi, co jest otwarte, a co już rozstrzygnięte
+
+- Karta pokazuje **wszystkie** findingi produktu, także te rozstrzygnięte,
+  a kolejka weryfikacji tylko otwarte. Karta o tym nie mówiła, więc produkt
+  z 13 pozycjami i jednym wierszem w kolejce wyglądał na błąd kolejki.
+- Teraz nad listą jest „N otwartych · M rozstrzygniętych", rozstrzygnięte są
+  wyszarzone i opisane (co zapadło, kiedy, w której partii), a otwarte idą
+  na górę.
+- Doszły linki: „pokaż je w kolejce" i przejście do rozstrzygniętych tego
+  produktu.
+
 ## 2026-09-19 · Przemianowane atrybuty wracają do importu
 
 - `Liczba miejsc` i `Rodzaj obicia` nie wchodziły do pliku importu. Powód:

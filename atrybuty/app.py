@@ -312,9 +312,20 @@ def produkt(request: Request, pid: str):
     if not p:
         con.close()
         return HTMLResponse("Nie znaleziono", status_code=404)
+    # Ze statusem decyzji, bo karta pokazuje WSZYSTKIE findingi produktu,
+    # a kolejka tylko otwarte. Bez tego karta z 13 pozycjami przy jednym
+    # wierszu w kolejce wygląda na błąd kolejki, a nie na 12 rozstrzygnięć.
     findingi = [dict(r) for r in con.execute(
-        "SELECT * FROM findingi WHERE produkt_id=? AND przebieg_id=?",
+        "SELECT f.*, d.status AS status_decyzji, d.nowa_wartosc AS decyzja_wartosc,"
+        "       d.utworzono AS decyzja_kiedy, d.partia_id "
+        "FROM findingi f "
+        "LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut "
+        "                   AND d.hasz_starej=f.hasz_starej "
+        "WHERE f.produkt_id=? AND f.przebieg_id=?",
         (pid, _przebieg(con)))]
+    # otwarte na górze — po to się tu wchodzi
+    findingi.sort(key=lambda f: (f["status_decyzji"] is not None, f["atrybut"]))
+    otwartych = sum(1 for f in findingi if f["status_decyzji"] is None)
     con.close()
 
     # Zestawienie obu miejsc obok siebie — najszybszy sposób, żeby zobaczyć,
@@ -336,6 +347,7 @@ def produkt(request: Request, pid: str):
 
     return szablony.TemplateResponse(request, "produkt.html", {
         "request": request, "p": p, "findingi": findingi,
+        "otwartych": otwartych,
         "wszystkie_atrybuty": wszystkie, "zgodnosc": zgodnosc,
         "nazwy_kat": kategorie.nazwy_kategorii()})
 
