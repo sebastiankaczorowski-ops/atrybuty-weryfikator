@@ -1,0 +1,156 @@
+{# Atrybuty sklepu i ich wartości słownikowe, z jednym przełącznikiem:
+   czy atrybut przyjmuje więcej niż jedną wartość naraz.
+
+   Panel tego nie mówi — w jego słowniku jedno i drugie wygląda tak samo.
+   Ta strona jest jedynym źródłem tej wiedzy, dlatego przełącznik zapisuje
+   się od razu, bez „zapisz" na dole. #}
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atrybuty i wartości — atrybuty OXM</title>
+<script src="/static/htmx.min.js"></script>
+{% include "_styl.html" %}
+<style>
+table.atr{width:100%;border-collapse:collapse;background:var(--surface);
+          border:1px solid var(--line);border-radius:3px;overflow:hidden}
+table.atr th,table.atr td{padding:8px 11px;border-bottom:1px solid var(--line);
+                          text-align:left;vertical-align:top}
+table.atr th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+             color:var(--muted);background:var(--surface-2);font-weight:600}
+table.atr tbody tr:hover{background:var(--surface-2)}
+td.kol-nazwa{width:250px}
+td.kol-wiele{width:190px;white-space:nowrap}
+td.kol-meta{width:120px;white-space:nowrap}
+.wartosci{display:flex;flex-wrap:wrap;gap:4px}
+.w{background:var(--surface-2);border:1px solid var(--line);border-radius:2px;
+   padding:1px 6px;font-size:12px}
+.wolne{color:var(--muted);font-size:12.5px}
+.znacznik{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11.5px;
+          font-weight:600}
+.znacznik.tak{background:var(--accent-soft);color:var(--accent)}
+.znacznik.nie{background:var(--surface-2);color:var(--muted)}
+.st{display:inline-block;padding:0 6px;border-radius:2px;font-size:11px;font-weight:600}
+.st.ACTIVE{background:var(--ok-soft);color:var(--ok)}
+.st.DISABLED,.st.DRAFT{background:var(--surface-2);color:var(--muted)}
+label.chk{display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:12.5px}
+form.filtry{margin-bottom:14px}
+.wykrywanie{display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+            background:var(--surface);border:1px solid var(--line);
+            border-radius:3px;padding:10px 12px;margin-bottom:12px}
+.zrobione{color:var(--ok);font-weight:600;font-size:13px}
+.legenda{color:var(--muted);font-size:12.5px;max-width:900px;margin:0 0 14px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Atrybuty i wartości</h1>
+  <span class="zrodlo">{{ ile_wszystkich }} atrybutów · {{ ile_slownikowych }}
+    słownikowych · {{ ile_wiele }} przyjmuje wiele wartości</span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/rozstrzygniete">rozstrzygnięte</a>
+    <a href="/reguly">reguły</a>
+    <a href="/postep">postęp</a>
+    <a href="/zmiany">co nowego</a>
+  </nav>
+</header>
+
+<main>
+<p class="legenda">
+  Zaznacz atrybuty, w które sklep przyjmuje <b>więcej niż jedną wartość
+  naraz</b> — np. „Materiał: płyta meblowa, szkło". Słownik panelu tego nie
+  rozróżnia, więc dopóki tu nie klikniesz, kolejka traktuje atrybut jako
+  jednowartościowy i nie pozwoli wpisać dwóch wartości po przecinku.
+  Zmiana działa od razu, bez przeliczania.
+</p>
+
+{% if komunikat %}<p class="zrobione">✓ {{ komunikat.replace('+', ' ') }}
+  atrybutów na podstawie danych sklepu.</p>{% endif %}
+
+<div class="wykrywanie">
+  {% if not wykryj %}
+    <a href="/atrybuty?{{ 'szukaj=' + szukaj if szukaj }}&amp;tylko={{ tylko }}&amp;wykryj=1">
+      <button type="button">Sprawdź w danych sklepu</button></a>
+    <span class="dowod">przejrzy ostatni wgrany plik i pokaże, które atrybuty
+      naprawdę bywają wypełnione kilkoma wartościami naraz</span>
+  {% else %}
+    <span class="dowod"><b>{{ wykrytych }}</b> atrybutów ma w danych sklepu
+      wartości z kilku członów{% if nowych_wykrytych %},
+      z tego <b>{{ nowych_wykrytych }}</b> jeszcze niezaznaczonych{% endif %}.</span>
+    {% if nowych_wykrytych %}
+    <form method="post" action="/atrybuty/wykryte" style="display:inline">
+      <button class="p" type="submit">Zaznacz wykryte ({{ nowych_wykrytych }})</button>
+    </form>
+    {% endif %}
+  {% endif %}
+</div>
+
+<form class="filtry" method="get" action="/atrybuty">
+  <div class="pole"><label>szukaj (atrybut lub wartość)</label>
+    <input type="text" name="szukaj" value="{{ szukaj }}"></div>
+  {% if wykryj %}<input type="hidden" name="wykryj" value="1">{% endif %}
+  <div class="pole"><label>pokaż</label>
+    <select name="tylko">
+      <option value="">— wszystkie —</option>
+      <option value="slownikowe" {{ 'selected' if tylko=='slownikowe' }}>tylko słownikowe</option>
+      <option value="aktywne" {{ 'selected' if tylko=='aktywne' }}>tylko ACTIVE</option>
+      <option value="wiele" {{ 'selected' if tylko=='wiele' }}>tylko wielowartościowe</option>
+    </select></div>
+  <button class="p" type="submit">Filtruj</button>
+  <a href="/atrybuty"><button type="button">Wyczyść</button></a>
+</form>
+
+{% if not wiersze %}
+  <p class="pod">Nic nie pasuje do filtrów.</p>
+{% else %}
+<table class="atr">
+  <thead><tr>
+    <th>atrybut</th><th>wartości słownikowe</th><th>stan</th>
+    <th>ile wartości naraz</th>
+  </tr></thead>
+  <tbody>
+  {% for w in wiersze %}
+  <tr>
+    <td class="kol-nazwa"><b>{{ w.nazwa }}</b>
+      <div class="dowod">ID {{ w.id }}{% if w.typ %} · {{ w.typ }}{% endif %}</div></td>
+    <td>
+      {% if w.wartosci %}
+        <div class="wartosci">
+          {% for v in w.wartosci %}<span class="w">{{ v }}</span>{% endfor %}
+        </div>
+        <div class="dowod">{{ w.wartosci|length }} wartości</div>
+      {% else %}
+        <span class="wolne">pole wolne — liczba albo tekst, bez słownika</span>
+      {% endif %}
+    </td>
+    <td class="kol-meta"><span class="st {{ w.status }}">{{ w.status or '—' }}</span></td>
+    <td class="kol-wiele">
+      {% if w.wykryte %}
+      <div class="dowod" title="Przykład ze sklepu: {{ w.wykryte.przyklad }}">
+        w danych: {{ w.wykryte.ile }} prod.</div>
+      {% endif %}
+      {% if w.slownikowy %}
+        <label class="chk">
+          <input type="checkbox" {{ 'checked' if w.wiele }}
+                 hx-post="/atrybuty/przelacz" hx-target="#zn-{{ loop.index }}"
+                 hx-swap="innerHTML"
+                 hx-vals='{"atrybut": {{ w.nazwa|tojson }}}'
+                 name="wiele" value="1">
+          <span id="zn-{{ loop.index }}">
+            <span class="znacznik {{ 'tak' if w.wiele else 'nie' }}">{{
+              'wiele wartości' if w.wiele else 'jedna wartość' }}</span></span>
+        </label>
+      {% else %}
+        <span class="dowod">nie dotyczy</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+</main>
+</body>
+</html>

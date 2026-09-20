@@ -48,6 +48,47 @@ def zmiany_nazw() -> dict[str, Any]:
     return {"atrybuty": d.get("atrybuty") or {}, "wartosci": d.get("wartosci") or {}}
 
 
+PLIK_WIELOWARTOSCIOWE = "wielowartosciowe.yaml"
+
+
+@functools.lru_cache(maxsize=None)
+def wielowartosciowe() -> set[str]:
+    """Atrybuty, w które sklep przyjmuje więcej niż jedną wartość naraz.
+
+    Panel tego nie mówi — w słowniku wszystko wygląda tak samo. Ręcznie
+    pisany `slowniki.yaml` ma `typ: multi_enum` przy kilku, ale obejmuje
+    tylko część atrybutów, więc traktujemy go wyłącznie jako zaczyn.
+    Właściwa lista powstaje przez odklikanie na podstronie „atrybuty
+    i wartości" i mieszka w osobnym pliku — nie w regułach, bo to nie jest
+    reguła, tylko fakt o sklepie.
+    """
+    d = _wczytaj(PLIK_WIELOWARTOSCIOWE)
+    if d.get("atrybuty") is not None:
+        return {str(x) for x in (d.get("atrybuty") or [])}
+    # pierwszy raz: zaczyn z ręcznego slowniki.yaml
+    return {k for k, v in (slowniki().get("atrybuty") or {}).items()
+            if v.get("typ") == "multi_enum"}
+
+
+def zapisz_wielowartosciowe(nazwy) -> Path:
+    sciezka = KATALOG_CONFIG / PLIK_WIELOWARTOSCIOWE
+    sciezka.parent.mkdir(parents=True, exist_ok=True)
+    naglowek = ("# Atrybuty przyjmujące więcej niż jedną wartość naraz.\n"
+                "# Odklikiwane na podstronie „atrybuty i wartości\".\n")
+    sciezka.write_text(
+        naglowek + yaml.safe_dump({"atrybuty": sorted(set(nazwy))},
+                                  allow_unicode=True, sort_keys=False),
+        encoding="utf-8")
+    wielowartosciowe.cache_clear()
+    return sciezka
+
+
+def przelacz_wielowartosciowy(nazwa: str, wiele: bool) -> None:
+    obecne = set(wielowartosciowe())
+    obecne.add(nazwa) if wiele else obecne.discard(nazwa)
+    zapisz_wielowartosciowe(obecne)
+
+
 @functools.lru_cache(maxsize=None)
 def ustawienia() -> dict[str, Any]:
     return _wczytaj("ustawienia.yaml")
@@ -132,3 +173,4 @@ def wyczysc_cache() -> None:
     ustawienia.cache_clear()
     reguly.cache_clear()
     schema.cache_clear()
+    wielowartosciowe.cache_clear()

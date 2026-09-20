@@ -1034,9 +1034,12 @@ def test_wlasna_wartosc_zapisuje_poprawke_a_nie_odklada(tmp_path, monkeypatch):
     klient = TestClient(app_mod.app)
     # Bez grupowania pole zapisuje wprost — i to jako decyzję, nie odłożenie.
     strona = klient.get("/anomalie?grupuj=0").text
-    assert 'placeholder="własna wartość"' in strona
-    kawalek = strona[:strona.find('placeholder="własna wartość"')]
-    assert kawalek.rsplit('name="status"', 1)[1].startswith(' value="zastosowana"')
+    # formularz własnej wartości poznajemy po regule RECZNA
+    i = strona.find('value="RECZNA"')
+    assert i > 0
+    formularz = strona[strona.rfind("<form", 0, i):strona.find("</form>", i)]
+    assert 'name="status" value="zastosowana"' in formularz
+    assert 'name="nowa"' in formularz
 
     klient.post("/decyzja", data={
         "produkt_id": "1", "atrybut": "Materiał", "stara": "plyta",
@@ -2531,3 +2534,127 @@ def test_strona_postepu_sie_renderuje(tmp_path, monkeypatch):
     assert "potwierdzone w kolejnym pliku" in strona
     # link w nawigacji innych stron
     assert '/postep' in TestClient(app_mod.app).get("/rozstrzygniete").text
+
+
+def _panel_z_wartosciami(tmp_path, monkeypatch):
+    """Słownik panelu: Materiał (3 wartości) i Kształt (2)."""
+    import yaml
+    from atrybuty import config, panel_format as pf
+    monkeypatch.setattr(config, "KATALOG_CONFIG", tmp_path)
+    for atryb, nazwa in (("PLIK_SLOWNIKA", "slownik_idow.yaml"),
+                         ("PLIK_ETYKIET", "etykiety_panelu.yaml"),
+                         ("PLIK_ATRYBUTOW", "atrybuty_panelu.yaml"),
+                         ("PLIK_WZORCA", "wzorzec_panelu.yaml"),
+                         ("PLIK_ZMIAN_NAZW", "zmiany_nazw.yaml")):
+        if hasattr(pf, atryb):
+            monkeypatch.setattr(pf, atryb, tmp_path / nazwa)
+    (tmp_path / "slownik_idow.yaml").write_text(yaml.safe_dump({
+        "Materiał": {"plyta meblowa": ["1"], "szklo": ["2"], "metal": ["3"]},
+        "Kształt": {"prostokatny": ["4"], "owalny": ["5"]}},
+        allow_unicode=True), encoding="utf-8")
+    (tmp_path / "etykiety_panelu.yaml").write_text(yaml.safe_dump({
+        "Materiał": {"plyta meblowa": "płyta meblowa", "szklo": "szkło",
+                     "metal": "metal"},
+        "Kształt": {"prostokatny": "prostokątny", "owalny": "owalny"}},
+        allow_unicode=True), encoding="utf-8")
+    (tmp_path / "atrybuty_panelu.yaml").write_text(yaml.safe_dump({
+        "Materiał": {"id": "10", "status": "ACTIVE"},
+        "Kształt": {"id": "11", "status": "ACTIVE"},
+        "Szerokość": {"id": "12", "status": "ACTIVE"}}, allow_unicode=True),
+        encoding="utf-8")
+    config.wyczysc_cache()
+    return config, pf
+
+
+def test_lista_wielowartosciowych_zapisuje_sie_i_wraca(tmp_path, monkeypatch):
+    """Panel nie mówi, które atrybuty biorą kilka wartości — odklikujemy to
+    sami i musi przeżyć restart."""
+    config, _ = _panel_z_wartosciami(tmp_path, monkeypatch)
+    try:
+        config.przelacz_wielowartosciowy("Materiał", True)
+        assert "Materiał" in config.wielowartosciowe()
+        assert (tmp_path / "wielowartosciowe.yaml").exists()
+
+        config.wyczysc_cache()                    # jak po restarcie
+        assert config.wielowartosciowe() == {"Materiał"}
+
+        config.przelacz_wielowartosciowy("Materiał", False)
+        assert config.wielowartosciowe() == set()
+    finally:
+        config.wyczysc_cache()
+
+
+def test_kilka_wartosci_tylko_tam_gdzie_wolno(tmp_path, monkeypatch):
+    """Wpisanie „szkło, metal” w atrybut jednowartościowy zrobiłoby w sklepie
+    nową, śmieciową wartość o takiej nazwie."""
+    import atrybuty.app as app_mod
+    config, _ = _panel_z_wartosciami(tmp_path, monkeypatch)
+    try:
+        config.zapisz_wielowartosciowe(["Materiał"])
+        assert app_mod._zle_wielokrotnosci("Materiał", "szkło, metal") == ""
+        assert app_mod._zle_wielokrotnosci("Kształt", "prostokątny") == ""
+        blad = app_mod._zle_wielokrotnosci("Kształt", "prostokątny, owalny")
+        assert "przyjmuje jedną wartość" in blad
+        assert "/atrybuty" in blad            # mówi, gdzie to zmienić
+    finally:
+        config.wyczysc_cache()
+
+
+def test_wykrywanie_wielowartosciowych_z_danych(tmp_path, monkeypatch):
+    """Dowodem jest wartość, której WSZYSTKIE człony są w słowniku.
+
+    Przecinek w polu tekstowym („Szafa 3-drzwiowa, biała”) listą nie jest.
+    """
+    _, pf = _panel_z_wartosciami(tmp_path, monkeypatch)
+    try:
+        wykryte = pf.wykryj_wielowartosciowe([
+            ("Materiał", "płyta meblowa, szkło"),
+            ("Materiał", "płyta meblowa, metal"),
+            ("Materiał", "płyta meblowa"),            # jedna wartość
+            ("Kształt", "prostokątny, coś dziwnego"),  # człon spoza słownika
+            ("Szerokość", "220, 240"),                 # atrybut bez słownika
+        ])
+        assert set(wykryte) == {"Materiał"}
+        assert wykryte["Materiał"]["ile"] == 2
+    finally:
+        from atrybuty import config
+        config.wyczysc_cache()
+
+
+def test_strona_atrybutow_pokazuje_wartosci_i_przelacznik(tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    import atrybuty.pipeline as pipeline, atrybuty.app as app_mod
+    from atrybuty import db, wizja
+    from atrybuty.model import Produkt
+    config, _ = _panel_z_wartosciami(tmp_path, monkeypatch)
+    baza = tmp_path / "a.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", [Produkt(
+        id="1", nazwa="Komoda", producent="BRW", kolekcja="", zdjecie="", styl="",
+        kategoria="komoda",
+        atrybuty_surowe={"Materiał": "płyta meblowa, szkło"})], [])
+    con.close()
+    try:
+        config.zapisz_wielowartosciowe([])
+        klient = TestClient(app_mod.app)
+        strona = klient.get("/atrybuty").text
+        assert "Materiał" in strona and "płyta meblowa" in strona
+        assert "Szerokość" in strona and "pole wolne" in strona   # bez słownika
+        assert strona.count("jedna wartość") >= 2
+
+        # przełącznik zapisuje od razu
+        odp = klient.post("/atrybuty/przelacz",
+                          data={"atrybut": "Materiał", "wiele": "1"})
+        assert "wiele wartości" in odp.text
+        assert "Materiał" in config.wielowartosciowe()
+
+        # wykrywanie z danych proponuje to samo
+        config.zapisz_wielowartosciowe([])
+        z_danych = klient.get("/atrybuty?wykryj=1").text
+        assert "1 prod." in z_danych
+        klient.post("/atrybuty/wykryte", follow_redirects=False)
+        assert config.wielowartosciowe() == {"Materiał"}
+    finally:
+        config.wyczysc_cache()

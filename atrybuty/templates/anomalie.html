@@ -160,6 +160,7 @@ tr.htmx-request .szkielet{display:flex}
 <header>
   <h1>Kolejka weryfikacji atrybutów</h1>
   <nav><a href="/rozstrzygniete">rozstrzygnięte</a> · <a href="/eksport/partie">eksport</a> · <a href="/weryfikacja">czy weszło</a> · <a href="/braki">braki danych</a> · <a href="/reguly">reguły</a> · <a href="/zrodla">źródła</a> · <a href="/import">wgraj plik</a>
+    <a href="/atrybuty" title="Atrybuty sklepu i ich wartości">atrybuty</a>
     <a href="/postep" title="Postęp prac dzień po dniu">postęp</a>
     <a href="/zmiany" title="Co się zmieniło w narzędziu">co nowego</a></nav>
   {% if przebieg %}
@@ -550,8 +551,10 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="grupa" value="{{ w.grupa }}">
         <input type="hidden" name="nr" value="{{ loop.index }}">
         <input type="hidden" name="filtr" value="{{ fl.jako_query() }}">
-        <input type="text" name="wartosc" placeholder="własna wartość" required
-               style="width:130px"
+        {% set wiele = w.atrybut in wielowartosciowe %}
+        <input type="text" name="wartosc" required
+               placeholder="{{ 'własna wartość, po przecinku' if wiele else 'własna wartość' }}"
+               style="width:{{ '190px' if wiele else '130px' }}"
                {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"
                title="Podpowiedzi to wartości, które sklep ma w słowniku"{% endif %}>
         <button class="p mini" type="submit"
@@ -567,10 +570,15 @@ tr.htmx-request .szkielet{display:flex}
         <input type="hidden" name="regula_id" value="RECZNA">
         <input type="hidden" name="zakres" value="pojedynczo">
         <input type="hidden" name="status" value="zastosowana">
-        <input type="text" name="nowa" placeholder="własna wartość" required
-               style="width:130px"
-               {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"
-               title="Podpowiedzi to wartości, które sklep ma w słowniku"{% endif %}>
+        {# Atrybut wielowartościowy wolno wypełnić listą po przecinku —
+           pozostałe nie, bo powstałaby śmieciowa wartość „welur, tkanina".
+           Które są które, ustala się na /atrybuty. #}
+        {% set wiele = w.atrybut in wielowartosciowe %}
+        <input type="text" name="nowa" required
+               placeholder="{{ 'własna wartość, po przecinku' if wiele else 'własna wartość' }}"
+               style="width:{{ '190px' if wiele else '130px' }}"
+               {% if w.atrybut in listy_wartosci %}list="dl-{{ listy_wartosci[w.atrybut] }}"{% endif %}
+               title="{% if wiele %}Ten atrybut przyjmuje kilka wartości — oddziel je przecinkiem{% else %}Podpowiedzi to wartości, które sklep ma w słowniku{% endif %}">
         <button class="p mini" type="submit">Zapisz</button>
       </form>
       {% endif %}

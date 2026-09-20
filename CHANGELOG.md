@@ -3,6 +3,26 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-20 · Zakładka „atrybuty" i wartości po przecinku
+
+- Nowa podstrona `/atrybuty`: wszystkie atrybuty sklepu z ich wartościami
+  słownikowymi, stanem (ACTIVE / DRAFT / DISABLED) i przełącznikiem **„ile
+  wartości naraz"**. Panel tego nie rozróżnia — atrybut na jedną wartość
+  wygląda w jego słowniku tak samo jak ten na kilka — więc ta strona jest
+  jedynym miejscem, gdzie ta wiedza powstaje.
+- **„Sprawdź w danych sklepu"** przegląda ostatni wgrany plik i pokazuje,
+  które atrybuty naprawdę bywają wypełnione kilkoma wartościami. Dowodem
+  jest wartość z przecinkiem, której wszystkie człony są w słowniku —
+  „Szafa 3-drzwiowa, biała" w polu tekstowym się nie liczy. Jedno kliknięcie
+  zaznacza wykryte, zamiast odklikiwać 68 atrybutów na ślepo.
+- W kolejce pole własnej wartości przy takim atrybucie przyjmuje listę po
+  przecinku i tak się podpisuje. Przy pozostałych wpisanie kilku wartości
+  jest odrzucane z wyjaśnieniem — bez tego w słowniku sklepu powstałaby nowa
+  wartość o nazwie „welur, tkanina".
+- Zaczyn listy bierze się z `slowniki.yaml` (7 atrybutów oznaczonych tam jako
+  `multi_enum`), ale właściwa lista mieszka w `config/wielowartosciowe.yaml`
+  i jest sterowana z UI — bez wdrożenia.
+
 ## 2026-09-20 · Zakładka „postęp" — statystyki dzienne
 
 - Nowa podstrona `/postep`: dzień po dniu widać, ile rozstrzygnięto w kolejce

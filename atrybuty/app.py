@@ -99,6 +99,7 @@ def anomalie(request: Request,
     # stronie, żeby nie wstawiać 473 wartości w każdy wiersz.
     slownik = panel_format.wczytaj_slownik()
     etykiety = panel_format.wczytaj_etykiety()
+    wielowartosciowe = config.wielowartosciowe()
     listy_wartosci: dict[str, int] = {}
     wartosci_slownika: dict[str, list[str]] = {}
     for w in wiersze:
@@ -126,9 +127,29 @@ def anomalie(request: Request,
         "pytania_wizji": wizja.obslugiwane_atrybuty(),
         "listy_wartosci": listy_wartosci,
         "wartosci_slownika": wartosci_slownika,
+        "wielowartosciowe": wielowartosciowe,
     }
     con.close()
     return szablony.TemplateResponse(request, "anomalie.html", kontekst)
+
+
+def _zle_wielokrotnosci(atrybut: str, wartosc: str) -> str:
+    """Pusty napis = w porządku, inaczej powód odmowy.
+
+    Kilka wartości po przecinku wolno wpisać tylko tam, gdzie sklep to
+    przyjmuje. Gdzie indziej powstałaby nowa, śmieciowa wartość słownikowa
+    o nazwie „welur, tkanina" — i dowiedzielibyśmy się o tym dopiero przy
+    eksporcie albo wcale.
+    """
+    if not wartosc or "," not in wartosc:
+        return ""
+    if atrybut in config.wielowartosciowe():
+        return ""
+    return (f"„{atrybut}” przyjmuje jedną wartość, a wpisano kilka po "
+            f"przecinku. Jeśli to pomyłka — popraw wpis. Jeśli ten atrybut "
+            f"naprawdę bywa wypełniany kilkoma wartościami, zaznacz go na "
+            f"stronie <a href=\"/atrybuty?szukaj={quote(atrybut)}\">atrybuty "
+            f"i wartości</a>.")
 
 
 @app.post("/decyzja", response_class=HTMLResponse)
@@ -145,6 +166,10 @@ def decyzja(request: Request,
     do tego, co człowiek ma na ekranie — decyzja nie może sięgać dalej niż
     widok, z którego padła.
     """
+    blad = _zle_wielokrotnosci(atrybut, (nowa or "").strip())
+    if blad:
+        return HTMLResponse(f'<div class="dowod">{blad}</div>')
+
     con = _con()
     przebieg = _przebieg(con)
     fl = zapytania.Filtr.z_query(filtr) if filtr else None
@@ -266,19 +291,26 @@ def decyzja_grupa_reczna(request: Request,
     for c in zapytania.czlonkowie_grupy(con, przebieg, grupa, fl):
         otwarte.setdefault(c["produkt_id"], c)
 
-    wiersze = []
+    wiersze, odrzucone = [], 0
     for pid, n in zip(produkt_id, nowa):
         c = otwarte.get(pid)
-        if c and n.strip():
-            wiersze.append((pid, c["atrybut"], c["stara_wartosc"], n.strip(),
-                            c["regula_id"]))
+        if not (c and n.strip()):
+            continue
+        if _zle_wielokrotnosci(c["atrybut"], n.strip()):
+            odrzucone += 1               # kilka wartości tam, gdzie wolno jedną
+            continue
+        wiersze.append((pid, c["atrybut"], c["stara_wartosc"], n.strip(),
+                        c["regula_id"]))
     ile = db.zapisz_decyzje_grupowo(con, wiersze, "zastosowana") if wiersze else 0
     pominiete = len(produkt_id) - ile
     con.close()
 
     tresc = f"✓ zapisano {ile} poprawek"
-    if pominiete:
-        tresc += f" · {pominiete} zostawionych bez wartości"
+    if pominiete - odrzucone > 0:
+        tresc += f" · {pominiete - odrzucone} zostawionych bez wartości"
+    if odrzucone:
+        tresc += (f" · {odrzucone} odrzuconych: kilka wartości w atrybucie,"
+                  f" który przyjmuje jedną")
     return _fragment_grupy(request, grupa, nr, wartosc, filtr, komunikat=tresc)
 
 
@@ -302,6 +334,10 @@ def decyzja_grupa_wartosc(request: Request, grupa: str = Form(...),
         con.close()
         return HTMLResponse('<div class="dowod">Wpisz wartość, zanim zapiszesz '
                             'całą grupę.</div>')
+    blad = _zle_wielokrotnosci(czlonkowie[0]["atrybut"] if czlonkowie else "", nowa)
+    if blad:
+        con.close()
+        return HTMLResponse(f'<div class="dowod">{blad}</div>')
     ile = db.zapisz_decyzje_grupowo(
         con, [(c["produkt_id"], c["atrybut"], c["stara_wartosc"], nowa,
                c["regula_id"]) for c in czlonkowie], "zastosowana")
@@ -758,6 +794,105 @@ def _markdown_lite(tekst: str) -> str:
     if w_liscie:
         wyjscie.append("</ul>")
     return "\n".join(wyjscie)
+
+
+@app.get("/atrybuty", response_class=HTMLResponse)
+def strona_atrybutow(request: Request, szukaj: str = "", tylko: str = "",
+                     wykryj: str = "", komunikat: str = ""):
+    """Wszystkie atrybuty sklepu z ich wartościami i jednym przełącznikiem:
+    czy atrybut przyjmuje więcej niż jedną wartość naraz.
+
+    Skąd to się wzięło: panel tego nie mówi. W jego słowniku atrybut na jedną
+    wartość wygląda identycznie jak ten na kilka, więc kolejka nie wiedziała,
+    kiedy wolno wpisać „welur, tkanina". Odklikanie tutaj jest jedynym
+    źródłem tej wiedzy — dlatego jest to osobna podstrona, a nie ustawienie
+    schowane w regułach.
+    """
+    wykryte: dict[str, dict] = {}
+    if wykryj == "1":
+        con = _con()
+        wykryte = _wykryte_wielowartosciowe(con)
+        con.close()
+
+    atrybuty = panel_format.wczytaj_atrybuty_panelu()
+    slownik = panel_format.wczytaj_slownik()
+    etykiety = panel_format.wczytaj_etykiety()
+    wiele = config.wielowartosciowe()
+    typy = {k: v.get("typ", "") for k, v in
+            (config.slowniki().get("atrybuty") or {}).items()}
+
+    igla = norm(szukaj)
+    wiersze = []
+    for nazwa in sorted(atrybuty):
+        meta = atrybuty[nazwa]
+        wartosci = sorted((etykiety.get(nazwa) or {}).get(k, k)
+                          for k in slownik.get(nazwa, {}))
+        w = {"nazwa": nazwa, "id": meta.get("id", ""),
+             "status": meta.get("status", ""), "wartosci": wartosci,
+             "slownikowy": nazwa in slownik, "wiele": nazwa in wiele,
+             "typ": typy.get(nazwa, ""), "wykryte": wykryte.get(nazwa)}
+        if igla and igla not in norm(nazwa) and not any(
+                igla in norm(v) for v in wartosci):
+            continue
+        if tylko == "wiele" and not w["wiele"]:
+            continue
+        if tylko == "slownikowe" and not w["slownikowy"]:
+            continue
+        if tylko == "aktywne" and w["status"] != "ACTIVE":
+            continue
+        wiersze.append(w)
+
+    return szablony.TemplateResponse(request, "atrybuty.html", {
+        "request": request, "wiersze": wiersze, "szukaj": szukaj, "tylko": tylko,
+        "ile_wszystkich": len(atrybuty), "ile_slownikowych": len(slownik),
+        "ile_wiele": len(wiele), "wykryj": wykryj == "1",
+        "wykrytych": len(wykryte),
+        "nowych_wykrytych": len(set(wykryte) - wiele),
+        "komunikat": komunikat})
+
+
+def _wykryte_wielowartosciowe(con) -> dict[str, dict]:
+    """Skan ostatniego przebiegu — szukamy dowodów w danych sklepu."""
+    import json
+
+    def pary():
+        for r in con.execute("SELECT atrybuty_surowe FROM produkty"):
+            try:
+                d = json.loads(r["atrybuty_surowe"] or "{}")
+            except ValueError:
+                continue
+            for k, v in d.items():
+                yield k, v
+
+    return panel_format.wykryj_wielowartosciowe(pary())
+
+
+@app.post("/atrybuty/wykryte", response_class=HTMLResponse)
+def zaznacz_wykryte():
+    """Zaznacza wszystkie atrybuty, dla których dane sklepu mają dowód.
+
+    Nic nie odznacza — człowiek mógł świadomie zaznaczyć coś, czego w tym
+    konkretnym pliku nie widać.
+    """
+    con = _con()
+    wykryte = set(_wykryte_wielowartosciowe(con))
+    con.close()
+    obecne = set(config.wielowartosciowe())
+    doszlo = wykryte - obecne
+    config.zapisz_wielowartosciowe(obecne | wykryte)
+    return RedirectResponse(
+        f"/atrybuty?komunikat=zaznaczono+{len(doszlo)}", status_code=303)
+
+
+@app.post("/atrybuty/przelacz", response_class=HTMLResponse)
+def przelacz_wielowartosciowy(atrybut: str = Form(...), wiele: str = Form("")):
+    """Przestawienie działa od razu — to nie jest reguła liczona przy imporcie,
+    tylko odpowiedź na pytanie „czy wolno tu wpisać dwie wartości"."""
+    config.przelacz_wielowartosciowy(atrybut, wiele == "1")
+    wlaczony = atrybut in config.wielowartosciowe()
+    return HTMLResponse(
+        f'<span class="znacznik {"tak" if wlaczony else "nie"}">'
+        f'{"wiele wartości" if wlaczony else "jedna wartość"}</span>')
 
 
 @app.get("/postep", response_class=HTMLResponse)

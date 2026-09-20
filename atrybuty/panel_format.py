@@ -568,3 +568,29 @@ def duplikaty(slownik: dict | None = None) -> list[dict]:
     out = [{"atrybut": k, "wartosc": (etykiety.get(k) or {}).get(v, v), "ids": ids}
            for k, m in s.items() for v, ids in m.items() if len(ids) > 1]
     return sorted(out, key=lambda w: (w["atrybut"], w["wartosc"]))
+
+
+def wykryj_wielowartosciowe(pary) -> dict[str, dict]:
+    """Które atrybuty sklep FAKTYCZNIE wypełnia kilkoma wartościami naraz.
+
+    `pary` to strumień (atrybut, wartość) z eksportu produktów. Dowodem jest
+    wartość z przecinkiem, której wszystkie człony siedzą w słowniku tego
+    atrybutu — wtedy to lista, a nie przecinek w nazwie („Szafa 3-drzwiowa,
+    biała" w polu tekstowym przecinek ma, ale listą nie jest).
+
+    Po to, żeby nie odklikiwać 68 atrybutów na ślepo: dane sklepu same
+    mówią, które są wielowartościowe. Człowiek potem poprawia wyjątki.
+    """
+    slownik, etykiety = wczytaj_slownik(), wczytaj_etykiety()
+    znalezione: dict[str, dict] = {}
+    for atrybut, wartosc in pary:
+        if atrybut not in slownik or not wartosc or "," not in str(wartosc):
+            continue
+        czlony = [c.strip() for c in str(wartosc).split(",") if c.strip()]
+        if len(czlony) < 2:
+            continue
+        if any(id_dla(slownik, atrybut, c, etykiety)[1] for c in czlony):
+            continue                      # któryś człon nie jest wartością
+        w = znalezione.setdefault(atrybut, {"ile": 0, "przyklad": wartosc})
+        w["ile"] += 1
+    return znalezione
