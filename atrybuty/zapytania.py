@@ -580,6 +580,120 @@ def postep_razem(con: sqlite3.Connection, przebieg: int | None = None) -> dict:
     return razem
 
 
+# --- jakość danych u źródła ----------------------------------------------
+#
+# Rozstrzygnięcia to nie tylko praca do odhaczenia — to pomiar. Dla każdego
+# findingu człowiek powiedział, czy błąd był prawdziwy (`zastosowana`), czy
+# to nasza reguła się myliła (`falszywy_alarm`), czy produkt był w porządku
+# (`do_importu`). Zsumowane po producencie odpowiadają na pytanie, którego
+# kolejka nie zadaje: KTO produkuje te błędy.
+#
+# Uwaga na czytanie: liczby opisują to, co już rozstrzygnięto, a rozstrzygano
+# w kolejności wygodnej dla człowieka, nie losowej. Dlatego obok każdej
+# liczby idzie pokrycie — ile procent findingów tego producenta w ogóle
+# dotknięto. Przy niskim pokryciu trafność jest ciekawostką, nie wnioskiem.
+
+SQL_PRODUCENCI = """
+WITH f AS (
+    SELECT p.producent AS producent,
+           COUNT(*) AS findingow,
+           COUNT(DISTINCT f.produkt_id) AS produktow_z_bledem
+    FROM findingi f JOIN produkty p ON p.id = f.produkt_id
+    WHERE f.przebieg_id = :przebieg
+    GROUP BY 1
+),
+d AS (
+    SELECT p.producent AS producent,
+           COUNT(*) AS rozstrzygnietych,
+           SUM(d.status='zastosowana')    AS bledow,
+           SUM(d.status='falszywy_alarm') AS falszywych,
+           SUM(d.status='do_importu')     AS bez_zmian,
+           SUM(d.status='odlozona')       AS odlozonych
+    FROM decyzje d JOIN produkty p ON p.id = d.produkt_id
+    GROUP BY 1
+),
+w AS (
+    SELECT producent, COUNT(*) AS produktow
+    FROM produkty GROUP BY 1
+)
+SELECT w.producent,
+       w.produktow,
+       IFNULL(f.findingow, 0) AS findingow,
+       IFNULL(f.produktow_z_bledem, 0) AS produktow_z_bledem,
+       IFNULL(d.rozstrzygnietych, 0) AS rozstrzygnietych,
+       IFNULL(d.bledow, 0) AS bledow,
+       IFNULL(d.falszywych, 0) AS falszywych,
+       IFNULL(d.bez_zmian, 0) AS bez_zmian,
+       IFNULL(d.odlozonych, 0) AS odlozonych
+FROM w LEFT JOIN f ON f.producent = w.producent
+       LEFT JOIN d ON d.producent = w.producent
+WHERE w.producent <> ''
+"""
+
+
+def _dolicz_wskazniki(w: dict) -> dict:
+    ocenione = w["bledow"] + w["falszywych"]
+    w["trafnosc"] = (w["bledow"] / ocenione) if ocenione else None
+    w["pokrycie"] = (w["rozstrzygnietych"] / w["findingow"]) if w["findingow"] else None
+    w["bledow_na_produkt"] = (w["bledow"] / w["produktow"]) if w["produktow"] else 0
+    w["findingow_na_produkt"] = (w["findingow"] / w["produktow"]) if w["produktow"] else 0
+    w["udzial_produktow"] = (w["produktow_z_bledem"] / w["produktow"]) if w["produktow"] else 0
+    return w
+
+
+def statystyki_producentow(con: sqlite3.Connection, przebieg: int,
+                           sortuj: str = "bledow") -> list[dict]:
+    kolumny = {"bledow", "findingow", "produktow", "bledow_na_produkt",
+               "findingow_na_produkt", "falszywych", "trafnosc", "udzial_produktow"}
+    wiersze = [_dolicz_wskazniki(dict(r))
+               for r in con.execute(SQL_PRODUCENCI, {"przebieg": przebieg})]
+    klucz = sortuj if sortuj in kolumny else "bledow"
+    wiersze.sort(key=lambda w: (w[klucz] is None, -(w[klucz] or 0)))
+    return wiersze
+
+
+def reguly_producenta(con: sqlite3.Connection, przebieg: int,
+                      producent: str) -> list[dict]:
+    """Rozbicie jednego producenta na reguły — żeby rozmowa z nim dotyczyła
+    konkretnej rzeczy, a nie „macie dużo błędów"."""
+    q = """
+    SELECT f.regula_id,
+           COUNT(*) AS findingow,
+           SUM(CASE WHEN d.status='zastosowana' THEN 1 ELSE 0 END) AS bledow,
+           SUM(CASE WHEN d.status='falszywy_alarm' THEN 1 ELSE 0 END) AS falszywych,
+           SUM(CASE WHEN d.status IS NOT NULL THEN 1 ELSE 0 END) AS rozstrzygnietych
+    FROM findingi f
+    JOIN produkty p ON p.id = f.produkt_id
+    LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
+                       AND d.hasz_starej=f.hasz_starej
+    WHERE f.przebieg_id = :przebieg AND p.producent = :producent
+    GROUP BY 1 ORDER BY 2 DESC
+    """
+    out = []
+    for r in con.execute(q, {"przebieg": przebieg, "producent": producent}):
+        w = dict(r)
+        ocenione = w["bledow"] + w["falszywych"]
+        w["trafnosc"] = (w["bledow"] / ocenione) if ocenione else None
+        out.append(w)
+    return out
+
+
+def atrybuty_producenta(con: sqlite3.Connection, przebieg: int,
+                        producent: str, limit: int = 15) -> list[dict]:
+    q = """
+    SELECT f.atrybut, COUNT(*) AS findingow,
+           SUM(CASE WHEN d.status='zastosowana' THEN 1 ELSE 0 END) AS bledow
+    FROM findingi f
+    JOIN produkty p ON p.id = f.produkt_id
+    LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
+                       AND d.hasz_starej=f.hasz_starej
+    WHERE f.przebieg_id = :przebieg AND p.producent = :producent
+    GROUP BY 1 ORDER BY 2 DESC LIMIT :limit
+    """
+    return [dict(r) for r in con.execute(
+        q, {"przebieg": przebieg, "producent": producent, "limit": limit})]
+
+
 # --- produkty bez danych --------------------------------------------------
 
 SQL_BRAKI = """

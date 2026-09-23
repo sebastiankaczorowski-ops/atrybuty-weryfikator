@@ -895,6 +895,49 @@ def przelacz_wielowartosciowy(atrybut: str = Form(...), wiele: str = Form("")):
         f'{"wiele wartości" if wlaczony else "jedna wartość"}</span>')
 
 
+@app.get("/producenci", response_class=HTMLResponse)
+def producenci(request: Request, sortuj: str = "bledow", producent: str = ""):
+    """Kto produkuje te błędy — z rozstrzygnięć, nie z przeczucia.
+
+    Dla każdego findingu człowiek powiedział, czy błąd był prawdziwy, czy to
+    nasza reguła się myliła. Zsumowane po producencie to jedyna liczba, która
+    pozwala ruszyć przyczynę zamiast skutku: rozmowa z dostawcą zamiast
+    kolejnego tysiąca kliknięć.
+    """
+    con = _con()
+    przebieg = _przebieg(con)
+    wiersze = zapytania.statystyki_producentow(con, przebieg, sortuj)
+    szczegoly = None
+    if producent:
+        szczegoly = {
+            "producent": producent,
+            "reguly": zapytania.reguly_producenta(con, przebieg, producent),
+            "atrybuty": zapytania.atrybuty_producenta(con, przebieg, producent),
+        }
+    con.close()
+
+    razem = {k: sum(w[k] for w in wiersze) for k in
+             ("produktow", "findingow", "rozstrzygnietych", "bledow",
+              "falszywych", "bez_zmian", "odlozonych")}
+    ocenione = razem["bledow"] + razem["falszywych"]
+    razem["trafnosc"] = (razem["bledow"] / ocenione) if ocenione else None
+    razem["pokrycie"] = ((razem["rozstrzygnietych"] / razem["findingow"])
+                         if razem["findingow"] else None)
+    # ilu dostawców odpowiada za połowę potwierdzonych błędów — to jest liczba,
+    # która mówi, czy da się to załatwić rozmowami, czy trzeba klikać
+    wg_bledow = sorted((w["bledow"] for w in wiersze), reverse=True)
+    polowa, ilu = 0, 0
+    for b in wg_bledow:
+        if polowa * 2 >= razem["bledow"] or not b:
+            break
+        polowa += b; ilu += 1
+    razem["ilu_na_polowe"] = ilu
+
+    return szablony.TemplateResponse(request, "producenci.html", {
+        "request": request, "wiersze": wiersze, "razem": razem,
+        "sortuj": sortuj, "szczegoly": szczegoly})
+
+
 @app.get("/postep", response_class=HTMLResponse)
 def postep(request: Request, dni: int = 60):
     """Postęp prac dzień po dniu — rozstrzygnięcia, partie, potwierdzenia.

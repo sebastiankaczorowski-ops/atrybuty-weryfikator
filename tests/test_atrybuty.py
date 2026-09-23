@@ -2658,3 +2658,91 @@ def test_strona_atrybutow_pokazuje_wartosci_i_przelacznik(tmp_path, monkeypatch)
         assert config.wielowartosciowe() == {"Materiał"}
     finally:
         config.wyczysc_cache()
+
+
+def _baza_producentow(tmp_path, monkeypatch):
+    """Dwóch producentów: jeden robi błędy, drugi jest czysty, a przy trzecim
+    to nasza reguła się myli."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    from atrybuty.model import Finding, Produkt
+    import atrybuty.app as app_mod
+    baza = tmp_path / "prod.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+
+    produkty, findingi = [], []
+    plan = [("BRW", 10, 8), ("Halmar", 10, 3), ("Wójcik", 10, 0)]
+    pid = 0
+    for prod, ile, z_bledem in plan:
+        for i in range(ile):
+            pid += 1
+            produkty.append(Produkt(id=str(pid), nazwa=f"{prod} {i}", producent=prod,
+                                    kolekcja="", zdjecie="", styl="", kategoria="komoda"))
+            if i < z_bledem:
+                findingi.append(Finding(str(pid), "Materiał", "L1-BRAK", "L1",
+                                        "srednia", 0.5, "stare", "nowe", "",
+                                        grupa=f"G{prod}"))
+    db.zapisz_przebieg(con, "t.csv", produkty, findingi)
+
+    # BRW: 6 z 8 to prawdziwe błędy, 2 fałszywe alarmy
+    for i, pid_ in enumerate(str(n) for n in range(1, 9)):
+        db.zapisz_decyzje(con, pid_, "Materiał", "stare",
+                          "zastosowana" if i < 6 else "falszywy_alarm",
+                          "nowe" if i < 6 else None, "L1-BRAK")
+    # Halmar: wszystkie 3 to fałszywe alarmy — nasza reguła, nie jego wina
+    for pid_ in ("11", "12", "13"):
+        db.zapisz_decyzje(con, pid_, "Materiał", "stare", "falszywy_alarm", None, "L1-BRAK")
+    return con, baza, app_mod
+
+
+def test_statystyki_producentow_oddzielaja_blad_od_falszywego_alarmu(
+        tmp_path, monkeypatch):
+    """Sedno: „dużo findingów" to nie to samo co „zła jakość danych".
+    Producent, przy którym myli się nasza reguła, nie może wyjść na winnego."""
+    from atrybuty import zapytania
+    con, _, _ = _baza_producentow(tmp_path, monkeypatch)
+    wg = {w["producent"]: w for w in zapytania.statystyki_producentow(con, 1)}
+
+    assert wg["BRW"]["findingow"] == 8 and wg["BRW"]["bledow"] == 6
+    assert wg["BRW"]["falszywych"] == 2
+    assert wg["BRW"]["trafnosc"] == 0.75
+    assert wg["BRW"]["bledow_na_produkt"] == 0.6      # 6 błędów na 10 produktów
+    assert wg["BRW"]["pokrycie"] == 1.0
+
+    assert wg["Halmar"]["findingow"] == 3 and wg["Halmar"]["bledow"] == 0
+    assert wg["Halmar"]["trafnosc"] == 0.0            # same fałszywe alarmy
+
+    assert wg["Wójcik"]["findingow"] == 0
+    assert wg["Wójcik"]["trafnosc"] is None           # nie ma czego oceniać
+    assert wg["Wójcik"]["pokrycie"] is None
+
+    # domyślne sortowanie stawia na górze tego, kto naprawdę robi błędy
+    assert zapytania.statystyki_producentow(con, 1)[0]["producent"] == "BRW"
+    con.close()
+
+
+def test_rozbicie_producenta_na_reguly(tmp_path, monkeypatch):
+    from atrybuty import zapytania
+    con, _, _ = _baza_producentow(tmp_path, monkeypatch)
+    reguly = zapytania.reguly_producenta(con, 1, "BRW")
+    assert len(reguly) == 1
+    r = reguly[0]
+    assert r["regula_id"] == "L1-BRAK" and r["bledow"] == 6 and r["falszywych"] == 2
+    atrybuty = zapytania.atrybuty_producenta(con, 1, "BRW")
+    assert atrybuty[0]["atrybut"] == "Materiał" and atrybuty[0]["bledow"] == 6
+    con.close()
+
+
+def test_strona_producentow_liczy_ilu_daje_polowe_bledow(tmp_path, monkeypatch):
+    """Ta jedna liczba decyduje, czy przyczynę da się ruszyć rozmowami."""
+    from fastapi.testclient import TestClient
+    con, _, app_mod = _baza_producentow(tmp_path, monkeypatch)
+    con.close()
+    strona = TestClient(app_mod.app).get("/producenci").text
+    assert "Jakość danych wg producenta" in strona
+    assert "BRW" in strona and "Halmar" in strona
+    assert "odpowiada" in strona          # zdanie o połowie błędów
+    szczegol = TestClient(app_mod.app).get("/producenci?producent=BRW").text
+    assert "BRW — rozbicie" in szczegol and "L1-BRAK" in szczegol

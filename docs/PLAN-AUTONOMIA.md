@@ -215,3 +215,132 @@ pokazujący zero nowych problemów to sukces, nie awaria narzędzia.**
 - Panel nadal nie ma logowania, a przybędzie mu dostęp do skrzynki pocztowej.
   Przed etapem 1 trzeba to rozstrzygnąć — osobny adres (wariant A) załatwia
   większość problemu, ale nie cały.
+---
+
+# Część II: paczki z panelu a pętla dzienna
+
+Analiza koncepcji weryfikacji przed aktywacją (panel OXM, ticket #2441)
+w odniesieniu do planu pętli dziennej. 2026-09-23.
+
+## 10. Dwie pętle, jeden silnik
+
+Paczki i pętla dzienna nie konkurują — pilnują dwóch różnych momentów.
+
+| | paczka z panelu | pętla dzienna |
+|---|---|---|
+| kiedy | zanim produkt trafi na front | codziennie, na całym asortymencie |
+| co wyzwala | klik pracownika | nowy plik |
+| zakres | kilkanaście–kilkadziesiąt produktów | 28 tys. |
+| kto odpowiada | konkretna osoba, z nazwiska | zespół |
+| po co | błąd nigdy nie dociera do klienta | błąd, który już tam jest, zostaje znaleziony |
+
+Wspólne jest wszystko, co pod spodem: reguły, kolejka, grupowanie, decyzje,
+format pliku, weryfikacja „czy weszło". **Nie budujemy drugiego narzędzia** —
+dokładamy drugie wejście i drugi widok do tego samego.
+
+Paczki są pierwszą linią i mają przewagę, której pętla dzienna mieć nie
+będzie: **wiadomo, kto**. Pętla dzienna widzi błąd, ale nie wie, czyj. Paczka
+wie i dlatego może uczyć — jeśli jedna osoba regularnie zostawia te same
+braki, to informacja o szkoleniu, nie o produkcie.
+
+Paczki nie zastępują pętli dziennej, bo dotyczą wyłącznie nowych produktów.
+28 tys. już aktywnych nie przejdzie przez żadną paczkę.
+
+## 11. Co się zmienia w planie pętli dziennej
+
+- **Dwa źródła danych zamiast jednego.** Plik dzienny (cały asortyment)
+  i BigQuery (paczki, na żądanie). Bramka sanitarna dotyczy pliku dziennego;
+  paczka ma własną, prostszą: znane ID, niepusta, produkty istnieją.
+- **Migawka i tożsamość findingu są potrzebne tym bardziej.** Produkt
+  z paczki po aktywacji wpada w pętlę dzienną. Bez stabilnej tożsamości
+  findingu nie da się powiedzieć „to ten sam problem, który przeszedł
+  weryfikację w paczce 17" — a to jest dokładnie ta reguła, którą sami
+  wpisaliście jako „do rozważenia po wdrożeniu".
+- **Raport dzienny dostaje sekcję o paczkach:** otwarte, zalegające,
+  zamknięte wczoraj, produkty czekające na aktywację.
+
+## 12. Blokada edycji — proponuję odwrócić mechanizm
+
+To Wasze ostatnie otwarte pytanie i jedyne, które w obecnym kształcie nie ma
+dobrej odpowiedzi. Blokada edycji w otwartej paczce rozwiązuje realny problem
+(import nie może nadpisać późniejszych zmian), ale tworzy zakleszczenie: część
+błędów da się poprawić wyłącznie w panelu, a panel jest zamknięty.
+
+Źródłem kłopotu jest **blokada pesymistyczna** — zabraniamy z góry, na wszelki
+wypadek. Ten sam cel osiąga **blokada optymistyczna**: nie zabraniamy niczego,
+ale przy imporcie sprawdzamy, czy produkt zmienił się od chwili wysłania do
+weryfikacji. Jeśli tak — ten wiersz nie wchodzi i wraca jako konflikt do
+rozstrzygnięcia.
+
+Do tego potrzeba jednej rzeczy: **odcisku produktu** (hasz jego atrybutów)
+zapisanego w paczce w momencie wysyłki. Panel przy imporcie porównuje odcisk
+i przepuszcza tylko niezmienione.
+
+Co to daje:
+
+- pracownik poprawia w panelu, co chce i kiedy chce — brak zakleszczenia,
+- import nigdy nie nadpisuje nowszej zmiany, bo ją widzi,
+- znika stan „zablokowany", a z nim klasa pytań „a co, jeśli ktoś zapomni
+  zamknąć paczkę".
+
+**Bramką aktywacji przestaje być członkostwo w zamkniętej paczce, a staje się
+pieczątka na produkcie:** „zweryfikowany, w tym kształcie". Pieczątka to
+(produkt, odcisk atrybutów, data, paczka). Edycja w panelu zmienia odcisk,
+więc pieczątka przestaje pasować i aktywacja znów jest zablokowana — sama,
+bez dodatkowej logiki.
+
+To ta sama zasada, na której działają decyzje w narzędziu: klucz
+`(produkt, atrybut, hasz starej wartości)` przeżywa kolejne importy właśnie
+dlatego, że opisuje stan, a nie moment.
+
+Jeśli panel nie umie liczyć odcisku, wystarczy znacznik czasu ostatniej
+edycji produktu — słabszy, ale wystarczający.
+
+## 13. Kalibracja reguł dla produktów nieaktywnych
+
+Zamiast ręcznej listy „reguły do wyłączenia w trybie paczki" — reguła
+wyznaczana z danych: **reguła wchodzi do paczki tylko wtedy, gdy wszystkie
+pola, na których się opiera, są wypełnione dla produktów tej paczki.** Jeśli
+pole jest puste u wszystkich, reguła jest pomijana i mówimy o tym wprost
+w raporcie paczki („pominięto 4 reguły: brak danych z frontu").
+
+Dlaczego tak: lista dezaktualizuje się przy pierwszej zmianie w panelu
+i nikt o tym nie wie. Wyznaczanie z danych psuje się głośno.
+
+Uwaga, która może oszczędzić pracy: nasze reguły i tak liczą się z eksportu
+panelu, nie z frontu. Realnie „danych z frontu" używa niewiele — warto
+policzyć, ile reguł faktycznie odpada, zanim zaplanujemy osobną kalibrację.
+
+## 14. Dziury w przepływie, które warto zatkać od razu
+
+- **Paczka bez findingów musi zamykać się sama.** Produkt czysty nie może
+  czekać na człowieka — inaczej dokładamy tarcie tam, gdzie nie ma błędu.
+- **Paczki zalegające.** Produkt w otwartej paczce nie da się aktywować.
+  Bez raportu wieku paczek i właściciela oferta cicho stoi.
+- **Jeden produkt, jedna otwarta paczka.** Inaczej dwie osoby wyślą ten sam
+  produkt i dwa pliki będą się nawzajem nadpisywać.
+- **Pracownik, który nigdy nie zaimportuje pliku.** Paczka wisi, produkt
+  zamrożony. Przy blokadzie optymistycznej problem znika sam.
+- **Puste kolumny w pliku.** Czy pusta komórka w naszym pliku kasuje
+  istniejącą wartość w panelu? Nierozstrzygnięte, dotyczy obu przepływów,
+  trzeba sprawdzić na jednym produkcie, zanim ruszy którykolwiek.
+- **Atrybuty nieaktywne w pliku.** W narzędziu to już działa przy
+  przepisywaniu ze składowych; trzeba potwierdzić, że eksport też odrzuca
+  DRAFT i DISABLED.
+- **Link do paczki a brak logowania.** Narzędzie nie ma uwierzytelniania
+  i stoi w sieci biurowej. Link „dla pracownika" zadziała dla każdego, kto go
+  zna. Wewnętrznie do przyjęcia, ale niech to będzie decyzja, nie przeoczenie.
+- **Poświadczenia do BigQuery na Mac Mini.** Maszyna bez logowania dostaje
+  dostęp do hurtowni. Konto serwisowe z prawem odczytu jednego zbioru.
+
+## 15. Kolejność
+
+1. **Sprawdzić puste kolumny i flagę na jednym produkcie.** Blokuje wszystko
+   inne, kosztuje pół godziny.
+2. **Odcisk produktu i pieczątka weryfikacji** — ustalenie z Michałem, zanim
+   powstanie blokada edycji, której potem trzeba będzie się pozbywać.
+3. **Przegląd reguł pod kątem danych z frontu** — policzyć, ile odpada.
+4. **Paczki w narzędziu:** pobranie z BigQuery, widok paczki, eksport.
+5. **Pętla dzienna** — niezależnie, bo dotyczy innego zbioru.
+
+Punkty 1–3 to ustalenia, nie kod. Warto je domknąć przed pisaniem czegokolwiek.

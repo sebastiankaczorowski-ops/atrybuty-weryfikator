@@ -3,6 +3,25 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-23 · Zakładka „producenci" — kto te błędy produkuje
+
+- Nowa podstrona `/producenci`. Dla każdego producenta: ile produktów, ile
+  findingów, ile z nich okazało się **potwierdzonym błędem** (ktoś zapisał
+  poprawkę), ile **fałszywym alarmem** (myliła się nasza reguła), ile produktów
+  przepuszczono bez zmian, błędy na produkt i trafność reguł.
+- Klik w producenta rozbija go na reguły i atrybuty — żeby rozmowa dotyczyła
+  konkretnej rzeczy, a nie „macie dużo błędów".
+- U góry jedna liczba, która decyduje o strategii: **ilu producentów odpowiada
+  za połowę potwierdzonych błędów.** Mała liczba znaczy, że przyczynę da się
+  ruszyć rozmową o formacie danych zamiast kolejnym tysiącem kliknięć.
+- Kolumna **pokrycie** pilnuje uczciwości liczb: rozstrzygano w kolejności
+  wygodnej dla człowieka, nie losowej, więc przy niskim pokryciu to wskazówka,
+  a nie wyrok.
+
+Po co to jest: dotąd całe narzędzie mierzyło skutki. To pierwszy widok, który
+patrzy na źródło — 30 tys. rozstrzygnięć to nie tylko odklikana praca, tylko
+pomiar jakości danych wejściowych, którego nigdy nie odczytaliśmy.
+
 ## 2026-09-20 · Zakładka „atrybuty" i wartości po przecinku
 
 - Nowa podstrona `/atrybuty`: wszystkie atrybuty sklepu z ich wartościami

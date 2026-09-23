@@ -1,0 +1,163 @@
+{# Jakość danych u źródła: kto produkuje błędy, które potem poprawiamy.
+
+   Liczby biorą się z rozstrzygnięć — dla każdego findingu człowiek powiedział,
+   czy błąd był prawdziwy, czy reguła się myliła. To jedyne miejsce
+   w narzędziu, które patrzy na przyczynę, a nie na skutek. #}
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jakość danych wg producenta — atrybuty OXM</title>
+{% include "_styl.html" %}
+<style>
+table.prod{width:100%;border-collapse:collapse;background:var(--surface);
+           border:1px solid var(--line);border-radius:3px;overflow:hidden}
+table.prod th,table.prod td{padding:7px 10px;border-bottom:1px solid var(--line);
+                            text-align:right;white-space:nowrap}
+table.prod th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+              color:var(--muted);background:var(--surface-2);font-weight:600}
+table.prod th a{color:inherit;text-decoration:none}
+table.prod th a:hover{text-decoration:underline}
+table.prod th.akt a{color:var(--accent)}
+table.prod td.nazwa,table.prod th.nazwa{text-align:left;white-space:normal}
+table.prod tbody tr:hover{background:var(--surface-2)}
+td.n{font-variant-numeric:tabular-nums}
+td.pusto{color:var(--line-strong)}
+.grupa-kol{border-left:2px solid var(--line)}
+.skut{display:inline-block;padding:1px 6px;border-radius:2px;font-weight:600}
+.skut.dobra{background:var(--ok-soft);color:var(--ok)}
+.skut.slaba{background:var(--crit-soft);color:var(--crit)}
+.skut.brak{color:var(--muted)}
+.legenda{color:var(--muted);font-size:12.5px;max-width:960px;margin:0 0 14px}
+.legenda b{color:var(--ink-2)}
+.wniosek{background:var(--accent-soft);border-left:3px solid var(--accent);
+         padding:10px 14px;border-radius:2px;margin:0 0 16px;max-width:960px}
+.szczegoly{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+           padding:14px 16px;margin:0 0 18px}
+.szczegoly h2{font-size:15px;margin:0 0 8px}
+.szczegoly table{width:auto;min-width:420px}
+.pasek{height:6px;background:var(--crit);border-radius:1px;display:block;margin-top:3px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Jakość danych wg producenta</h1>
+  <span class="zrodlo">z rozstrzygnięć: co było błędem, a co fałszywym alarmem</span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/rozstrzygniete">rozstrzygnięte</a>
+    <a href="/atrybuty">atrybuty</a>
+    <a href="/postep">postęp</a>
+    <a href="/zmiany">co nowego</a>
+  </nav>
+</header>
+
+<main>
+
+<div class="kafle">
+  <div class="kafel"><b>{{ razem.findingow }}</b><span>findingów w przebiegu</span></div>
+  <div class="kafel"><b>{{ razem.rozstrzygnietych }}</b><span>rozstrzygniętych</span></div>
+  <div class="kafel"><b>{{ razem.bledow }}</b><span>potwierdzonych błędów</span></div>
+  <div class="kafel"><b>{{ razem.falszywych }}</b><span>fałszywych alarmów</span></div>
+  <div class="kafel"><b>{% if razem.trafnosc is none %}—{% else %}{{
+      '%.0f'|format(razem.trafnosc * 100) }}%{% endif %}</b>
+    <span>trafność reguł</span></div>
+  <div class="kafel"><b>{% if razem.pokrycie is none %}—{% else %}{{
+      '%.0f'|format(razem.pokrycie * 100) }}%{% endif %}</b>
+    <span>pokrycie rozstrzygnięciami</span></div>
+</div>
+
+{% if razem.ilu_na_polowe %}
+<p class="wniosek">
+  <b>{{ razem.ilu_na_polowe }}</b> {{ 'producent odpowiada' if razem.ilu_na_polowe == 1
+  else 'producentów odpowiada' }} za połowę wszystkich potwierdzonych błędów.
+  Jeśli ta liczba jest mała, przyczynę da się ruszyć rozmową o formacie danych,
+  a nie kolejnym tysiącem kliknięć.
+</p>
+{% endif %}
+
+<p class="legenda">
+  <b>Potwierdzony błąd</b> to finding, przy którym człowiek zapisał poprawkę.
+  <b>Fałszywy alarm</b> to nasza reguła, nie wina producenta — kolumna trafności
+  mówi, na ile ufać danym w tym wierszu. <b>Bez zmian</b> to produkty uznane za
+  poprawne i przepuszczone przez import po flagę odcięcia składowych.
+  Uwaga na <b>pokrycie</b>: rozstrzygano w kolejności wygodnej dla człowieka,
+  nie losowej, więc przy niskim pokryciu liczby są wskazówką, a nie wyrokiem.
+</p>
+
+{% if szczegoly %}
+<div class="szczegoly">
+  <h2>{{ szczegoly.producent }} — rozbicie</h2>
+  <p class="dowod">Żeby rozmowa dotyczyła konkretnej rzeczy, a nie „macie dużo błędów".</p>
+  <table class="prod">
+    <thead><tr><th class="nazwa">reguła</th><th>findingów</th>
+      <th>błędów</th><th>fałszywych</th><th>trafność</th></tr></thead>
+    <tbody>
+    {% for r in szczegoly.reguly %}
+      <tr><td class="nazwa"><code>{{ r.regula_id }}</code></td>
+        <td class="n">{{ r.findingow }}</td>
+        <td class="n">{{ r.bledow or '·' }}</td>
+        <td class="n">{{ r.falszywych or '·' }}</td>
+        <td class="n">{% if r.trafnosc is none %}<span class="skut brak">·</span>
+          {% else %}<span class="skut {{ 'dobra' if r.trafnosc >= 0.6 else 'slaba' }}">
+          {{ '%.0f'|format(r.trafnosc * 100) }}%</span>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="dowod" style="margin-top:12px">Atrybuty, w których najczęściej się myli:
+    {% for a in szczegoly.atrybuty %}{{ a.atrybut }} ({{ a.findingow }}){% if not loop.last %} · {% endif %}{% endfor %}</p>
+  <p style="margin:10px 0 0"><a href="/producenci">← wszyscy producenci</a> ·
+    <a href="/anomalie?producent={{ szczegoly.producent|urlencode }}">otwarte findingi tego producenta</a></p>
+</div>
+{% endif %}
+
+{% macro naglowek(klucz, etykieta) %}
+  <th class="{{ 'akt' if sortuj == klucz }}">
+    <a href="/producenci?sortuj={{ klucz }}">{{ etykieta }}</a></th>
+{% endmacro %}
+
+<table class="prod">
+  <thead><tr>
+    <th class="nazwa">producent</th>
+    {{ naglowek('produktow', 'produktów') }}
+    {{ naglowek('findingow', 'findingów') }}
+    {{ naglowek('findingow_na_produkt', 'na produkt') }}
+    {{ naglowek('udzial_produktow', '% z błędem') }}
+    <th class="grupa-kol">rozstrzygn.</th>
+    {{ naglowek('bledow', 'błędów') }}
+    {{ naglowek('bledow_na_produkt', 'błędów/prod.') }}
+    {{ naglowek('falszywych', 'fałszywych') }}
+    <th>bez zmian</th>
+    {{ naglowek('trafnosc', 'trafność') }}
+    <th>pokrycie</th>
+  </tr></thead>
+  <tbody>
+  {% for w in wiersze %}
+    {% if w.findingow or w.rozstrzygnietych %}
+    <tr>
+      <td class="nazwa"><a href="/producenci?producent={{ w.producent|urlencode }}&amp;sortuj={{ sortuj }}">{{ w.producent }}</a>
+        {% if razem.bledow and w.bledow %}<span class="pasek"
+          style="width:{{ (w.bledow / razem.bledow * 100)|round(1) }}%"></span>{% endif %}</td>
+      <td class="n">{{ w.produktow }}</td>
+      <td class="n">{{ w.findingow or '·' }}</td>
+      <td class="n">{{ '%.1f'|format(w.findingow_na_produkt) }}</td>
+      <td class="n">{{ '%.0f'|format(w.udzial_produktow * 100) }}%</td>
+      <td class="n grupa-kol {{ 'pusto' if not w.rozstrzygnietych }}">{{ w.rozstrzygnietych or '·' }}</td>
+      <td class="n"><b>{{ w.bledow or '·' }}</b></td>
+      <td class="n">{{ '%.2f'|format(w.bledow_na_produkt) }}</td>
+      <td class="n {{ 'pusto' if not w.falszywych }}">{{ w.falszywych or '·' }}</td>
+      <td class="n {{ 'pusto' if not w.bez_zmian }}">{{ w.bez_zmian or '·' }}</td>
+      <td class="n">{% if w.trafnosc is none %}<span class="skut brak">·</span>
+        {% else %}<span class="skut {{ 'dobra' if w.trafnosc >= 0.6 else 'slaba' }}">
+        {{ '%.0f'|format(w.trafnosc * 100) }}%</span>{% endif %}</td>
+      <td class="n">{% if w.pokrycie is none %}<span class="pusto">·</span>
+        {% else %}{{ '%.0f'|format(w.pokrycie * 100) }}%{% endif %}</td>
+    </tr>
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table>
+</main>
+</body>
+</html>
