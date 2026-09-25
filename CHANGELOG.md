@@ -3,6 +3,13 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-25 · Porządek w repo: blokady gita poza wersjonowaniem
+
+- Pliki z `_smieci/` (stare `index.lock`, `HEAD.lock`) zniknęły z repo —
+  były zacommitowane, zanim katalog trafił do `.gitignore`, więc sam wpis
+  niczego nie ignorował.
+- Aplikacja działa bez zmian; zakładki i przyciski zachowują się jak dotąd.
+
 ## 2026-09-23 · Zakładka „producenci" — kto te błędy produkuje
 
 - Nowa podstrona `/producenci`. Dla każdego producenta: ile produktów, ile

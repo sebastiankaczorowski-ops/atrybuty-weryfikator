@@ -145,7 +145,10 @@ frameworka, bez ORM-a. 50 tras, 167 testów (`python3 -m pytest -q`).
   atrybut po cichu wypada z importu.
 - **`_smieci/`** — katalog na blokady gita. Powłoka na Macu nie może kasować
   plików w mouncie, więc `.git/index.lock` i `HEAD.lock` przenosi się tam
-  przed commitem. Do wyczyszczenia i dopisania do `.gitignore`.
+  przed commitem. Jest w `.gitignore` i zdjęty z wersjonowania — sam wpis
+  w `.gitignore` nie wystarczał, bo blokady były już zacommitowane, a git
+  ignoruje tylko pliki, których jeszcze nie śledzi. Zawartość można kasować
+  ręcznie.
 - **Brak logowania.** Panel stoi w sieci biurowej bez uwierzytelniania
   (opisane w `WDROZENIE.md`). Każdy nowy dostęp (skrzynka, BigQuery) dokłada
   do tego ryzyka.
