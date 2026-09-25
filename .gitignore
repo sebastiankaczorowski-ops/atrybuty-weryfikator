@@ -10,3 +10,4 @@ dane/*
 
 # Klucz Gemini i inne sekrety.
 .env
+_smieci/
