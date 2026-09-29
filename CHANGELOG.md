@@ -3,6 +3,21 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-29 · Feedy producentów prosto z arkusza „RAW FILES”
+
+- W `/zrodla` jako adres źródła można wkleić **zakładkę arkusza Google**
+  (adres z `#gid=`). Narzędzie czyta ją kontem serwisowym tylko do odczytu,
+  składa wiersze z `<item>` w jeden feed i dalej działa jak dotąd: podgląd
+  pól, mapowanie, dopasowanie do naszych produktów, rozjazdy w kolejce.
+- Jeden producent = jedna zakładka = jedno źródło. Adres bez `#gid=` nie
+  zgaduje — odpowiada listą zakładek w arkuszu.
+- Pusta zakładka to błąd, a nie zero pozycji — inaczej po cichu zniknęłyby
+  wszystkie dane producenta.
+
+Po co to jest: arkusz odświeża się po każdym imporcie, więc porównanie
+„co podał producent” z „co jest w sklepie” nie wymaga już ręcznego wgrywania
+plików.
+
 ## 2026-09-25 · Porządek w repo: blokady gita poza wersjonowaniem
 
 - Pliki z `_smieci/` (stare `index.lock`, `HEAD.lock`) zniknęły z repo —

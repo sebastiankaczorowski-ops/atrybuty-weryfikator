@@ -100,9 +100,25 @@ Wyłącznie w `.env` na Mac Mini (i lokalnie w `~/.atrybuty-gemini-key` na
 MacBooku). Nigdy w repo — `.gitignore` i `.dockerignore` to blokują.
 Bez klucza działa wszystko poza „Sprawdź zdjęciem".
 
+## Konto serwisowe Google (feedy z arkusza)
+
+Zakładka `/zrodla` czyta surowe feedy producentów z arkusza
+„Imports - RAW FILES automat” kontem
+`manager-dashboard-reader@ai-agents-analytics-491415.iam.gserviceaccount.com`
+— tym samym co `manager-dashboard`.
+
+- Uprawnienie w arkuszu: **Wyświetlający**. Zakres tokenu:
+  `spreadsheets.readonly`. Narzędzie nie pisze do arkusza.
+- Klucz JSON leży w projekcie `manager-dashboard` na Mini i jest montowany
+  do kontenera tylko do odczytu; ścieżkę w kontenerze wskazuje
+  `GOOGLE_APPLICATION_CREDENTIALS`. Nigdy w repo ani w obrazie.
+- **Wymiana klucza w manager-dashboard wyłącza też feedy tutaj** — po
+  rotacji sprawdź `/zrodla` (źródło pokaże błąd 403 albo „brak klucza”).
+- Bez klucza działa wszystko poza odświeżaniem źródeł z arkusza.
+
 ## Kolejne kroki
 
-Ten projekt celowo nie dotyka BigQuery ani konta serwisowego GCP. Eksport
+Import produktów nie dotyka BigQuery — eksport wgrywasz ręcznie. Eksport
 produktów wgrywasz ręcznie przez `/import`. Gdyby miało to chodzić samo,
 naturalny krok to zapytanie do BQ w harmonogramie i wywołanie importu
 tokenem — wtedy potrzebne będą `GOOGLE_APPLICATION_CREDENTIALS` i

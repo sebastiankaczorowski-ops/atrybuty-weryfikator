@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 50 tras, 167 testów (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 50 tras, 173 testy (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 
@@ -73,7 +73,7 @@ frameworka, bez ORM-a. 50 tras, 167 testów (`python3 -m pytest -q`).
 | **L1** | struktura i słowniki: braki, wartości spoza słownika, sprzeczności, relacje liczbowe (`detektory.py`) |
 | **L2** | statystyka: outliery wymiarowe, test skali (`detektory.py`) |
 | **L3** | zdjęcie przez Gemini — tylko dla spornych (`wizja.py`) |
-| **L4** | feedy producenckie (`zrodla.py`) |
+| **L4** | feedy producenckie (`zrodla.py`), także z zakładek arkusza Google (`arkusze.py`) |
 
 ### Moduły
 

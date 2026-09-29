@@ -7,3 +7,4 @@ python-multipart>=0.0.9
 Pillow>=10.0        # skalowanie zdjęć przed wysłaniem do Gemini
 pytest>=8.0
 openpyxl>=3.1        # eksport w formacie panelu sklepu (xlsx)
+google-auth>=2.20     # odczyt arkusza Google z feedami producentów (L4), tylko do odczytu

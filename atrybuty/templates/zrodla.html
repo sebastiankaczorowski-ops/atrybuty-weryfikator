@@ -115,8 +115,9 @@ td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;tex
           <option value="">— dowolny —</option>
           {% for p in producenci %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
         </select></div>
-      <div class="pole"><label>URL feedu</label>
-        <input type="url" name="url" placeholder="https://..." style="min-width:320px"></div>
+      <div class="pole"><label>URL feedu albo zakładki arkusza Google</label>
+        <input type="url" name="url" placeholder="https://... lub docs.google.com/spreadsheets/…#gid=…" style="min-width:320px"
+          title="Arkusz: skopiuj adres z otwartą zakładką producenta — musi zawierać #gid=. Konto serwisowe czyta go tylko do odczytu."></div>
       <div class="pole"><label>…albo plik (XML / CSV / JSON)</label>
         <input type="file" name="plik" accept=".xml,.csv,.json,text/xml,text/csv,application/json"></div>
       <button class="p" type="submit">Dodaj</button>

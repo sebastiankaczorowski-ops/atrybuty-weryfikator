@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+from . import arkusze
 from .tekst import do_liczby, norm
 
 SCHEMA_ZRODLA = """
@@ -433,7 +434,15 @@ def przelacz_zrodlo(con: sqlite3.Connection, zid: int, aktywne: bool) -> None:
 # --- odświeżenie źródła ---------------------------------------------------
 
 def dane_zrodla(z: dict, katalog_danych: Path) -> tuple[bytes, str]:
-    """Zwraca (zawartość, nazwa) — z URL-a albo z wgranego pliku."""
+    """Zwraca (zawartość, nazwa) — z URL-a, arkusza Google albo wgranego pliku."""
+    if arkusze.jest_arkuszem(z.get("url") or ""):
+        # Arkusz nie jest publiczny — zwykłe pobranie dałoby stronę logowania
+        # Google, którą parser uznałby za „niepoprawny XML”.
+        try:
+            dane, tytul = arkusze.pobierz_zakladke(z["url"])
+        except arkusze.BladArkusza as e:
+            raise BladZrodla(str(e)) from e
+        return dane, f"{tytul}.xml"
     if z.get("url"):
         return pobierz(z["url"]), z["url"]
     if z.get("plik"):

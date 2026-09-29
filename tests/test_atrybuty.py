@@ -2746,3 +2746,102 @@ def test_strona_producentow_liczy_ilu_daje_polowe_bledow(tmp_path, monkeypatch):
     assert "odpowiada" in strona          # zdanie o połowie błędów
     szczegol = TestClient(app_mod.app).get("/producenci?producent=BRW").text
     assert "BRW — rozbicie" in szczegol and "L1-BRAK" in szczegol
+
+
+# --- L4 z arkusza Google --------------------------------------------------
+
+# Tak wygląda zakładka „BogartStock”: jeden <item> na komórkę w kolumnie A.
+KOMORKI_BOGART = [
+    """<item>
+        <filters><kolor>szary,grafitowy</kolor><styl>nowoczesny</styl></filters>
+        <gtin>5904619730097</gtin>
+        <id>50979</id>
+        <image_link>https://www.meble-bogart.pl/x.jpg?w=800&h=600</image_link>
+        <params><glebokosc>40</glebokosc><szerokosc>167</szerokosc><wysokosc>52</wysokosc></params>
+        <title>Szafka RTV Asha 167</title>
+    </item>""",
+    "",
+    """<?xml version="1.0" encoding="UTF-8"?><item>
+        <gtin>5904619730103</gtin>
+        <id>50980</id>
+        <params><glebokosc>40</glebokosc><szerokosc>200</szerokosc></params>
+        <title>Komoda Asha 200</title>
+    </item>""",
+]
+
+
+def test_url_arkusza_daje_id_i_zakladke():
+    from atrybuty import arkusze
+    url = ("https://docs.google.com/spreadsheets/d/19oZ8rjkAtUYuwiHDKE2OQafA1Wbkdze-"
+           "LiHO0XUCWSU/edit?gid=0#gid=0")
+    assert arkusze.jest_arkuszem(url)
+    assert arkusze.rozbierz_url(url) == ("19oZ8rjkAtUYuwiHDKE2OQafA1Wbkdze-LiHO0XUCWSU", 0)
+    assert arkusze.rozbierz_url(url.split("?")[0])[1] is None
+    assert not arkusze.jest_arkuszem("https://b2b.bogart.eu/feed.xml")
+
+
+def test_komorki_arkusza_skladaja_sie_w_feed():
+    """Nieucieknięte `&` w URL-u zdjęcia i deklaracja <?xml?> w środku
+    zakładki wywracały parser na całym producencie, nie na jednym wierszu."""
+    from atrybuty import arkusze, zrodla
+    rek, tag = zrodla.rekordy_xml(arkusze.zloz_xml(KOMORKI_BOGART))
+    assert tag == "item" and len(rek) == 2
+    assert rek[0]["gtin"] == "5904619730097"
+    assert rek[0]["params.glebokosc"] == "40"
+    assert rek[0]["filters.kolor"] == "szary,grafitowy"
+    assert rek[0]["image_link"].endswith("w=800&h=600")
+
+
+def test_mapowanie_feedu_z_arkusza_trafia_w_wymiary():
+    from atrybuty import arkusze, zrodla
+    rek, _ = zrodla.rekordy_xml(arkusze.zloz_xml(KOMORKI_BOGART))
+    m = zrodla.zgadnij_mapowanie(zrodla.opisz_pola(rek))
+    assert m["Szerokość"] == "params.szerokosc"
+    assert m["Głębokość"] == "params.glebokosc"
+
+
+def test_pusta_zakladka_to_blad_a_nie_zero_pozycji():
+    """Pusta zakładka po cichu kasowałaby wszystkie pozycje producenta
+    — lepiej odmówić i powiedzieć, co się stało."""
+    import pytest
+    from atrybuty import arkusze
+    with pytest.raises(arkusze.BladArkusza):
+        arkusze.zloz_xml(["", "  "])
+
+
+def test_arkusz_bez_gid_podaje_liste_zakladek(monkeypatch):
+    import pytest
+    from atrybuty import arkusze
+    monkeypatch.setattr(arkusze, "token", lambda: "t")
+    monkeypatch.setattr(arkusze, "zakladki", lambda i, t: [
+        {"gid": 0, "tytul": "BogartStock"}, {"gid": 7, "tytul": "Halmar"}])
+    with pytest.raises(arkusze.BladArkusza, match="BogartStock \\(gid=0\\).*Halmar"):
+        arkusze.pobierz_zakladke("https://docs.google.com/spreadsheets/d/abc/edit")
+
+
+def test_zrodlo_z_arkusza_dopasowuje_po_ean(tmp_path, monkeypatch):
+    """Cała ścieżka: zakładka arkusza -> pozycje -> dopasowanie po EAN-ie
+    z naszego eksportu -> rozjazd szerokości w kolejce."""
+    from atrybuty import arkusze, db, zrodla
+    monkeypatch.setattr(arkusze, "pobierz_zakladke",
+                        lambda url: (arkusze.zloz_xml(KOMORKI_BOGART), "BogartStock"))
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    con.execute(
+        "INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,atrybuty,liczby,kody)"
+        " VALUES ('324','Szafka RTV Asha','Bogart','Asha','ok',?,?,?)",
+        ('{"Szerokość":"160"}', '{"Szerokość":160.0}', '{"kod EAN":"5904619730097"}'))
+    con.execute("INSERT INTO przebiegi (id,plik,utworzono,liczba_produktow,"
+                "liczba_findingow) VALUES (1,'x','2026-09-29',1,0)")
+    con.commit()
+    zid = zrodla.dodaj_zrodlo(con, "Bogart (arkusz)", "Bogart",
+                              url="https://docs.google.com/spreadsheets/d/abc/edit#gid=0")
+    zrodla.zapisz_mapowanie(con, zid, {"klucz": "gtin", "nazwa": "title",
+                                       "Szerokość": "params.szerokosc"})
+    wynik = zrodla.odswiez(con, zid, tmp_path)
+    assert wynik["zapisanych"] == 2
+    assert zrodla.dopasuj(con)["324"]["sposob"] == "kod"
+    assert zrodla.dopisz_findingi_l4(con, 1) >= 1
+    r = con.execute("SELECT * FROM findingi WHERE regula_id='L4-ROZJAZD'").fetchone()
+    assert r["stara_wartosc"] == "160" and r["proponowana_wartosc"] == "167"
+    con.close()
