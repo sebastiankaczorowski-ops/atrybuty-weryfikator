@@ -2823,8 +2823,8 @@ def test_zrodlo_z_arkusza_dopasowuje_po_ean(tmp_path, monkeypatch):
     """Cała ścieżka: zakładka arkusza -> pozycje -> dopasowanie po EAN-ie
     z naszego eksportu -> rozjazd szerokości w kolejce."""
     from atrybuty import arkusze, db, zrodla
-    monkeypatch.setattr(arkusze, "pobierz_zakladke",
-                        lambda url: (arkusze.zloz_xml(KOMORKI_BOGART), "BogartStock"))
+    monkeypatch.setattr(arkusze, "pobierz_zakladke", lambda url: (
+        arkusze.zloz_zakladke([[k] for k in KOMORKI_BOGART]), "BogartStock"))
     con = db.polacz(tmp_path / "t.db")
     zrodla.przygotuj_baze(con)
     con.execute(
@@ -2845,3 +2845,26 @@ def test_zrodlo_z_arkusza_dopasowuje_po_ean(tmp_path, monkeypatch):
     r = con.execute("SELECT * FROM findingi WHERE regula_id='L4-ROZJAZD'").fetchone()
     assert r["stara_wartosc"] == "160" and r["proponowana_wartosc"] == "167"
     con.close()
+
+
+def test_zakladka_tabelaryczna_daje_rekordy_z_naglowkow():
+    """WojcikProductsV4Ours to zwykła tabela, nie XML w komórkach — czytanie
+    samej kolumny A dawało „XML nie zawiera powtarzających się elementów”."""
+    from atrybuty import arkusze, zrodla
+    wiersze = [["sku", "ean", "nazwa", "szerokosc", "kolor"],
+               ["W-01", "5901234567890", "Komoda Wojcik", "120", "szary,grafitowy"],
+               ["W-02", "5901234567891", "Regał Wojcik"],          # ucięte puste komórki
+               []]
+    dane = arkusze.zloz_zakladke(wiersze)
+    rek, _ = zrodla.rekordy(dane, zrodla.wykryj_format(dane))
+    assert len(rek) == 2
+    assert rek[0]["kolor"] == "szary,grafitowy" and rek[0]["szerokosc"] == "120"
+    assert rek[1]["szerokosc"] == ""
+
+
+def test_zakladka_z_xml_w_komorkach_nadal_idzie_jako_xml():
+    from atrybuty import arkusze, zrodla
+    dane = arkusze.zloz_zakladke([[k] for k in KOMORKI_BOGART])
+    assert zrodla.wykryj_format(dane) == "xml"
+    rek, tag = zrodla.rekordy_xml(dane)
+    assert tag == "item" and len(rek) == 2

@@ -11,6 +11,9 @@ Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
   pól, mapowanie, dopasowanie do naszych produktów, rozjazdy w kolejce.
 - Jeden producent = jedna zakładka = jedno źródło. Adres bez `#gid=` nie
   zgaduje — odpowiada listą zakładek w arkuszu.
+- Zakładka może trzymać XML w komórkach (jak Bogart), JSON w komórkach
+  albo zwykłą tabelę z nagłówkami w pierwszym wierszu (jak Wójcik) —
+  narzędzie rozpoznaje to samo.
 - Pusta zakładka to błąd, a nie zero pozycji — inaczej po cichu zniknęłyby
   wszystkie dane producenta.
 

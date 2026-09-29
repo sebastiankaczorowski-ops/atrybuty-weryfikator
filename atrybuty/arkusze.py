@@ -126,7 +126,7 @@ def zakladki(id_arkusza: str, tok: str) -> list[dict]:
 
 
 def pobierz_zakladke(url: str) -> tuple[bytes, str]:
-    """Zwraca (dokument XML, nazwa zakładki) dla zakładki wskazanej przez `gid`.
+    """Zwraca (dokument XML albo JSON, nazwa zakładki) dla zakładki z `gid`.
 
     Bez `gid` nie zgadujemy — pierwsza zakładka to feed jednego producenta,
     a źródło jest przypisane do konkretnego. Zamiast tego podajemy listę.
@@ -141,7 +141,57 @@ def pobierz_zakladke(url: str) -> tuple[bytes, str]:
     if tytul is None:
         raise BladArkusza(f"w arkuszu nie ma zakładki gid={gid}")
 
-    zakres = urllib.parse.quote(f"'{tytul}'!A:A", safe="")
-    dane = _get(f"{API}/{id_arkusza}/values/{zakres}?majorDimension=COLUMNS", tok)
-    kolumny = dane.get("values") or [[]]
-    return zloz_xml(kolumny[0]), tytul
+    zakres = urllib.parse.quote(f"'{tytul}'", safe="")
+    dane = _get(f"{API}/{id_arkusza}/values/{zakres}", tok)
+    return zloz_zakladke(dane.get("values") or []), tytul
+
+
+def zloz_zakladke(wiersze: list[list[str]]) -> bytes:
+    """Wiersze zakładki -> dokument, który zrozumie `zrodla.rekordy`.
+
+    Zakładki nie mają jednego formatu: Bogart trzyma po jednym <item> XML-a
+    w komórce, a WojcikProductsV4Ours to zwykła tabela z nagłówkami.
+    Czytanie samej kolumny A dawało z tabeli tekst bez struktury i błąd
+    „XML nie zawiera powtarzających się elementów”.
+    """
+    kolumna_a = [(w[0] if w else "").strip() for w in wiersze]
+    niepuste = [k for k in kolumna_a if k]
+    if not niepuste:
+        raise BladArkusza("zakładka jest pusta")
+
+    if _wiekszosc(niepuste, lambda k: k.startswith("<")):
+        return zloz_xml(kolumna_a)
+    if _wiekszosc(niepuste, lambda k: k.startswith("{")):
+        try:
+            return json.dumps([json.loads(k) for k in niepuste],
+                              ensure_ascii=False).encode("utf-8")
+        except json.JSONDecodeError as e:
+            raise BladArkusza(f"komórki wyglądają na JSON, ale nie dają się odczytać: {e}") from e
+    return zloz_tabele(wiersze)
+
+
+def _wiekszosc(komorki: list[str], warunek) -> bool:
+    probka = komorki[:200]
+    return sum(1 for k in probka if warunek(k)) > len(probka) / 2
+
+
+def zloz_tabele(wiersze: list[list[str]]) -> bytes:
+    """Tabela z nagłówkami w pierwszym wierszu -> lista rekordów w JSON-ie.
+
+    JSON, nie CSV: `rekordy_csv` zgaduje separator z liczby średników
+    i przecinków, a wartości typu „szary,grafitowy” by go zmyliły.
+    """
+    naglowki = [(n or "").strip() for n in wiersze[0]]
+    if not any(naglowki):
+        raise BladArkusza("pierwszy wiersz zakładki nie ma nagłówków")
+    # Arkusz ucina puste komórki na końcu wiersza, więc wiersz bywa krótszy
+    # od nagłówka — dopełniamy, zamiast gubić ostatnie kolumny.
+    rekordy = []
+    for w in wiersze[1:]:
+        r = {n: (w[i] if i < len(w) else "").strip()
+             for i, n in enumerate(naglowki) if n}
+        if any(r.values()):
+            rekordy.append(r)
+    if not rekordy:
+        raise BladArkusza("zakładka ma nagłówki, ale żadnego wiersza danych")
+    return json.dumps(rekordy, ensure_ascii=False).encode("utf-8")
