@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rozpoznanie arkusza — kontrola atrybutów OXM</title>
+<script src="/static/htmx.min.js"></script>
+<style>
+:root{
+  --bg:#f6f8f7; --surface:#fff; --surface-2:#edf1ef;
+  --ink:#15201d; --ink-2:#3c4c47; --muted:#6b7c76;
+  --line:#d9e1dd; --line-strong:#b9c7c1;
+  --accent:#0e5e52; --accent-soft:#d7e8e3;
+  --crit:#9a2b2b; --crit-soft:#f5dedc;
+  --warn:#8a5a0b; --warn-soft:#f6e7cc;
+  --ok:#3a6b2e; --ok-soft:#dfebd6;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+     font:14px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.9em}
+a{color:var(--accent)}
+header{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px;
+       display:flex;flex-wrap:wrap;gap:16px;align-items:baseline}
+header h1{font-size:16px;margin:0;font-weight:600}
+header .zrodlo{color:var(--muted);font-size:12.5px}
+header nav{margin-left:auto;display:flex;gap:14px;font-size:13.5px}
+main{padding:18px 20px 70px;max-width:1240px;margin:0 auto;display:flex;
+     flex-direction:column;gap:24px}
+h2{font-size:15px;margin:0 0 3px;font-weight:600}
+.pod{color:var(--muted);font-size:13px;margin:0 0 12px;max-width:84ch}
+section.karta{background:var(--surface);border:1px solid var(--line);border-radius:3px;
+              padding:16px 18px}
+.komunikat{padding:9px 13px;border-radius:3px;font-size:13.5px}
+.komunikat.ok{background:var(--ok-soft);color:var(--ok)}
+.komunikat.zle{background:var(--crit-soft);color:var(--crit)}
+.pola{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.pole{display:flex;flex-direction:column;gap:4px}
+.pole label{font-size:11.5px;color:var(--muted)}
+input[type=text],input[type=url],input[type=file],select{font:inherit;padding:6px 8px;
+  border:1px solid var(--line-strong);border-radius:2px;background:var(--bg);color:var(--ink);
+  min-width:190px}
+button{font:inherit;padding:6px 13px;border:1px solid var(--line-strong);border-radius:2px;
+       background:var(--bg);color:var(--ink-2);cursor:pointer}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.mini{padding:3px 9px;font-size:12px}
+form.inline{display:inline}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+thead th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+         background:var(--surface-2);font-weight:600}
+tbody tr:last-child td{border-bottom:none}
+td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.znacznik{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600}
+.znacznik.ok{background:var(--ok-soft);color:var(--ok)}
+.znacznik.zle{background:var(--crit-soft);color:var(--crit)}
+.znacznik.nieaktywne{background:var(--surface-2);color:var(--muted)}
+.mapowanie{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.mapowanie .wiersz{display:flex;flex-direction:column;gap:3px}
+.mapowanie label{font-size:12px;color:var(--ink-2);font-weight:600}
+.mapowanie small{color:var(--muted);font-size:11.5px}
+.przyklady{color:var(--muted);font-size:12px}
+.kolo{width:12px;height:12px;border:2px solid currentColor;border-top-color:transparent;
+      border-radius:50%;display:inline-block;animation:obrot .7s linear infinite}
+@keyframes obrot{to{transform:rotate(360deg)}}
+.czekam{display:none}
+.htmx-request .czekam{display:inline-flex;align-items:center;gap:6px}
+.htmx-request .etykieta{display:none}
+@media (prefers-reduced-motion: reduce){ .kolo{animation:none} }
+.polecana{background:var(--ok-soft)}
+.brak td{color:var(--muted)}
+.uwaga{color:var(--warn);font-size:12px}
+.miara{font-family:"IBM Plex Mono",monospace;font-size:12px}
+.miara.slabo{color:var(--muted);text-decoration:line-through}
+</style>
+{% if stan.trwa %}<meta http-equiv="refresh" content="5">{% endif %}
+</head>
+<body>
+
+<header>
+  <h1>Rozpoznanie arkusza RAW FILES</h1>
+  {% if raport %}<span class="zrodlo">{{ raport.zakladki|length }} zakładek ·
+    przebieg {{ raport.utworzono[:16].replace('T',' ') }} UTC</span>{% endif %}
+  <nav><a href="/zrodla">← źródła producenckie</a></nav>
+</header>
+
+<main>
+{% if komunikat %}<div class="komunikat {{ 'zle' if blad else 'ok' }}">{{ komunikat }}</div>{% endif %}
+{% if stan.trwa %}
+  <div class="komunikat ok"><span class="kolo"></span> Zakładam źródła i pobieram pozycje:
+    {{ stan.zrobione }} z {{ stan.wszystkie }}. Strona odświeża się sama.</div>
+{% elif stan.koniec %}
+  <div class="komunikat {{ 'zle' if stan.bledy else 'ok' }}">Gotowe o {{ stan.koniec }}:
+    {{ stan.wszystkie - stan.bledy|length }} z {{ stan.wszystkie }} źródeł pobranych.
+    Przelicz dane na <a href="/import">/import</a>, żeby powstały findingi L4.
+    {% for b in stan.bledy %}<div>{{ b }}</div>{% endfor %}</div>
+{% endif %}
+
+<section class="karta">
+  <h2>Jak to działa</h2>
+  <p class="pod">Dla każdej zakładki narzędzie <b>zmierzyło</b>, które pole trafia w kody naszych
+    produktów (to klucz), do jakiego producenta należą trafione produkty i które pole
+    feedu <b>zgadza się z naszymi wartościami</b> wymiarów i wagi na dopasowanych produktach.
+    Pole mapujemy, gdy zgadza się na co najmniej połowie par — niżej to najpewniej inna
+    wielkość (paczka, długość zamiast głębokości). Przekreślone = najlepszy kandydat, ale za słaby.</p>
+  <p class="pod">Na producenta polecana jest jedna zakładka — ta z największą liczbą trafionych
+    produktów. Porównywanie z kilkoma wersjami naraz dawałoby sprzeczne propozycje.</p>
+  {% if not raport %}
+  <p class="pod">Raportu jeszcze nie ma. Uruchom na Mac Mini:</p>
+  <pre><code>cd ~/atrybuty-weryfikator && docker compose exec atrybuty python -m atrybuty.pipeline rozpoznaj-arkusz "https://docs.google.com/spreadsheets/d/…/edit"</code></pre>
+  {% endif %}
+</section>
+
+{% if raport %}
+<form method="post" action="/zrodla/rozpoznanie/zastosuj">
+<section class="karta">
+  <h2>Zakładki</h2>
+  <p class="pod">Zaznaczone są polecane. Zatwierdzenie zakłada źródła (albo poprawia istniejące
+    dla tej samej zakładki), ustawia dopasowanie „tylko po kodzie” i pobiera pozycje.</p>
+  <table>
+    <thead><tr><th></th><th>Zakładka</th><th>Producent</th><th>Trafionych</th><th>Klucz</th>
+      {% for c in cele %}<th>{{ c }}</th>{% endfor %}<th>Uwagi</th></tr></thead>
+    <tbody>
+    {% for z in udane %}
+      <tr class="{{ 'polecana' if z.polecana }}">
+        <td>{% if z.mapowanie.klucz %}<input type="checkbox" name="gid" value="{{ z.gid }}"
+              {{ 'checked' if z.polecana }}>{% endif %}</td>
+        <td><b>{{ z.tytul }}</b>
+          {% if z.gid|string in istniejace %}<span class="znacznik ok">jest źródłem</span>{% endif %}
+          <div class="przyklady">{{ z.rekordow }} rekordów · {{ z.format }}{% if z.tag %} &lt;{{ z.tag }}&gt;{% endif %}</div></td>
+        <td>{{ z.producent or '—' }}{% if z.udzial_producenta and z.udzial_producenta < 0.9 %}
+          <div class="uwaga">{{ '%.0f'|format(z.udzial_producenta*100) }}% trafień</div>{% endif %}</td>
+        <td class="n">{{ z.trafionych_produktow }}</td>
+        <td><code>{{ z.klucz or '—' }}</code></td>
+        {% for c in cele %}{% set m = z.zgodnosc.get(c) %}
+        <td>{% if m %}<span class="miara {{ '' if m.zmapowane else 'slabo' }}"
+              title="{{ m.zgodnych }} z {{ m.par }} par zgodnych">{{ m.pole }}<br>
+              {{ '%.0f'|format(m.udzial*100) }}% z {{ m.par }}</span>{% else %}—{% endif %}</td>
+        {% endfor %}
+        <td>{% for u in z.uwagi %}<div class="uwaga">{{ u }}</div>{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    {% for z in bledne %}
+      <tr class="brak"><td></td><td><b>{{ z.tytul }}</b></td><td colspan="{{ 4 + cele|length }}">{{ z.blad }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p style="margin-top:14px"><button class="p" type="submit" {{ 'disabled' if stan.trwa }}>Załóż zaznaczone źródła i pobierz pozycje</button></p>
+</section>
+</form>
+{% endif %}
+</main>
+</body>
+</html>

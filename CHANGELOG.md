@@ -3,6 +3,20 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-29 · Rozpoznanie arkusza: źródła dobierają się same, do zatwierdzenia
+
+- Nowa strona `/zrodla/rozpoznanie`. Komenda na Mini przechodzi wszystkie
+  zakładki arkusza „RAW FILES” i dla każdej **mierzy**: które pole trafia
+  w kody naszych produktów (klucz), do którego producenta należą trafione
+  produkty i które pole feedu **zgadza się z naszymi wymiarami i wagą**.
+- Dzięki temu kolejność „wymiar 1/2/3” z opisów (Halmar) rozstrzygają dane.
+  Pole mapujemy dopiero, gdy zgadza się na co najmniej połowie produktów —
+  słabszy kandydat jest pokazany przekreślony, żeby było widać, czemu go nie ma.
+- Na producenta polecana jest jedna zakładka (najwięcej trafień) — V2/V3
+  i Stock/Products naraz dałyby sprzeczne propozycje dla tego samego mebla.
+- Nic nie zmienia się samo: zaznaczasz zakładki, klikasz „Załóż”, a źródła
+  powstają (albo poprawiają się istniejące) i pobierają pozycje w tle.
+
 ## 2026-09-29 · Feedy producentów prosto z arkusza „RAW FILES”
 
 - W `/zrodla` jako adres źródła można wkleić **zakładkę arkusza Google**

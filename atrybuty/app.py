@@ -8,6 +8,7 @@ przeniesienie na Mac Mini to później tylko Dockerfile.
 from __future__ import annotations
 
 import json
+import threading
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote, urlencode
@@ -20,7 +21,7 @@ from fastapi.templating import Jinja2Templates
 
 from . import (config, db, eksport, eksport_panelu, importer, kategorie,
                panel_format, reguly as reguly_mod, weryfikacja as weryfikacja_mod,
-               wizja, zapytania, zdjecia as zdjecia_mod, zrodla as zrodla_mod)
+               wizja, zapytania, zdjecia as zdjecia_mod, zrodla as zrodla_mod, rozpoznanie)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
 from .tekst import norm
 from .pipeline import BAZA
@@ -410,6 +411,70 @@ def strona_zrodel(request: Request, komunikat: str = "", blad: str = ""):
     }
     con.close()
     return szablony.TemplateResponse(request, "zrodla.html", kontekst)
+
+
+# Odświeżenie kilkudziesięciu źródeł z arkusza trwa minuty (limit Sheets API),
+# więc idzie w tle, a strona pokazuje postęp — żądanie HTTP by nie doczekało.
+STAN_ROZPOZNANIA: dict = {"trwa": False, "zrobione": 0, "wszystkie": 0, "bledy": [],
+                          "koniec": ""}
+
+
+@app.get("/zrodla/rozpoznanie", response_class=HTMLResponse)
+def strona_rozpoznania(request: Request, komunikat: str = "", blad: str = ""):
+    con = _con()
+    istniejace = {z["url"].rsplit("gid=", 1)[-1] for z in zrodla_mod.lista_zrodel(con)
+                  if "gid=" in (z.get("url") or "")}
+    con.close()
+    raport = rozpoznanie.wczytaj_raport(importer.KATALOG_DANYCH)
+    zakladki = raport["zakladki"] if raport else []
+    kontekst = {
+        "request": request,
+        "raport": raport,
+        "udane": sorted((z for z in zakladki if "blad" not in z),
+                        key=lambda z: (-int(z.get("polecana", False)),
+                                       -z.get("trafionych_produktow", 0))),
+        "bledne": [z for z in zakladki if "blad" in z],
+        "istniejace": istniejace,
+        "stan": STAN_ROZPOZNANIA,
+        "cele": list(zrodla_mod.TOLERANCJA),
+        "komunikat": komunikat, "blad": bool(blad),
+    }
+    return szablony.TemplateResponse(request, "rozpoznanie.html", kontekst)
+
+
+@app.post("/zrodla/rozpoznanie/zastosuj")
+async def zastosuj_rozpoznanie(request: Request):
+    """Zakłada albo poprawia źródła z zaznaczonych zakładek i pobiera pozycje."""
+    if STAN_ROZPOZNANIA["trwa"]:
+        return RedirectResponse("/zrodla/rozpoznanie", status_code=303)
+    formularz = await request.form()
+    wybrane = {str(v) for k, v in formularz.multi_items() if k == "gid"}
+    raport = rozpoznanie.wczytaj_raport(importer.KATALOG_DANYCH) or {"zakladki": []}
+    zakladki = [z for z in raport["zakladki"]
+                if str(z["gid"]) in wybrane and z.get("mapowanie", {}).get("klucz")]
+    if not zakladki:
+        q = urlencode({"komunikat": "Nie zaznaczono żadnej zakładki z kluczem.", "blad": "1"})
+        return RedirectResponse(f"/zrodla/rozpoznanie?{q}", status_code=303)
+
+    STAN_ROZPOZNANIA.update(trwa=True, zrobione=0, wszystkie=len(zakladki), bledy=[],
+                            koniec="")
+    threading.Thread(target=_zastosuj_w_tle, args=(zakladki,), daemon=True).start()
+    return RedirectResponse("/zrodla/rozpoznanie", status_code=303)
+
+
+def _zastosuj_w_tle(zakladki: list[dict]) -> None:
+    con = _con()
+    try:
+        for z in zakladki:
+            try:
+                zid, _ = rozpoznanie.zastosuj(con, z)
+                zrodla_mod.odswiez(con, zid, importer.KATALOG_DANYCH)
+            except Exception as e:                           # noqa: BLE001
+                STAN_ROZPOZNANIA["bledy"].append(f"{z['tytul']}: {e}")
+            STAN_ROZPOZNANIA["zrobione"] += 1
+    finally:
+        con.close()
+        STAN_ROZPOZNANIA.update(trwa=False, koniec=datetime.now().strftime("%H:%M"))
 
 
 @app.get("/zrodla/{zid}", response_class=HTMLResponse)

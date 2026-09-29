@@ -431,6 +431,10 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--potwierdzam", default="", metavar="TAK",
                    help="bez tego nic się nie kasuje")
 
+    r = sub.add_parser("rozpoznaj-arkusz",
+                       help="przejdź zakładki arkusza RAW FILES i zaproponuj źródła L4")
+    r.add_argument("url", help="adres arkusza Google (bez #gid=)")
+
     args = ap.parse_args(argv)
     if args.cmd == "import":
         komenda_import(args.plik, args.kategorie)
@@ -445,9 +449,20 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "wyczysc":
         komenda_wyczysc(args.zakres, args.z_wizja, args.pliki_partii,
                         args.potwierdzam)
+    elif args.cmd == "rozpoznaj-arkusz":
+        komenda_rozpoznaj_arkusz(args.url)
     else:
         komenda_raport()
     return 0
+
+
+def komenda_rozpoznaj_arkusz(url: str) -> None:
+    from . import importer, rozpoznanie
+    con = db.polacz(BAZA)
+    raport = rozpoznanie.rozpoznaj_arkusz(con, url, importer.KATALOG_DANYCH)
+    polecane = [z for z in raport["zakladki"] if z.get("polecana")]
+    print(f"\nPolecanych zakładek: {len(polecane)} z {len(raport['zakladki'])}. "
+          f"Zatwierdź je na /zrodla/rozpoznanie.")
 
 
 if __name__ == "__main__":

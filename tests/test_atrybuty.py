@@ -4,6 +4,7 @@ Nacisk na te miejsca, gdzie łatwo o fałszywy alarm — bo to one decydują,
 czy zespół zaufa kolejce, czy zacznie ją ignorować.
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -2929,3 +2930,164 @@ def test_wymiary_paczki_nie_sa_podpowiadane_jako_wymiary_mebla():
     for docelowe in ("Szerokość", "Wysokość", "Głębokość"):
         assert "package" not in m.get(docelowe, "")
     assert m["Waga"] == "nett_weight"
+
+
+# --- rozpoznanie arkusza --------------------------------------------------
+
+def _baza_halmar(tmp_path, n=8):
+    """n łóżek Halmaru z EAN-em i wymiarami 99 × 89 (szer × wys) u nas."""
+    from atrybuty import db, zrodla
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    for i in range(n):
+        con.execute(
+            "INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,atrybuty,liczby,kody)"
+            " VALUES (?,?,'Halmar','Sumatra','ok','{}',?,?)",
+            (str(100 + i), f"Łóżko Sumatra {i}",
+             json.dumps({"Szerokość": 99.0, "Wysokość": 89.0, "Waga": 22.5}),
+             json.dumps({"kod EAN": f"59052481204{i:02d}"})))
+    con.commit()
+    return con
+
+
+def _feed_halmar(n=8, wysokosc=89):
+    return [{"ean": f"20100011563{i:02d}", "ean_GTIN": f"59052481204{i:02d}",
+             "code": f"V-CH-SUMATRA-{i}", "name": f"SUMATRA łóżko {i}",
+             "description": f"wymiary: 99/210/{wysokosc} cm, materiał: stal, kolor: biały",
+             "nett_weight": "22.500", "package.pack.width": "99.00",
+             "package.pack.length": "216.00"} for i in range(n)]
+
+
+def _przeanalizuj(con, rek, tytul="HalmarStock"):
+    from atrybuty import rozpoznanie, zrodla
+    rek = [dict(r, **zrodla.pola_z_opisu(r)) for r in rek]
+    return rozpoznanie.przeanalizuj(rek, rozpoznanie.indeks_kodow(con),
+                                    rozpoznanie.nasze_produkty(con), ["Halmar"], tytul)
+
+
+def test_rozpoznanie_mierzy_klucz_i_kolejnosc_wymiarow(tmp_path):
+    """Kolejność „wymiar 1/2/3” rozstrzygają dane: na dopasowanych produktach
+    wymiar 1 zgadza się z naszą szerokością, a wymiar 3 z wysokością."""
+    con = _baza_halmar(tmp_path)
+    w = _przeanalizuj(con, _feed_halmar())
+    assert w["klucz"] == "ean_GTIN" and w["trafionych_produktow"] == 8
+    assert w["producent"] == "Halmar"
+    m = w["mapowanie"]
+    assert m["Wysokość"] == "description » wymiar 3"
+    assert m["Waga"] == "nett_weight"
+    con.close()
+
+
+def test_rozpoznanie_nie_mapuje_wymiaru_paczki_nawet_gdy_sie_zgadza(tmp_path):
+    """Szerokość kartonu bywa przypadkiem równa szerokości mebla — mimo to nie
+    wolno jej brać, bo na innych produktach porówna karton z meblem."""
+    con = _baza_halmar(tmp_path)
+    w = _przeanalizuj(con, _feed_halmar())
+    assert w["mapowanie"]["Szerokość"] == "description » wymiar 1"
+    assert "package" not in json.dumps(w["mapowanie"])
+    con.close()
+
+
+def test_pole_zgodne_rzadziej_niz_w_polowie_nie_jest_mapowane(tmp_path):
+    """Pole, które zgadza się z naszą wysokością u mniej niż połowy produktów,
+    to najpewniej inna wielkość — zmapowane zasypałoby kolejkę rozjazdami."""
+    con = _baza_halmar(tmp_path)
+    rek = _feed_halmar(wysokosc=120)
+    w = _przeanalizuj(con, rek)
+    assert "Wysokość" not in w["mapowanie"]
+    assert w["zgodnosc"]["Wysokość"]["zmapowane"] is False
+    con.close()
+
+
+def test_klucz_nie_trafia_w_nasze_id_sklepowe(tmp_path):
+    """Numer produktu u Bogartu (50979) potrafi się pokryć z id w naszym
+    sklepie. Trafienie w id to przypadek, nie dopasowanie."""
+    con = _baza_halmar(tmp_path)
+    rek = [{"id": str(100 + i), "title": f"Szafka {i}"} for i in range(8)]
+    w = _przeanalizuj(con, rek, "BogartStock")
+    assert w["klucz"] == "" and w["trafionych_produktow"] == 0
+    con.close()
+
+
+def test_producent_z_nazwy_zakladki():
+    from atrybuty import rozpoznanie
+    prod = ["Halmar", "Signal", "Szynaka Meble", "Black Red White"]
+    assert rozpoznanie.producent_z_nazwy("HalmarStock", prod) == "Halmar"
+    assert rozpoznanie.producent_z_nazwy("SzynakaProductsV3", prod) == "Szynaka Meble"
+    assert rozpoznanie.producent_z_nazwy("BRWV2Products", prod) == ""
+
+
+def test_na_producenta_polecana_jedna_zakladka():
+    from atrybuty import rozpoznanie
+    z = [{"tytul": "SzynakaProductsV2", "producent": "Szynaka", "trafionych_produktow": 40,
+          "mapowanie": {"klucz": "ean"}},
+         {"tytul": "SzynakaProductsV3", "producent": "Szynaka", "trafionych_produktow": 310,
+          "mapowanie": {"klucz": "ean"}},
+         {"tytul": "SzynakaStock", "producent": "Szynaka", "trafionych_produktow": 3,
+          "mapowanie": {"klucz": "ean"}}]
+    rozpoznanie.wybierz_najlepsze(z)
+    assert [x["polecana"] for x in z] == [False, True, False]
+
+
+def test_zastosowanie_dwa_razy_nie_mnozy_zrodel(tmp_path):
+    from atrybuty import rozpoznanie, zrodla
+    con = _baza_halmar(tmp_path)
+    zakl = {"gid": 10953551, "tytul": "HalmarStock", "producent": "Halmar",
+            "url": "https://docs.google.com/spreadsheets/d/abc/edit#gid=10953551",
+            "mapowanie": {"klucz": "ean_GTIN"}}
+    zid, nowe = rozpoznanie.zastosuj(con, zakl)
+    zakl["mapowanie"] = {"klucz": "ean_GTIN", "Waga": "nett_weight"}
+    zid2, nowe2 = rozpoznanie.zastosuj(con, zakl)
+    assert nowe and not nowe2 and zid == zid2
+    z = zrodla.zrodlo(con, zid)
+    assert z["mapowanie"]["Waga"] == "nett_weight" and z["strategia"] == "klucz"
+    assert len(zrodla.lista_zrodel(con)) == 1
+    con.close()
+
+
+def test_strona_rozpoznania_pokazuje_raport(tmp_path, monkeypatch):
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from atrybuty import importer, rozpoznanie
+    from fastapi.testclient import TestClient
+    baza = tmp_path / "t.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    monkeypatch.setattr(importer, "KATALOG_DANYCH", tmp_path)
+    klient = TestClient(app_mod.app)
+    assert "rozpoznaj-arkusz" in klient.get("/zrodla/rozpoznanie").text
+
+    (tmp_path / rozpoznanie.PLIK_RAPORTU).write_text(json.dumps({
+        "utworzono": "2026-09-29T10:00:00+00:00", "arkusz": "abc", "zakladki": [
+            {"gid": 1, "tytul": "HalmarStock", "producent": "Halmar", "polecana": True,
+             "trafionych_produktow": 8, "rekordow": 3220, "format": "xml", "tag": "Item",
+             "klucz": "ean_GTIN", "uwagi": [], "mapowanie": {"klucz": "ean_GTIN"},
+             "zgodnosc": {"Szerokość": {"pole": "description » wymiar 1", "par": 8,
+                                        "zgodnych": 8, "udzial": 1.0, "zmapowane": True}}},
+            {"gid": 2, "tytul": "Pusta", "blad": "zakładka jest pusta"}]}), encoding="utf-8")
+    html = klient.get("/zrodla/rozpoznanie").text
+    assert "HalmarStock" in html and "description » wymiar 1" in html
+    assert re.search(r'value="1"\s+checked', html) and "zakładka jest pusta" in html
+
+
+def test_rozpoznanie_calego_arkusza_zapisuje_raport(tmp_path, monkeypatch):
+    """Przebieg przez wszystkie zakładki: zła zakładka nie przerywa reszty,
+    a raport ląduje w katalogu danych dla strony /zrodla/rozpoznanie."""
+    from atrybuty import arkusze, rozpoznanie
+    con = _baza_halmar(tmp_path)
+    naglowki = list(_feed_halmar()[0])
+    tabela = [naglowki] + [[r[k] for k in naglowki] for r in _feed_halmar()]
+    monkeypatch.setattr(arkusze, "token", lambda: "t")
+    monkeypatch.setattr(arkusze, "zakladki", lambda i, t: [
+        {"gid": 5, "tytul": "HalmarProducts"}, {"gid": 6, "tytul": "Pusta"}])
+    monkeypatch.setattr(arkusze, "wartosci_zakladki",
+                        lambda i, tytul, t: tabela if tytul == "HalmarProducts" else [])
+    raport = rozpoznanie.rozpoznaj_arkusz(
+        con, "https://docs.google.com/spreadsheets/d/abc/edit", tmp_path,
+        pauza=0, wypisz=lambda *_: None)
+    halmar, pusta = raport["zakladki"]
+    assert halmar["polecana"] and halmar["mapowanie"]["klucz"] == "ean_GTIN"
+    assert halmar["url"].endswith("#gid=5")
+    assert "pusta" in pusta["blad"]
+    assert rozpoznanie.wczytaj_raport(tmp_path)["zakladki"][0]["tytul"] == "HalmarProducts"
+    con.close()

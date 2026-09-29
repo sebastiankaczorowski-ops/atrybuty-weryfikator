@@ -79,8 +79,15 @@ def sciezka_klucza() -> Path:
     return sciezka
 
 
+# Token żyje godzinę. Odświeżenie 40 źródeł jedno po drugim prosiłoby
+# o 40 tokenów i zjadało limit odczytów na minutę.
+_TOKEN: dict = {"wartosc": "", "wygasa": 0.0}
+
+
 def token(sciezka: Path | None = None) -> str:
     """Token dostępu z klucza konta serwisowego (JWT bearer, bez `requests`)."""
+    if sciezka is None and _TOKEN["wartosc"] and time.time() < _TOKEN["wygasa"]:
+        return _TOKEN["wartosc"]
     from google.auth import crypt, jwt   # import tu: bez arkuszy biblioteka niepotrzebna
 
     info = json.loads((sciezka or sciezka_klucza()).read_text(encoding="utf-8"))
@@ -93,14 +100,21 @@ def token(sciezka: Path | None = None) -> str:
         "assertion": asercja.decode() if isinstance(asercja, bytes) else asercja,
     }).encode()
     odp = _zapytanie(urllib.request.Request(info["token_uri"], data=tresc))
+    if sciezka is None:
+        _TOKEN.update(wartosc=odp["access_token"], wygasa=time.time() + 3000)
     return odp["access_token"]
 
 
-def _zapytanie(req: urllib.request.Request, timeout: int = 60) -> dict:
+def _zapytanie(req: urllib.request.Request, timeout: int = 60, prob: int = 4) -> dict:
     try:
         with urllib.request.urlopen(req, timeout=timeout) as odp:
             return json.loads(odp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
+        # 429 = limit odczytów na minutę; przy przejściu ~90 zakładek
+        # zdarza się mimo pauzy, a przerwanie w połowie marnuje cały przebieg.
+        if e.code == 429 and prob > 1:
+            time.sleep(30)
+            return _zapytanie(req, timeout, prob - 1)
         if e.code == 403:
             raise BladArkusza(
                 "Google odmówił dostępu (403) — arkusz nie jest udostępniony "
@@ -141,9 +155,12 @@ def pobierz_zakladke(url: str) -> tuple[bytes, str]:
     if tytul is None:
         raise BladArkusza(f"w arkuszu nie ma zakładki gid={gid}")
 
+    return zloz_zakladke(wartosci_zakladki(id_arkusza, tytul, tok)), tytul
+
+
+def wartosci_zakladki(id_arkusza: str, tytul: str, tok: str) -> list[list[str]]:
     zakres = urllib.parse.quote(f"'{tytul}'", safe="")
-    dane = _get(f"{API}/{id_arkusza}/values/{zakres}", tok)
-    return zloz_zakladke(dane.get("values") or []), tytul
+    return _get(f"{API}/{id_arkusza}/values/{zakres}", tok).get("values") or []
 
 
 def zloz_zakladke(wiersze: list[list[str]]) -> bytes:
