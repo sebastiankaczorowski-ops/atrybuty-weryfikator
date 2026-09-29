@@ -3017,16 +3017,21 @@ def test_producent_z_nazwy_zakladki():
     assert rozpoznanie.producent_z_nazwy("BRWV2Products", prod) == ""
 
 
-def test_na_producenta_polecana_jedna_zakladka():
+def test_polecane_sa_wszystkie_zakladki_ktore_cos_wnosza():
+    """Kilka wersji feedu naraz jest dozwolone — konflikty między nimi
+    rozstrzyga porównanie. Odpada tylko to, co nic nie trafia albo nie ma
+    żadnego pola do porównania."""
     from atrybuty import rozpoznanie
-    z = [{"tytul": "SzynakaProductsV2", "producent": "Szynaka", "trafionych_produktow": 40,
-          "mapowanie": {"klucz": "ean"}},
-         {"tytul": "SzynakaProductsV3", "producent": "Szynaka", "trafionych_produktow": 310,
-          "mapowanie": {"klucz": "ean"}},
-         {"tytul": "SzynakaStock", "producent": "Szynaka", "trafionych_produktow": 3,
+    z = [{"tytul": "SzynakaProductsV2", "trafionych_produktow": 40,
+          "mapowanie": {"klucz": "ean", "Szerokość": "w"}},
+         {"tytul": "SzynakaProductsV3", "trafionych_produktow": 310,
+          "mapowanie": {"klucz": "ean", "Waga": "kg"}},
+         {"tytul": "SzynakaStock", "trafionych_produktow": 3,
+          "mapowanie": {"klucz": "ean", "Szerokość": "w"}},
+         {"tytul": "SzynakaLogistics", "trafionych_produktow": 300,
           "mapowanie": {"klucz": "ean"}}]
     rozpoznanie.wybierz_najlepsze(z)
-    assert [x["polecana"] for x in z] == [False, True, False]
+    assert [x["polecana"] for x in z] == [True, True, False, False]
 
 
 def test_zastosowanie_dwa_razy_nie_mnozy_zrodel(tmp_path):
@@ -3181,3 +3186,92 @@ def test_rozpoznanie_znajduje_pole_w_mm(tmp_path):
     assert w["mapowanie"]["Szerokość"] == "szerokosc_mm"
     assert w["zgodnosc"]["Szerokość"]["jednostka"] == "mm → cm"
     con.close()
+
+
+# --- kilka źródeł na produkt ----------------------------------------------
+
+def _dwa_zrodla(tmp_path, szer_a, szer_b, nasza=140):
+    """Jeden produkt, dwa feedy z tym samym EAN-em i różnymi (albo nie) szerokościami."""
+    from atrybuty import db, zrodla
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    con.execute(
+        "INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,atrybuty,liczby,kody)"
+        " VALUES ('1','Komoda','Wójcik','K','ok',?,?,?)",
+        (json.dumps({"Szerokość": str(nasza)}), json.dumps({"Szerokość": float(nasza)}),
+         '{"kod EAN":"5900000000001"}'))
+    con.execute("INSERT INTO przebiegi (id,plik,utworzono,liczba_produktow,"
+                "liczba_findingow) VALUES (1,'x','2026-09-29',1,0)")
+    for nazwa, szer in (("PIM Wójcik", szer_a), ("WojcikProductsV3", szer_b)):
+        plik = tmp_path / f"{nazwa}.csv"
+        plik.write_text(f"ean;szer\n5900000000001;{szer}", encoding="utf-8")
+        zid = zrodla.dodaj_zrodlo(con, nazwa, "Wójcik", plik=plik.name)
+        zrodla.zapisz_mapowanie(con, zid, {"klucz": "ean", "Szerokość": "szer"})
+        zrodla.odswiez(con, zid, tmp_path)
+    con.commit()
+    return con
+
+
+def test_zgodne_zrodla_daja_jeden_mocniejszy_finding(tmp_path):
+    """Dawniej pierwsze źródło „zabierało” produkt i drugie nie miało głosu.
+    Teraz oba głosują, a zgodność podnosi pewność propozycji."""
+    import pytest
+    from atrybuty import zrodla
+    con = _dwa_zrodla(tmp_path, 120, 121)
+    assert len(zrodla.dopasuj_wszystkie(con)["1"]) == 2
+    zrodla.dopisz_findingi_l4(con, 1)
+    rows = con.execute("SELECT * FROM findingi WHERE regula_id='L4-ROZJAZD'").fetchall()
+    assert len(rows) == 1
+    r = rows[0]
+    assert r["proponowana_wartosc"] == "120.5"
+    assert "2 zgodne źródła" in r["dowod"] and "PIM Wójcik = 120" in r["dowod"]
+    assert r["pewnosc"] == pytest.approx(0.87)
+    con.close()
+
+
+def test_sprzeczne_zrodla_nie_trafiaja_do_kolejki(tmp_path):
+    """Gdy źródła się kłócą, nie wiadomo, która wersja jest prawdziwa —
+    nie proponujemy nic, tylko zapisujemy konflikt dla człowieka."""
+    from atrybuty import zrodla
+    con = _dwa_zrodla(tmp_path, 120, 160)
+    zrodla.dopisz_findingi_l4(con, 1)
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE warstwa='L4'").fetchone()[0] == 0
+    k = zrodla.konflikty_ostatniego(con)
+    assert k["ile"] == 1
+    assert k["lista"][0]["wartosci"] == [["PIM Wójcik", "120"], ["WojcikProductsV3", "160"]]
+    assert k["pary"] == [("PIM Wójcik ↔ WojcikProductsV3", 1)]
+    con.close()
+
+
+def test_konflikt_nawet_gdy_jedno_zrodlo_zgadza_sie_z_nami(tmp_path):
+    """Nasza wartość nie jest arbitrem — jeśli feedy się kłócą, a my zgadzamy
+    się z jednym, to wciąż nie wiadomo, czy nie zgadzamy się z błędem."""
+    from atrybuty import zrodla
+    con = _dwa_zrodla(tmp_path, 140, 160, nasza=140)
+    zrodla.dopisz_findingi_l4(con, 1)
+    assert zrodla.konflikty_ostatniego(con)["ile"] == 1
+    con.close()
+
+
+def test_uzgodnienie_pomija_zrodla_bez_wartosci():
+    from atrybuty import zrodla
+    t = [{"zrodlo": "A", "dane": {"Szerokość": "120"}},
+         {"zrodlo": "B", "dane": {}},
+         {"zrodlo": "C", "dane": {"Szerokość": "121"}}]
+    u = zrodla.uzgodnij(t, "Szerokość")
+    assert u["stan"] == "zgodne" and [z for z, _ in u["glosy"]] == ["A", "C"]
+    assert zrodla.uzgodnij(t, "Waga") is None
+
+
+def test_strona_zrodel_pokazuje_konflikty(tmp_path, monkeypatch):
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from fastapi.testclient import TestClient
+    con = _dwa_zrodla(tmp_path, 120, 160)
+    from atrybuty import zrodla
+    zrodla.dopisz_findingi_l4(con, 1)
+    con.close()
+    monkeypatch.setattr(pipeline, "BAZA", tmp_path / "t.db")
+    monkeypatch.setattr(app_mod, "BAZA", tmp_path / "t.db")
+    html = TestClient(app_mod.app).get("/zrodla").text
+    assert "Konflikty między źródłami — 1" in html and "WojcikProductsV3" in html

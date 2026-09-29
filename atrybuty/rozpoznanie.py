@@ -248,22 +248,17 @@ def rozpoznaj_arkusz(con: sqlite3.Connection, url: str, katalog_danych: Path,
 
 
 def wybierz_najlepsze(zakladki: list[dict]) -> None:
-    """Na producenta jedna polecana zakładka — ta z największą liczbą
-    trafionych produktów, a przy remisie z większą liczbą zmapowanych pól.
+    """Polecamy każdą zakładkę, która coś wnosi: trafia w nasze produkty
+    i ma choć jedno zmierzone pole do porównania.
 
-    Kilka zakładek jednego producenta (Stock / Products / V2 / V3) to
-    najczęściej kolejne wersje importera; porównywanie z każdą naraz
-    dawałoby sprzeczne findingi dla tego samego produktu.
+    Kilka zakładek jednego producenta (Stock / Products / V2 / V3) wolno
+    podpiąć naraz — porównanie najpierw uzgadnia je między sobą, a produkty,
+    przy których się kłócą, trafiają do „konfliktów” zamiast do kolejki.
     """
-    grupy: dict[str, list[dict]] = defaultdict(list)
     for z in zakladki:
-        z["polecana"] = False
-        if z.get("producent") and z.get("trafionych_produktow", 0) >= MIN_TRAFIEN:
-            grupy[z["producent"]].append(z)
-    for grupa in grupy.values():
-        najlepsza = max(grupa, key=lambda z: (z["trafionych_produktow"],
-                                              len(z.get("mapowanie", {}))))
-        najlepsza["polecana"] = True
+        z["polecana"] = bool(
+            z.get("trafionych_produktow", 0) >= MIN_TRAFIEN
+            and any(c in z.get("mapowanie", {}) for c in zrodla.TOLERANCJA))
 
 
 def wczytaj_raport(katalog_danych: Path) -> dict | None:

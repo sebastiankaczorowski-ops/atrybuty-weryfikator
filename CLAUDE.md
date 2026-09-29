@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 52 trasy, 194 testy (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 52 trasy, 199 testów (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 
@@ -104,6 +104,10 @@ frameworka, bez ORM-a. 52 trasy, 194 testy (`python3 -m pytest -q`).
 - **grupa** — findingi o tym samym `(reguła, atrybut, wartość)`. Jedna
   decyzja rozstrzyga całą grupę **w zakresie aktywnych filtrów**.
 - **partia** — plik eksportu dla panelu; da się wycofać.
+- **źródło** — feed producenta (L4). Produkt może mieć kilka; przed
+  porównaniem z bazą źródła są uzgadniane między sobą. **Konflikt** (źródła
+  się kłócą) nie idzie do kolejki, tylko do `konflikty_zrodel` i sekcji
+  w `/zrodla` — nie ma czego proponować, gdy nie wiadomo, kto ma rację.
 - **zgłoszenie** — produkt wysłany do importu bez zmian, żeby panel postawił
   mu flagę `omit_components_in_attributes`. Wiersz niesie komplet obecnych
   atrybutów, więc powtórzenie importu niczego nie psuje.

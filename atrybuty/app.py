@@ -407,6 +407,7 @@ def strona_zrodel(request: Request, komunikat: str = "", blad: str = ""):
         "pola_docelowe": zrodla_mod.POLA_DOCELOWE,
         "podglad": None, "wybrane": None,
         "raport": zrodla_mod.raport_dopasowania(con),
+        "konflikty": zrodla_mod.konflikty_ostatniego(con),
         "komunikat": komunikat, "blad": bool(blad),
     }
     con.close()
@@ -504,6 +505,7 @@ def podglad_zrodla(request: Request, zid: int):
         "pola_docelowe": zrodla_mod.POLA_DOCELOWE,
         "podglad": podglad, "wybrane": wybrane,
         "raport": zrodla_mod.raport_dopasowania(con),
+        "konflikty": zrodla_mod.konflikty_ostatniego(con),
         "komunikat": komunikat, "blad": blad,
     }
     con.close()

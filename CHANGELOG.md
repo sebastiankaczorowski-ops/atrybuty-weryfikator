@@ -3,6 +3,23 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-29 · Kilka źródeł na produkt: najpierw uzgadniamy, potem porównujemy
+
+- Jeden produkt może mieć teraz kilka źródeł naraz (np. PIM Wójcika
+  i zakładki arkusza V3/V4). Dawniej pierwsze dopasowane źródło „zabierało”
+  produkt, a pozostałe nie miały głosu.
+- Przy każdym przeliczeniu importu źródła są **najpierw porównywane między
+  sobą**. Gdy się zgadzają (w tej samej tolerancji co porównanie z bazą),
+  z naszą bazą porównujemy uzgodnioną wartość — dowód w kolejce wymienia
+  każde źródło z jego wartością, a zgodność kilku podnosi pewność.
+- Gdy źródła się kłócą, **nic nie trafia do kolejki** — nie wiadomo, która
+  wersja jest prawdziwa. Produkt ląduje w nowej sekcji „Konflikty między
+  źródłami” w `/zrodla`, razem z zestawieniem, które pary źródeł kłócą się
+  najczęściej. Zwykle to stara wersja feedu albo inne jednostki — wyłącz
+  źródło, które się myli, i przelicz import.
+- Rozpoznanie arkusza poleca teraz wszystkie zakładki, które coś wnoszą,
+  a nie jedną na producenta.
+
 ## 2026-09-29 · Wygląd w kolorach Twojemeble.pl
 
 - Panel dostał paletę z design systemu sklepu: fioletowy nagłówek (Deep

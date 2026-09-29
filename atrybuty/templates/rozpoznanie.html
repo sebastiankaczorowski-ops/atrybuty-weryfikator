@@ -104,8 +104,10 @@ td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;tex
     feedu <b>zgadza się z naszymi wartościami</b> wymiarów i wagi na dopasowanych produktach.
     Pole mapujemy, gdy zgadza się na co najmniej połowie par — niżej to najpewniej inna
     wielkość (paczka, długość zamiast głębokości). Przekreślone = najlepszy kandydat, ale za słaby.</p>
-  <p class="pod">Na producenta polecana jest jedna zakładka — ta z największą liczbą trafionych
-    produktów. Porównywanie z kilkoma wersjami naraz dawałoby sprzeczne propozycje.</p>
+  <p class="pod">Polecane są wszystkie zakładki, które trafiają w nasze produkty i mają choć jedno
+    zmierzone pole. Kilka źródeł jednego producenta to nie problem: przy porównaniu narzędzie
+    najpierw sprawdza, czy źródła zgadzają się między sobą, a z naszą bazą porównuje tylko
+    zgodną wartość. Sprzeczności trafiają do „konfliktów” w <a href="/zrodla">źródłach</a>.</p>
   {% if not raport %}
   <p class="pod">Raportu jeszcze nie ma. Uruchom na Mac Mini:</p>
   <pre><code>cd ~/atrybuty-weryfikator && docker compose exec atrybuty python -m atrybuty.pipeline rozpoznaj-arkusz "https://docs.google.com/spreadsheets/d/…/edit"</code></pre>

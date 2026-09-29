@@ -55,6 +55,18 @@ CREATE TABLE IF NOT EXISTS pozycje_zrodla (
     PRIMARY KEY (zrodlo_id, klucz)
 );
 CREATE INDEX IF NOT EXISTS ix_pz_klucz ON pozycje_zrodla(klucz);
+
+-- Produkt, dla którego źródła podają sprzeczne wartości. Nie idzie do
+-- kolejki: nie wiadomo, która wersja jest prawdziwa, więc nie ma czego
+-- proponować — to sygnał dla człowieka, że któreś źródło kłamie.
+CREATE TABLE IF NOT EXISTS konflikty_zrodel (
+    przebieg_id INTEGER NOT NULL,
+    produkt_id TEXT NOT NULL,
+    atrybut TEXT NOT NULL,
+    nasza TEXT,
+    wartosci TEXT                  -- JSON: [[źródło, wartość], ...]
+);
+CREATE INDEX IF NOT EXISTS ix_kz_przebieg ON konflikty_zrodel(przebieg_id);
 """
 
 # Kolumny dodane po pierwszym wydaniu — jak w db.MIGRACJE.
@@ -768,22 +780,33 @@ def _nazwa_do_porownania(nazwa: str, kolekcja: str = "") -> str:
 
 
 def dopasuj(con: sqlite3.Connection) -> dict[str, dict]:
-    """Zwraca {produkt_id: dane z feedu} dla produktów, które udało się dopasować.
+    """{produkt_id: pierwsze trafienie} — widok dla raportów i podglądu.
+
+    Porównanie z bazą korzysta z `dopasuj_wszystkie`, bo jeden produkt
+    może mieć kilka źródeł.
+    """
+    return {pid: t[0] for pid, t in dopasuj_wszystkie(con).items()}
+
+
+def dopasuj_wszystkie(con: sqlite3.Connection) -> dict[str, list[dict]]:
+    """Zwraca {produkt_id: [trafienie z każdego źródła, które go zna]}.
 
     Dwie strategie, bo feedy bywają różne:
-    * **po kodzie** — pewna, gdy nasze nazwy zawierają SKU producenta;
+    * **po kodzie** — pewna, gdy mamy EAN albo SKU producenta;
     * **po nazwie** — dla feedów, gdzie nazwy opisują to samo innymi słowami
       ("Rimini RI01 Kredens" vs "Kredens Rimini"). Zawężona do producenta
       i kolekcji, z progiem podobieństwa i marginesem nad drugim kandydatem.
 
-    `auto` próbuje najpierw kodu, a dla nieprzypisanych sięga po nazwę.
+    `auto` próbuje najpierw kodu, a dla nieprzypisanych sięga po nazwę —
+    w obrębie jednego źródła. Kolejne źródła dopasowują się niezależnie:
+    dawniej pierwsze źródło „zabierało” produkt i reszta nie miała głosu.
     """
     przygotuj_baze(con)
     aktywne = [z for z in lista_zrodel(con) if z["aktywne"] and z["liczba_pozycji"]]
     if not aktywne:
         return {}
 
-    out: dict[str, dict] = {}
+    out: dict[str, list[dict]] = defaultdict(list)
     for z in aktywne:
         pozycje = [dict(r) for r in con.execute(
             "SELECT klucz, dane, nazwa_pozycji, kolekcja_pozycji FROM pozycje_zrodla "
@@ -796,12 +819,15 @@ def dopasuj(con: sqlite3.Connection) -> dict[str, dict]:
             + (" WHERE producent = ?" if z["producent"] else ""),
             (z["producent"],) if z["producent"] else ())]
 
+        z_tego: dict[str, dict] = {}
         strategia = z.get("strategia") or "auto"
         if strategia in ("auto", "klucz"):
-            _dopasuj_po_kodzie(z, pozycje, produkty, out)
+            _dopasuj_po_kodzie(z, pozycje, produkty, z_tego)
         if strategia in ("auto", "nazwa"):
-            _dopasuj_po_nazwie(z, pozycje, produkty, out)
-    return out
+            _dopasuj_po_nazwie(z, pozycje, produkty, z_tego)
+        for pid, trafienie in z_tego.items():
+            out[pid].append(trafienie)
+    return dict(out)
 
 
 def _opis(z: dict, dane: dict, sposob: str, nazwa_pozycji: str = "") -> dict:
@@ -878,42 +904,92 @@ def statystyki(con: sqlite3.Connection) -> dict:
 TOLERANCJA = {"Szerokość": 0.03, "Wysokość": 0.03, "Głębokość": 0.03, "Waga": 0.10}
 
 
+def uzgodnij(trafienia: list[dict], atrybut: str) -> dict | None:
+    """Co źródła mówią o jednym atrybucie jednego produktu.
+
+    Zwraca None, gdy żadne źródło nie ma wartości; w przeciwnym razie
+    {"stan": "zgodne"|"konflikt", "wartosc": mediana|None, "glosy": [(źródło, v)]}.
+    Źródła uznajemy za zgodne, gdy każde mieści się w tolerancji wokół
+    mediany — tej samej, której używamy przy porównaniu z naszą bazą.
+    Konflikt nie rozstrzygamy większością: dwa feedy z tego samego
+    importera (V2 i V3) potrafią powtarzać ten sam błąd.
+    """
+    glosy = []
+    widziane: set[str] = set()
+    for t in trafienia:
+        v = do_liczby(t["dane"].get(atrybut, ""))
+        if v is None or v <= 0 or t["zrodlo"] in widziane:
+            continue
+        widziane.add(t["zrodlo"])
+        glosy.append((t["zrodlo"], v))
+    if not glosy:
+        return None
+    wartosci = sorted(v for _, v in glosy)
+    srodek = len(wartosci) // 2
+    mediana = (wartosci[srodek] if len(wartosci) % 2
+               else (wartosci[srodek - 1] + wartosci[srodek]) / 2)
+    tol = TOLERANCJA[atrybut]
+    if all(abs(v - mediana) / mediana <= tol for _, v in glosy):
+        return {"stan": "zgodne", "wartosc": mediana, "glosy": glosy}
+    return {"stan": "konflikt", "wartosc": None, "glosy": glosy}
+
+
 def znajdz_rozjazdy(con: sqlite3.Connection, przebieg_id: int) -> list[dict]:
-    """Porównuje nasze wartości z referencją producenta.
+    """Porównuje nasze wartości z uzgodnioną referencją producenta.
 
     Zwraca listę findingów gotowych do zapisania. Produkt bez dopasowania
     w feedzie jest pomijany — brak referencji to nie błąd danych.
+    Konflikty między źródłami zbiera `znajdz_konflikty`.
     """
-    dopasowania = dopasuj(con)
+    return _porownaj(con)[0]
+
+
+def znajdz_konflikty(con: sqlite3.Connection) -> list[dict]:
+    return _porownaj(con)[1]
+
+
+def _porownaj(con: sqlite3.Connection) -> tuple[list[dict], list[dict]]:
+    dopasowania = dopasuj_wszystkie(con)
     if not dopasowania:
-        return []
+        return [], []
 
     findingi: list[dict] = []
+    konflikty: list[dict] = []
     for r in con.execute("SELECT id, liczby, atrybuty FROM produkty"):
-        trafienie = dopasowania.get(r["id"])
-        if not trafienie:
+        trafienia = dopasowania.get(r["id"])
+        if not trafienia:
             continue
         nasze_liczby = json.loads(r["liczby"] or "{}")
         nasze_atrybuty = json.loads(r["atrybuty"] or "{}")
-        ref = trafienie["dane"]
 
         for klucz, tolerancja in TOLERANCJA.items():
-            wartosc_ref = do_liczby(ref.get(klucz, ""))
-            if wartosc_ref is None or wartosc_ref <= 0:
+            ustalenie = uzgodnij(trafienia, klucz)
+            if ustalenie is None:
+                continue
+            nasza = nasze_liczby.get(klucz)
+            if ustalenie["stan"] == "konflikt":
+                konflikty.append({"produkt_id": r["id"], "atrybut": klucz,
+                                  "nasza": None if nasza is None else _fmt(nasza),
+                                  "wartosci": [[z, _fmt(v)] for z, v in ustalenie["glosy"]]})
                 continue
 
-            nasza = nasze_liczby.get(klucz)
+            wartosc_ref = ustalenie["wartosc"]
+            glosujace = [z for z, _ in ustalenie["glosy"]]
+            uzyte = [t for t in trafienia if t["zrodlo"] in glosujace]
+            opis = _opis_uzgodnienia(uzyte, ustalenie)
+            pewnosc = _pewnosc_wielu(uzyte)
+            grupa_zrodel = "+".join(sorted(glosujace))
+
             if nasza is None:
                 if klucz in nasze_atrybuty:
                     continue
                 findingi.append({
                     "produkt_id": r["id"], "atrybut": klucz,
                     "regula_id": "L4-UZUPELNIA", "waga": "srednia",
-                    "pewnosc": _pewnosc(trafienie, 0.80),
+                    "pewnosc": pewnosc(0.80),
                     "stara": None, "proponowana": _fmt(wartosc_ref),
-                    "dowod": f"{_zrodlo_opis(trafienie)}: {klucz} = {_fmt(wartosc_ref)}, "
-                             f"u nas brak",
-                    "grupa": f"L4-UZUPELNIA|{klucz}|{trafienie['zrodlo']}",
+                    "dowod": f"{opis}: {klucz} = {_fmt(wartosc_ref)}, u nas brak",
+                    "grupa": f"L4-UZUPELNIA|{klucz}|{grupa_zrodel}",
                 })
                 continue
 
@@ -922,14 +998,33 @@ def znajdz_rozjazdy(con: sqlite3.Connection, przebieg_id: int) -> list[dict]:
                 findingi.append({
                     "produkt_id": r["id"], "atrybut": klucz,
                     "regula_id": "L4-ROZJAZD", "waga": "krytyczna",
-                    "pewnosc": _pewnosc(trafienie, 0.82),
+                    "pewnosc": pewnosc(0.82),
                     "stara": _fmt(nasza), "proponowana": _fmt(wartosc_ref),
-                    "dowod": f"{_zrodlo_opis(trafienie)}: {klucz} = {_fmt(wartosc_ref)}, "
+                    "dowod": f"{opis}: {klucz} = {_fmt(wartosc_ref)}, "
                              f"u nas {_fmt(nasza)} (różnica {odchylka:.0%}, "
                              f"tolerancja {tolerancja:.0%})",
-                    "grupa": f"L4-ROZJAZD|{klucz}|{trafienie['zrodlo']}",
+                    "grupa": f"L4-ROZJAZD|{klucz}|{grupa_zrodel}",
                 })
-    return findingi
+    return findingi, konflikty
+
+
+def _opis_uzgodnienia(uzyte: list[dict], ustalenie: dict) -> str:
+    """Jedno źródło — jak dawniej; kilka — każde z własną wartością,
+    żeby w kolejce było widać, że referencja jest potwierdzona."""
+    if len(uzyte) == 1:
+        return _zrodlo_opis(uzyte[0])
+    wartosci = dict(ustalenie["glosy"])
+    return f"{len(uzyte)} zgodne źródła (" + "; ".join(
+        f"{_zrodlo_opis(t)} = {_fmt(wartosci[t['zrodlo']])}" for t in uzyte) + ")"
+
+
+def _pewnosc_wielu(uzyte: list[dict]):
+    """Każde kolejne zgodne źródło dokłada trochę pewności — ale nie ponad
+    0,95: dwa feedy z tego samego importera to nie dwa niezależne pomiary."""
+    def licz(bazowa: float) -> float:
+        najlepsza = max(_pewnosc(t, bazowa) for t in uzyte)
+        return min(0.95, najlepsza + 0.05 * (len(uzyte) - 1))
+    return licz
 
 
 def _fmt(x: float) -> str:
@@ -960,7 +1055,14 @@ def dopisz_findingi_l4(con: sqlite3.Connection, przebieg_id: int) -> int:
     produktów — dopasowanie potrzebuje ich już w bazie."""
     from .db import hasz
 
-    znalezione = znajdz_rozjazdy(con, przebieg_id)
+    znalezione, konflikty = _porownaj(con)
+    con.execute("DELETE FROM konflikty_zrodel WHERE przebieg_id=?", (przebieg_id,))
+    con.executemany(
+        "INSERT INTO konflikty_zrodel (przebieg_id,produkt_id,atrybut,nasza,wartosci)"
+        " VALUES (?,?,?,?,?)",
+        [(przebieg_id, k["produkt_id"], k["atrybut"], k["nasza"],
+          json.dumps(k["wartosci"], ensure_ascii=False)) for k in konflikty])
+    con.commit()
     if not znalezione:
         return 0
     con.executemany(
@@ -974,3 +1076,21 @@ def dopisz_findingi_l4(con: sqlite3.Connection, przebieg_id: int) -> int:
                 (len(znalezione), przebieg_id))
     con.commit()
     return len(znalezione)
+
+
+def konflikty_ostatniego(con: sqlite3.Connection, limit: int = 200) -> dict:
+    """Konflikty z ostatniego przebiegu: lista + które pary źródeł kłócą się najczęściej."""
+    przygotuj_baze(con)
+    r = con.execute("SELECT MAX(przebieg_id) FROM konflikty_zrodel").fetchone()
+    if not r or r[0] is None:
+        return {"ile": 0, "pary": [], "lista": []}
+    przebieg = r[0]
+    wiersze = [dict(w) for w in con.execute(
+        "SELECT k.produkt_id, k.atrybut, k.nasza, k.wartosci, p.nazwa, p.producent "
+        "FROM konflikty_zrodel k LEFT JOIN produkty p ON p.id = k.produkt_id "
+        "WHERE k.przebieg_id=? ORDER BY p.producent, k.produkt_id", (przebieg,))]
+    pary: Counter = Counter()
+    for w in wiersze:
+        w["wartosci"] = json.loads(w["wartosci"] or "[]")
+        pary[" ↔ ".join(sorted(z for z, _ in w["wartosci"]))] += 1
+    return {"ile": len(wiersze), "pary": pary.most_common(10), "lista": wiersze[:limit]}
