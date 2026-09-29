@@ -109,9 +109,11 @@ Zakładka `/zrodla` czyta surowe feedy producentów z arkusza
 
 - Uprawnienie w arkuszu: **Wyświetlający**. Zakres tokenu:
   `spreadsheets.readonly`. Narzędzie nie pisze do arkusza.
-- Klucz JSON leży w projekcie `manager-dashboard` na Mini i jest montowany
-  do kontenera tylko do odczytu; ścieżkę w kontenerze wskazuje
-  `GOOGLE_APPLICATION_CREDENTIALS`. Nigdy w repo ani w obrazie.
+- Klucz JSON leży w `~/manager-dashboard/secrets/` na Mini. Do kontenera
+  trafia **sam plik**, tylko do odczytu, jako `/app/klucz-google.json`.
+  Ścieżkę na hoście podaje `KLUCZ_GOOGLE` w `.env`, np.
+  `KLUCZ_GOOGLE=/Users/<ty>/manager-dashboard/secrets/<plik>.json`.
+  Bez tej zmiennej `docker compose` odmówi startu. Nigdy w repo ani w obrazie.
 - **Wymiana klucza w manager-dashboard wyłącza też feedy tutaj** — po
   rotacji sprawdź `/zrodla` (źródło pokaże błąd 403 albo „brak klucza”).
 - Bez klucza działa wszystko poza odświeżaniem źródeł z arkusza.

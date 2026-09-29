@@ -18,5 +18,11 @@ services:
       # Baza w nazwanym wolumenie — bind mount z macOS nie daje SQLite
       # blokad plikowych i kończy się "disk I/O error".
       - atrybuty-baza:/app/baza
+      # Klucz konta serwisowego z manager-dashboard — sam plik, nie cały
+      # katalog secrets/: panel stoi w LAN-ie bez logowania, więc kontener
+      # nie powinien widzieć sekretów, których nie używa. Ścieżka w .env.
+      - ${KLUCZ_GOOGLE:?ustaw KLUCZ_GOOGLE w .env — patrz WDROZENIE.md}:/app/klucz-google.json:ro
+    environment:
+      GOOGLE_APPLICATION_CREDENTIALS: /app/klucz-google.json
 volumes:
   atrybuty-baza:
