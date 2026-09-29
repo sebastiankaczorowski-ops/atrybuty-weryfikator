@@ -3,6 +3,16 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-29 · Wygląd w kolorach Twojemeble.pl
+
+- Panel dostał paletę z design systemu sklepu: fioletowy nagłówek (Deep
+  Violet), główne przyciski w kolorze marki, fokus z klawiatury na
+  pomarańczowo (Vivid Orange), zaokrąglone karty i tabele z zebrą.
+- Przycisk „sprawdź zdjęciem” (Gemini) ma fioletowy gradient — tak DS
+  oznacza funkcje AI, żeby odróżniały się od zwykłych akcji.
+- Kolory stanów (krytyczne, ostrzeżenia, zrobione) z tej samej palety,
+  z tekstem w ciemniejszym odcieniu dla czytelności.
+
 ## 2026-09-29 · Jednostki w feedach wykrywane same (mm, m, g)
 
 - Feed z wymiarami w mm (np. PIM Wójcika) nie daje już rozjazdów typu

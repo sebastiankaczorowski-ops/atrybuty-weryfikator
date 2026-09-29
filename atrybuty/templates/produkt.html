@@ -6,7 +6,7 @@
 <title>{{ p.nazwa }} — atrybuty</title>
 <style>
 :root{--bg:#f6f8f7;--surface:#fff;--surface-2:#edf1ef;--ink:#15201d;--muted:#6b7c76;
-      --line:#d9e1dd;--accent:#0e5e52;--crit:#9a2b2b;--crit-soft:#f5dedc}
+      --line:#d9e1dd;--accent:#0e5e52;--crit:var(--crit);--crit-soft:var(--crit-soft)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
      font:14px/1.6 "IBM Plex Sans",system-ui,sans-serif;padding:20px}
@@ -31,15 +31,16 @@ a.panel{display:inline-block;background:var(--accent);color:#fff;text-decoration
         padding:6px 13px;border-radius:2px;font-weight:600;font-size:13.5px}
 @media(max-width:760px){.wrap{grid-template-columns:1fr}}
 table.porownanie td{vertical-align:top}
-table.porownanie tr.rozjazd{background:#f5dedc}
-table.porownanie tr.tylko-skladowe{background:#f6e7cc}
-.pusto{color:#9aa8a3}
+table.porownanie tr.rozjazd{background:var(--crit-soft)}
+table.porownanie tr.tylko-skladowe{background:var(--warn-soft)}
+.pusto{color:var(--line-hover)}
 .zn{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;font-weight:600;
-    background:#edf1ef;color:#6b7c76;white-space:nowrap}
-.zn.zle{background:#f5dedc;color:#9a2b2b}
-.zn.ostrz{background:#f6e7cc;color:#8a5a0b}
-.zn.ok{background:#dfebd6;color:#3a6b2e}
+    background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.zn.zle{background:var(--crit-soft);color:var(--crit)}
+.zn.ostrz{background:var(--warn-soft);color:var(--warn)}
+.zn.ok{background:var(--ok-soft);color:var(--ok)}
 </style>
+{% include "_motyw.html" %}
 </head>
 <body>
 <div class="wrap">
@@ -90,13 +91,13 @@ table.porownanie tr.tylko-skladowe{background:#f6e7cc}
                 title="Wiersz poniesie komplet obecnych atrybutów — po to, żeby panel
                        mógł postawić temu produktowi flagę odcięcia składowych">
           Dodaj do importu bez zmian</button>
-        <span style="color:#6b7c76;font-size:13px">— gdy produkt jest już poprawny,
+        <span style="color:var(--muted);font-size:13px">— gdy produkt jest już poprawny,
           a i tak ma przejść przez import (flaga „składowe nieużywane")</span>
       </form>
     </div>
 
     <h2 style="font-size:15px">Atrybuty produktu a składowe</h2>
-    <p style="color:#6b7c76;font-size:13px;margin:0 0 10px">
+    <p style="color:var(--muted);font-size:13px;margin:0 0 10px">
       Lewa kolumna to legitne miejsce, prawa to składowe mebla. Front bierze
       wartość stamtąd, gdzie ją znajdzie — docelowo ma być tylko po lewej.
       {% if p.skladowe_odciete %}<b>Ten produkt ma składowe odcięte od frontu.</b>{% endif %}
@@ -123,7 +124,7 @@ table.porownanie tr.tylko-skladowe{background:#f6e7cc}
       {% endfor %}
       </tbody>
     </table>
-    <p style="color:#6b7c76;font-size:13px">
+    <p style="color:var(--muted);font-size:13px">
       Po normalizacji wartość bywa inna niż surowa —
       {% for k, v in p.atrybuty.items() if p.atrybuty_surowe.get(k) != v %}
         {% if loop.first %}znormalizowane: {% endif %}

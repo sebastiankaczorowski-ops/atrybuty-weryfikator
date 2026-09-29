@@ -1,0 +1,109 @@
+{# Motyw Twojemeble.pl — kolory z „DS Starter Manual → Foundations → Colors”.
+
+   Wstawiany na końcu <head> każdej strony, PO jej własnym <style>: strony
+   mają swoje :root z dawną zieloną paletą, a przy tej samej specyficzności
+   wygrywa reguła późniejsza. Dzięki temu cały panel zmienia się w jednym
+   miejscu, bez przepisywania 13 arkuszy stylów.
+
+   Znaczenie kolorów jak w DS:
+   * Deep Violet (Brand) — główne akcje i to, co mówi „to jest nasz sklep”
+     (nagłówek, przycisk główny, linki);
+   * Vivid Orange (Accent) — fokus i wyróżnienia niezwiązane z głównym flow;
+   * Violet Gradient — wyłącznie funkcje AI (u nas: Gemini, „sprawdź zdjęciem”),
+     żeby odróżnić „inteligentne” od zwykłych akcji;
+   * Danger / Warning / Success / Info — stany findingów i komunikaty. #}
+<style>
+:root{
+  /* neutralne */
+  --bg:#F8F8FA;          /* Bg/default (50) */
+  --surface:#FFFFFF;     /* Surface-1 */
+  --surface-2:#F3F4F6;   /* Bg/strong (100) */
+  --ink:#1F2937;         /* Bold/default — Neutral/800 */
+  --ink-2:#374151;       /* Neutral/700 */
+  --muted:#6B7280;       /* Neutral/500 */
+  --line:#E5E7EB;        /* Bg/strongest (200) */
+  --line-strong:#D1D5DB; /* Border/default — ramka inputu */
+  --line-hover:#9CA3AF;  /* Border/hover */
+  --glowa-tabeli:#03071205; /* Highlight/Dark/alpha 020 — Cell Head, Zebra */
+
+  /* marka */
+  --accent:#640097;      /* Brand/default — Deep Violet */
+  --accent-hover:#4D0073;
+  --accent-down:#3A0058;
+  --accent-soft:#FCF5FF; /* Brand/weak */
+  --accent-mid:#EFD1FF;  /* Purple/200 — wyraźniejsze tło zaznaczeń */
+  --pomarancz:#FF4D00;   /* Accent/default — Vivid Orange, fokus */
+  --pomarancz-soft:#FFF0EC;
+  --ai:linear-gradient(120deg,#EFD1FF 0%,#FCF5FF 55%,#FFF5FE 100%);
+
+  /* stany — tekst w odcieniu 700/800, żeby na jasnym tle trzymał kontrast */
+  --crit:#C90003;   --crit-soft:#FFD5D6;   /* Danger */
+  --warn:#8C5E00;   --warn-soft:#FFF5DB;   /* Warning — 900, bo żółty 600 nie czyta się na bieli */
+  --ok:#3D6D47;     --ok-soft:#E3F2E6;     /* Success */
+  --info:#1F73BA;   --info-soft:#D9EEFF;   /* Info */
+
+  --r:12px;   /* karty, tabele, sekcje */
+  --r-s:8px;  /* przyciski, pola, komunikaty */
+}
+
+body{background:var(--bg);color:var(--ink)}
+a{color:var(--accent)}
+a:hover{color:var(--accent-hover)}
+
+/* Nagłówek jak w DS: fioletowy pas z białym tekstem */
+header{background:var(--accent);border-bottom:none;color:#fff}
+header h1{color:#fff}
+header a{color:#fff;opacity:.88;text-decoration:none}
+header a:hover{color:#fff;opacity:1;text-decoration:underline}
+header .zrodlo, header .pod, header span{color:rgba(255,255,255,.78)}
+header code{color:#fff}
+
+/* Karty i sekcje */
+section.karta, .dodaj, details, .kafel{border-radius:var(--r);border-color:var(--line)}
+details>summary{border-radius:var(--r)}
+details[open]>summary{border-radius:var(--r) var(--r) 0 0}
+.komunikat{border-radius:var(--r-s)}
+.komunikat.ok{background:var(--ok-soft);color:var(--ok)}
+.komunikat.zle{background:var(--crit-soft);color:var(--crit)}
+
+/* Tabele: jasna głowa, zebra z tej samej alfy */
+table{border-radius:var(--r);border-color:var(--line)}
+thead th{background:var(--glowa-tabeli);color:var(--muted);border-bottom:1px solid var(--line)}
+tbody tr:nth-child(even) td{background:var(--glowa-tabeli)}
+
+/* Przyciski */
+button{border-radius:var(--r-s);border-color:var(--line-strong);background:var(--surface);
+       color:var(--ink-2);transition:background .12s,border-color .12s}
+button:hover{border-color:var(--line-hover)}
+button.p{background:var(--accent);border-color:var(--accent);color:#fff}
+button.p:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+button.p:active{background:var(--accent-down);border-color:var(--accent-down)}
+button:disabled{opacity:.5;cursor:not-allowed}
+
+/* Pola formularzy — Input z Components Layer */
+input[type=text],input[type=url],input[type=number],input[type=search],input[type=file],
+select,textarea{border-radius:var(--r-s);border:1px solid var(--line-strong);
+       background:var(--surface);color:var(--ink)}
+input:hover,select:hover,textarea:hover{border-color:var(--line-hover)}
+input:disabled,select:disabled,textarea:disabled{background:var(--bg)}
+
+/* Fokus: Vivid Orange, jak w DS. Tylko z klawiatury, żeby nie migał przy kliknięciu. */
+:focus-visible{outline:2px solid var(--pomarancz);outline-offset:2px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0;
+       border-color:var(--pomarancz)}
+
+/* Znaczniki */
+.sev,.znacznik,.werdykt,.zn{border-radius:999px}
+.sev.srednia{background:var(--warn-soft);color:var(--warn)}
+
+/* AI: Gemini dostaje gradient, nie kolor marki */
+.wizja-btn{background:var(--ai);border-color:var(--accent-mid);color:var(--accent)}
+.wizja-btn:hover{border-color:var(--accent)}
+tr.htmx-request .wizja-btn{background:var(--ai);border-color:var(--accent);color:var(--accent)}
+.wizja{border-left-color:var(--accent-mid)}
+.szkielet{border-left-color:var(--accent-mid)}
+
+/* Zaznaczony kafel filtra */
+.kafel.akt{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);
+           background:var(--accent-soft)}
+</style>
