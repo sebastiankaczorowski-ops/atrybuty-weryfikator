@@ -3091,3 +3091,93 @@ def test_rozpoznanie_calego_arkusza_zapisuje_raport(tmp_path, monkeypatch):
     assert "pusta" in pusta["blad"]
     assert rozpoznanie.wczytaj_raport(tmp_path)["zakladki"][0]["tytul"] == "HalmarProducts"
     con.close()
+
+
+# --- jednostki w feedach --------------------------------------------------
+
+def _zrodlo_wojcik(tmp_path, csv_tekst, mapowanie, n_naszych=6):
+    """Źródło z pliku CSV + n komód Wójcika (szer. 120 cm) z EAN-ami."""
+    from atrybuty import db, zrodla
+    (tmp_path / "pim.csv").write_text(csv_tekst, encoding="utf-8")
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    for i in range(n_naszych):
+        con.execute(
+            "INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,atrybuty,liczby,kody)"
+            " VALUES (?,?,'Wójcik','K','ok',?,?,?)",
+            (str(i), f"Komoda {i}", '{"Szerokość":"120"}', '{"Szerokość":120.0}',
+             json.dumps({"kod EAN": f"590000000000{i}"})))
+    con.execute("INSERT INTO przebiegi (id,plik,utworzono,liczba_produktow,"
+                "liczba_findingow) VALUES (1,'x','2026-09-29',1,0)")
+    con.commit()
+    zid = zrodla.dodaj_zrodlo(con, "PIM Wójcik", "Wójcik", plik="pim.csv")
+    zrodla.zapisz_mapowanie(con, zid, mapowanie)
+    return con, zid
+
+
+def test_wymiary_w_mm_wykryte_z_danych_i_przeliczone(tmp_path):
+    """PIM Wójcika podaje wymiary w mm i szły do porównania bez przeliczenia
+    — każda komoda dostawała rozjazd „1200 zamiast 120”."""
+    from atrybuty import zrodla
+    wiersze = ["ean;szerokosc"] + [f"590000000000{i};1200" for i in range(5)] \
+        + ["5900000000005;1250"]
+    con, zid = _zrodlo_wojcik(tmp_path, "\n".join(wiersze),
+                              {"klucz": "ean", "Szerokość": "szerokosc"})
+    wynik = zrodla.odswiez(con, zid, tmp_path)
+    assert wynik["skale"] == {"Szerokość": 0.1}
+    assert "mm → cm" in wynik["opis_skal"][0] and "zgodność" in wynik["opis_skal"][0]
+    zrodla.dopisz_findingi_l4(con, 1)
+    rozjazdy = con.execute("SELECT produkt_id, proponowana_wartosc FROM findingi "
+                           "WHERE regula_id='L4-ROZJAZD'").fetchall()
+    assert [(r[0], r[1]) for r in rozjazdy] == [("5", "125")]
+    assert zrodla.lista_zrodel(con)[0]["skale"] == {"Szerokość": "mm → cm"}
+    con.close()
+
+
+def test_jednostka_z_nazwy_pola_gdy_brak_dopasowan(tmp_path):
+    from atrybuty import zrodla
+    con, zid = _zrodlo_wojcik(tmp_path, "sku;Szerokość (mm)\nX1;1200\nX2;800",
+                              {"klucz": "sku", "Szerokość": "Szerokość (mm)"})
+    assert zrodla.odswiez(con, zid, tmp_path)["skale"] == {"Szerokość": 0.1}
+    con.close()
+
+
+def test_jednostka_z_zapisu_wartosci(tmp_path):
+    from atrybuty import zrodla
+    con, zid = _zrodlo_wojcik(tmp_path, "sku;width\nX1;1200 mm\nX2;800 mm",
+                              {"klucz": "sku", "Szerokość": "width"})
+    assert zrodla.odswiez(con, zid, tmp_path)["skale"] == {"Szerokość": 0.1}
+    con.close()
+
+
+def test_podejrzanie_duze_wymiary_bez_potwierdzenia_tylko_ostrzegaja(tmp_path):
+    """Bez dopasowań i bez jednostki w nazwie nie przeliczamy na ślepo —
+    szafa 450 cm istnieje. Mówimy człowiekowi, że wygląda na mm."""
+    from atrybuty import zrodla
+    con, zid = _zrodlo_wojcik(tmp_path, "sku;szer\nX1;1200\nX2;900\nX3;1500",
+                              {"klucz": "sku", "Szerokość": "szer"})
+    wynik = zrodla.odswiez(con, zid, tmp_path)
+    assert wynik["skale"] == {}
+    assert "wygląda na mm" in wynik["opis_skal"][0]
+    con.close()
+
+
+def test_cm_zostaja_bez_przeliczenia(tmp_path):
+    from atrybuty import zrodla
+    wiersze = ["ean;szerokosc"] + [f"590000000000{i};120" for i in range(6)]
+    con, zid = _zrodlo_wojcik(tmp_path, "\n".join(wiersze),
+                              {"klucz": "ean", "Szerokość": "szerokosc"})
+    wynik = zrodla.odswiez(con, zid, tmp_path)
+    assert wynik["skale"] == {} and wynik["opis_skal"] == []
+    con.close()
+
+
+def test_rozpoznanie_znajduje_pole_w_mm(tmp_path):
+    from atrybuty import rozpoznanie
+    con = _baza_halmar(tmp_path)
+    rek = [{"ean_GTIN": f"59052481204{i:02d}", "szerokosc_mm": "990", "wysokosc_mm": "890"}
+           for i in range(8)]
+    w = _przeanalizuj(con, rek)
+    assert w["mapowanie"]["Szerokość"] == "szerokosc_mm"
+    assert w["zgodnosc"]["Szerokość"]["jednostka"] == "mm → cm"
+    con.close()

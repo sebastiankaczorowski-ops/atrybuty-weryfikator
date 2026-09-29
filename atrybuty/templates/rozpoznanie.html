@@ -135,7 +135,7 @@ td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;tex
         {% for c in cele %}{% set m = z.zgodnosc.get(c) %}
         <td>{% if m %}<span class="miara {{ '' if m.zmapowane else 'slabo' }}"
               title="{{ m.zgodnych }} z {{ m.par }} par zgodnych">{{ m.pole }}<br>
-              {{ '%.0f'|format(m.udzial*100) }}% z {{ m.par }}</span>{% else %}—{% endif %}</td>
+              {{ '%.0f'|format(m.udzial*100) }}% z {{ m.par }}{% if m.jednostka %} · {{ m.jednostka }}{% endif %}</span>{% else %}—{% endif %}</td>
         {% endfor %}
         <td>{% for u in z.uwagi %}<div class="uwaga">{{ u }}</div>{% endfor %}</td>
       </tr>

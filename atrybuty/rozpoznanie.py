@@ -160,35 +160,32 @@ def dobierz_pola_liczbowe(pary: list[tuple[dict, dict]], pola: list
     # z polem z opisu, a potem nie była mapowana — atrybut zostawał pusty.
     kandydaci = [p.nazwa for p in pola if p.wyglada_na_liczbe
                  and not zrodla._to_paczka(p.nazwa)]
-    wyniki: list[tuple[float, int, str, str, int]] = []   # (udział, zgodnych, cel, pole, par)
+    # (udział, zgodnych, cel, pole, par, skala) — skala, bo feed w mm
+    # zgadza się z naszymi cm dopiero po przeliczeniu (PIM Wójcika)
+    wyniki: list[tuple[float, int, str, str, int, float]] = []
     uwagi: list[str] = []
     for docelowe, tolerancja in zrodla.TOLERANCJA.items():
         for pole in kandydaci:
-            par, zgodnych, zgodnych_mm = 0, 0, 0
-            for r, nasze in pary:
-                ref = do_liczby(r.get(pole, ""))
-                nasza = nasze.get(docelowe)
-                if ref is None or ref <= 0 or not nasza:
-                    continue
-                par += 1
-                if abs(nasza - ref) / nasza <= tolerancja:
-                    zgodnych += 1
-                elif abs(nasza - ref / 10) / nasza <= tolerancja:
-                    zgodnych_mm += 1
-            if par >= MIN_PAR:
-                wyniki.append((zgodnych / par, zgodnych, docelowe, pole, par))
-                if zgodnych_mm / par >= PROG_ZGODNOSCI:
-                    uwagi.append(f"{pole} zgadza się z naszym „{docelowe}” po podzieleniu "
-                                 f"przez 10 — pole jest w mm, nie mapuję go automatycznie")
+            wartosci = [(do_liczby(r.get(pole, "")), nasze.get(docelowe)) for r, nasze in pary]
+            wartosci = [(f, n) for f, n in wartosci if f and f > 0 and n]
+            if len(wartosci) < MIN_PAR:
+                continue
+            for skala in zrodla.SKALE[docelowe]:
+                zgodnych = sum(1 for f, n in wartosci if abs(f * skala - n) / n <= tolerancja)
+                wyniki.append((zgodnych / len(wartosci), zgodnych, docelowe, pole,
+                               len(wartosci), skala))
 
     zgodnosc: dict[str, dict] = {}
     uzyte: set[str] = set()
-    for udzial, zgodnych, docelowe, pole, par in sorted(wyniki, reverse=True):
+    # przy remisie wygrywa brak przeliczenia — 1.0 przed 0.1 w sortowaniu
+    for udzial, zgodnych, docelowe, pole, par, skala in sorted(
+            wyniki, key=lambda w: (w[0], w[1], w[5] == 1.0), reverse=True):
         if docelowe in zgodnosc or pole in uzyte:
             continue
         zmapowane = udzial >= PROG_ZGODNOSCI
         zgodnosc[docelowe] = {"pole": pole, "par": par, "zgodnych": zgodnych,
-                              "udzial": udzial, "zmapowane": zmapowane}
+                              "udzial": udzial, "zmapowane": zmapowane,
+                              "jednostka": zrodla.NAZWY_SKAL.get(skala, "")}
         if zmapowane:
             uzyte.add(pole)
     # Najlepszy kandydat poniżej progu zostaje w raporcie jako informacja,

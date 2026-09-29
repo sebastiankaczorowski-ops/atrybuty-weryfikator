@@ -547,13 +547,19 @@ async def zapisz_mapowanie(request: Request, zid: int):
     try:
         wynik = zrodla_mod.odswiez(con, zid, importer.KATALOG_DANYCH)
         komunikat = (f"Zapisano mapowanie. Pobrano {wynik['zapisanych']} pozycji "
-                     f"z {wynik['rekordow']} rekordów. Przelicz dane na /import, "
-                     f"żeby powstały findingi L4.")
+                     f"z {wynik['rekordow']} rekordów.{_opis_skal(wynik)} "
+                     f"Przelicz dane na /import, żeby powstały findingi L4.")
         blad = None
     except zrodla_mod.BladZrodla as e:
         komunikat, blad = "", f"Mapowanie zapisane, ale pobranie się nie udało: {e}"
     con.close()
     return _wroc_zrodla(blad, komunikat, zid)
+
+
+def _opis_skal(wynik: dict) -> str:
+    """Przeliczenie jednostek ma być widać — cichy przelicznik ×0,1 to
+    dokładnie ten rodzaj zmiany, której człowiek powinien móc nie zgodzić się."""
+    return (" Jednostki: " + "; ".join(wynik["opis_skal"]) + ".") if wynik.get("opis_skal") else ""
 
 
 @app.post("/zrodla/{zid}/odswiez")
@@ -566,7 +572,7 @@ def odswiez_zrodlo(zid: int):
                                "wejdź w podgląd i zmapuj pola.", "", zid)
         else:
             odp = _wroc_zrodla(None, f"Pobrano {wynik['zapisanych']} pozycji "
-                                     f"z {wynik['rekordow']} rekordów.")
+                                     f"z {wynik['rekordow']} rekordów.{_opis_skal(wynik)}")
     except zrodla_mod.BladZrodla as e:
         odp = _wroc_zrodla(f"Nie udało się pobrać: {e}", "")
     except Exception as e:                                   # noqa: BLE001

@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 52 trasy, 188 testów (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 52 trasy, 194 testy (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 

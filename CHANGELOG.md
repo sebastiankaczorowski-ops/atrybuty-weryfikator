@@ -3,6 +3,20 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-29 · Jednostki w feedach wykrywane same (mm, m, g)
+
+- Feed z wymiarami w mm (np. PIM Wójcika) nie daje już rozjazdów typu
+  „1200 zamiast 120”. Przy każdym pobraniu narzędzie sprawdza na
+  dopasowanych produktach, czy wartości zgadzają się z naszymi wprost,
+  po podzieleniu przez 10 (mm) czy po pomnożeniu przez 100 (m); dla wagi
+  także gramy. Gdy nie ma dopasowań, patrzy na nazwę pola („Szerokość (mm)”)
+  i zapis wartości („1200 mm”).
+- Przeliczenie widać: w komunikacie po pobraniu i jako znacznik przy
+  źródle („Szerokość: mm → cm”). Pozycje zapisują się już w cm, więc
+  propozycja w kolejce to od razu nasza wartość.
+- Gdy liczby wyglądają na mm, ale nic tego nie potwierdza — narzędzie
+  ostrzega i nie przelicza. Szafa 450 cm istnieje.
+
 ## 2026-09-29 · Rozpoznanie arkusza: źródła dobierają się same, do zatwierdzenia
 
 - Nowa strona `/zrodla/rozpoznanie`. Komenda na Mini przechodzi wszystkie

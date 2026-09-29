@@ -60,7 +60,8 @@ CREATE INDEX IF NOT EXISTS ix_pz_klucz ON pozycje_zrodla(klucz);
 # Kolumny dodane po pierwszym wydaniu — jak w db.MIGRACJE.
 MIGRACJE_ZRODLA = [("zrodla", "strategia", "TEXT DEFAULT 'auto'"),
                    ("pozycje_zrodla", "nazwa_pozycji", "TEXT DEFAULT ''"),
-                   ("pozycje_zrodla", "kolekcja_pozycji", "TEXT DEFAULT ''")]
+                   ("pozycje_zrodla", "kolekcja_pozycji", "TEXT DEFAULT ''"),
+                   ("zrodla", "skale", "TEXT DEFAULT '{}'")]
 
 # Pola, które umiemy wykorzystać. Klucz jest obowiązkowy — bez niego nie ma
 # jak połączyć pozycji feedu z naszym produktem.
@@ -435,6 +436,8 @@ def lista_zrodel(con: sqlite3.Connection) -> list[dict]:
     for r in con.execute("SELECT * FROM zrodla ORDER BY nazwa"):
         d = dict(r)
         d["mapowanie"] = json.loads(d["mapowanie"] or "{}")
+        d["skale"] = {k: NAZWY_SKAL.get(v, str(v))
+                      for k, v in json.loads(d.get("skale") or "{}").items()}
         out.append(d)
     return out
 
@@ -492,6 +495,114 @@ def przelacz_zrodlo(con: sqlite3.Connection, zid: int, aktywne: bool) -> None:
     con.commit()
 
 
+# --- jednostki -------------------------------------------------------------
+
+# PIM Wójcika podaje wymiary w mm i trafiały do porównania bez przeliczenia:
+# „1200 zamiast 120” na każdym produkcie. Przelicznik na nasze jednostki
+# (cm, kg) ustalamy sami — najpierw z danych, potem z nazwy pola.
+SKALE = {"Szerokość": (1.0, 0.1, 100.0), "Wysokość": (1.0, 0.1, 100.0),
+         "Głębokość": (1.0, 0.1, 100.0), "Waga": (1.0, 0.001)}
+NAZWY_SKAL = {0.1: "mm → cm", 100.0: "m → cm", 0.001: "g → kg"}
+RE_JEDNOSTKA_POLA = [(re.compile(r"(?:^|[^a-z])mm(?:$|[^a-z])"), 0.1),
+                     (re.compile(r"(?:^|[^a-z])m(?:$|[^a-z])"), 100.0),
+                     (re.compile(r"(?:^|[^a-z])(g|gr)(?:$|[^a-z])"), 0.001)]
+RE_JEDNOSTKA_WARTOSCI = {"mm": 0.1, "m": 100.0, "g": 0.001}
+# Mediana szerokości/wysokości/głębokości mebla w cm leży grubo poniżej tego.
+# Wyżej, bez potwierdzenia z danych, tylko ostrzegamy — nie przeliczamy.
+PODEJRZANIE_DUZO_CM = 400
+
+
+def _skala_z_nazwy(pole: str, docelowe: str) -> float | None:
+    n = norm(pole).replace(" ", "_")
+    # nazwa pola z opisu („description » wymiar 1”) nie mówi nic o jednostce
+    if SEP_OPISU in pole:
+        return None
+    for wzor, skala in RE_JEDNOSTKA_POLA:
+        if skala in SKALE[docelowe] and wzor.search(n):
+            return skala
+    return None
+
+
+def _skala_z_wartosci(wartosci: list[str], docelowe: str) -> float | None:
+    """„1200 mm” — do_liczby zjada jednostkę, więc patrzymy na surowy tekst."""
+    licznik: Counter = Counter()
+    for w in wartosci[:300]:
+        m = re.search(r"\d\s*([a-z]+)\s*$", (w or "").strip().lower())
+        if m:
+            licznik[m.group(1)] += 1
+    if not licznik:
+        return None
+    jednostka, ile = licznik.most_common(1)[0]
+    skala = RE_JEDNOSTKA_WARTOSCI.get(jednostka)
+    if skala in SKALE[docelowe] and ile > len(wartosci[:300]) / 2:
+        return skala
+    return None
+
+
+def skala_z_par(pary: list[tuple[float, float]], docelowe: str) -> tuple[float | None, int]:
+    """Przelicznik, przy którym wartości feedu zgadzają się z naszymi.
+
+    `pary` to (wartość z feedu, nasza wartość). Zwraca (skala, liczba par)
+    albo (None, n), gdy par za mało albo żaden przelicznik nie daje
+    zgodności na co najmniej połowie z nich.
+    """
+    pary = [(f, n) for f, n in pary if f and n and f > 0 and n > 0]
+    if len(pary) < 5:
+        return None, len(pary)
+    tol = TOLERANCJA[docelowe]
+    najlepsza, najlepszy_udzial = None, 0.0
+    for skala in SKALE[docelowe]:
+        udzial = sum(1 for f, n in pary if abs(f * skala - n) / n <= tol) / len(pary)
+        if udzial > najlepszy_udzial:
+            najlepsza, najlepszy_udzial = skala, udzial
+    return (najlepsza if najlepszy_udzial >= 0.5 else None), len(pary)
+
+
+def _indeks_naszych(con: sqlite3.Connection, producent: str) -> dict[str, dict]:
+    """kod -> nasze liczby, do sprawdzenia jednostek na dopasowanych produktach."""
+    out: dict[str, dict] = {}
+    zapytanie = "SELECT nazwa, kody, liczby FROM produkty"
+    for r in con.execute(zapytanie + (" WHERE producent=?" if producent else ""),
+                         (producent,) if producent else ()):
+        liczby = json.loads(r["liczby"] or "{}")
+        for k in klucze_produktu(r["nazwa"], "", json.loads(r["kody"] or "{}")):
+            out[k] = liczby
+    return out
+
+
+def wykryj_skale(con: sqlite3.Connection, z: dict, rek: list[dict],
+                 mapowanie: dict[str, str]) -> tuple[dict[str, float], list[str]]:
+    """{atrybut: przelicznik} dla zmapowanych pól liczbowych + opis dla człowieka."""
+    skale: dict[str, float] = {}
+    opis: list[str] = []
+    klucz = mapowanie.get("klucz")
+    nasze = _indeks_naszych(con, z.get("producent") or "") if klucz else {}
+    for docelowe in SKALE:
+        pole = mapowanie.get(docelowe)
+        if not pole:
+            continue
+        wartosci = [r.get(pole, "") for r in rek if r.get(pole)]
+        pary = []
+        for r in rek:
+            n = nasze.get(norm(r.get(klucz, ""))) if klucz else None
+            if n and n.get(docelowe):
+                pary.append((do_liczby(r.get(pole, "")), n[docelowe]))
+        skala, ile_par = skala_z_par(pary, docelowe)
+        skad = f"zgodność z naszymi danymi na {ile_par} produktach"
+        if skala is None:
+            skala = _skala_z_nazwy(pole, docelowe) or _skala_z_wartosci(wartosci, docelowe)
+            skad = f"nazwa albo zapis pola „{pole}”"
+        if skala and skala != 1.0:
+            skale[docelowe] = skala
+            opis.append(f"{docelowe}: {NAZWY_SKAL[skala]} ({skad})")
+        elif skala is None and docelowe != "Waga":
+            liczby = sorted(x for x in (do_liczby(w) for w in wartosci) if x)
+            if liczby and liczby[len(liczby) // 2] > PODEJRZANIE_DUZO_CM:
+                opis.append(f"{docelowe}: mediana {_fmt(liczby[len(liczby) // 2])} — "
+                            f"wygląda na mm, ale nie ma jak tego potwierdzić, nie przeliczam")
+    return skale, opis
+
+
 # --- odświeżenie źródła ---------------------------------------------------
 
 def dane_zrodla(z: dict, katalog_danych: Path) -> tuple[bytes, str]:
@@ -540,6 +651,7 @@ def odswiez(con: sqlite3.Connection, zid: int, katalog_danych: Path) -> dict:
         # przy dopasowaniu po nazwie klucz jest tylko identyfikatorem wiersza
         mapowanie = dict(mapowanie)
         mapowanie["klucz"] = mapowanie["nazwa"]
+    skale, opis_skal = wykryj_skale(con, z, rek, mapowanie)
     if mapowanie.get("klucz"):
         con.execute("DELETE FROM pozycje_zrodla WHERE zrodlo_id=?", (zid,))
         wiersze = []
@@ -552,6 +664,11 @@ def odswiez(con: sqlite3.Connection, zid: int, katalog_danych: Path) -> dict:
                 if docelowe == "klucz":
                     continue
                 wartosc = (r.get(zrodlowe) or "").strip()
+                if wartosc and docelowe in skale:
+                    liczba = do_liczby(wartosc)
+                    # zapisujemy już w naszych jednostkach — porównanie,
+                    # dowód w kolejce i propozycja widzą to samo
+                    wartosc = _fmt(liczba * skale[docelowe]) if liczba is not None else ""
                 if wartosc:
                     dane[docelowe] = wartosc
             wiersze.append((zid, klucz, json.dumps(dane, ensure_ascii=False),
@@ -565,13 +682,15 @@ def odswiez(con: sqlite3.Connection, zid: int, katalog_danych: Path) -> dict:
 
     con.execute(
         "UPDATE zrodla SET format=?, sciezka_rekordu=?, mapowanie=?, blad=NULL,"
-        " ostatnie_pobranie=?, liczba_pozycji=? WHERE id=?",
-        (fmt, tag, json.dumps(mapowanie, ensure_ascii=False), _teraz(), zapisane, zid))
+        " ostatnie_pobranie=?, liczba_pozycji=?, skale=? WHERE id=?",
+        (fmt, tag, json.dumps(mapowanie, ensure_ascii=False), _teraz(), zapisane,
+         json.dumps(skale, ensure_ascii=False), zid))
     con.commit()
 
     return {"rekordow": len(rek), "zapisanych": zapisane, "format": fmt,
             "tag": tag, "pola": pola, "mapowanie": mapowanie,
-            "brak_klucza": not mapowanie.get("klucz")}
+            "brak_klucza": not mapowanie.get("klucz"),
+            "skale": skale, "opis_skal": opis_skal}
 
 
 def podglad(con: sqlite3.Connection, zid: int, katalog_danych: Path, ile: int = 5) -> dict:

@@ -143,6 +143,8 @@ td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;tex
           {% if not z.aktywne %}<span class="znacznik nieaktywne">wyłączone</span>{% endif %}
           {% if z.blad %}<span class="znacznik zle">błąd</span>{% endif %}
           {% if z.mapowanie.get('klucz') %}<span class="znacznik ok">zmapowane</span>{% endif %}
+          {% for atr, jak in z.skale.items() %}<span class="znacznik nieaktywne"
+            title="Wartości z feedu przeliczane na nasze jednostki">{{ atr }}: {{ jak }}</span>{% endfor %}
           <div class="przyklady">
             {% if z.url %}<code>{{ z.url[:70] }}{{ '…' if z.url|length > 70 }}</code>
             {% else %}<code>{{ z.plik }}</code>{% endif %}
