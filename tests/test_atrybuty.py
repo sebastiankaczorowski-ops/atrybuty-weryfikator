@@ -2868,3 +2868,64 @@ def test_zakladka_z_xml_w_komorkach_nadal_idzie_jako_xml():
     assert zrodla.wykryj_format(dane) == "xml"
     rek, tag = zrodla.rekordy_xml(dane)
     assert tag == "item" and len(rek) == 2
+
+
+# Zakładka Halmaru: wymiary mebla tylko w opisie, w <package> wymiary kartonu.
+KOMORKA_HALMAR = """<?xml version="1.0"?>
+<Item>
+  <ean>2010001156345</ean>
+  <ean_GTIN>5905248120402</ean_GTIN>
+  <code>V-CH-SUMATRA-LOZ-BIAŁY</code>
+  <name>SUMATRA łóżko białe (1p=1szt)</name>
+  <description>wymiary: 99/210/89 cm, materiał: stal malowana proszkowo, kolor: biały</description>
+  <nett_weight>22.500</nett_weight>
+  <gros_weight>23.000</gros_weight>
+  <package><pack><packNum>1</packNum><length>216.00</length><width>110.00</width>
+    <height>9.00</height><weight>23.00</weight></pack></package>
+  <transport_costs><item><qty>1</qty><cost>150.00</cost></item>
+    <item><qty>2</qty><cost>150.00</cost></item></transport_costs>
+</Item>"""
+
+
+def _rekordy_halmar():
+    from atrybuty import arkusze, zrodla
+    druga = KOMORKA_HALMAR.replace("5905248120402", "5905248120419")
+    dane = arkusze.zloz_zakladke([[KOMORKA_HALMAR], [druga]])
+    return zrodla.rekordy(dane, zrodla.wykryj_format(dane))
+
+
+def test_wymiary_z_opisu_bez_zgadywania_kolejnosci():
+    """Halmar trzyma wymiary tylko w opisie. Wyciągamy je jako wymiar 1/2/3
+    — która liczba jest szerokością, mówi człowiek w mapowaniu."""
+    rek, tag = _rekordy_halmar()
+    assert tag == "Item" and len(rek) == 2      # <item> w transport_costs to nie produkt
+    r = rek[0]
+    assert r["description » wymiar 1"] == "99"
+    assert r["description » wymiar 2"] == "210"
+    assert r["description » wymiar 3"] == "89"
+    assert r["description » materiał"] == "stal malowana proszkowo"
+    assert r["description » kolor"] == "biały"
+
+
+def test_wymiary_w_mm_przeliczane_na_cm():
+    from atrybuty import zrodla
+    out = zrodla.pola_z_opisu({"opis": "Wymiary (szer/wys/gł): 1200x800x400 mm"})
+    assert [out[f"opis » wymiar {i}"] for i in (1, 2, 3)] == ["120", "80", "40"]
+
+
+def test_wartosc_z_przecinkiem_nie_rozpada_sie_na_pary():
+    from atrybuty import zrodla
+    out = zrodla.pola_z_opisu({"opis": "kolor: szary,grafitowy, styl: nowoczesny"})
+    assert out["opis » kolor"] == "szary,grafitowy"
+    assert out["opis » styl"] == "nowoczesny"
+
+
+def test_wymiary_paczki_nie_sa_podpowiadane_jako_wymiary_mebla():
+    """Podpowiedź po słowie „width” brała szerokość kartonu (110) za szerokość
+    łóżka (99) — rozjazd w kolejce byłby fałszywy od początku do końca."""
+    from atrybuty import zrodla
+    rek, _ = _rekordy_halmar()
+    m = zrodla.zgadnij_mapowanie(zrodla.opisz_pola(rek))
+    for docelowe in ("Szerokość", "Wysokość", "Głębokość"):
+        assert "package" not in m.get(docelowe, "")
+    assert m["Waga"] == "nett_weight"

@@ -266,10 +266,56 @@ def rekordy_json(dane: bytes) -> list[dict]:
 
 def rekordy(dane: bytes, format_: str, sciezka_rekordu: str = "") -> tuple[list[dict], str]:
     if format_ == "xml":
-        return rekordy_xml(dane, sciezka_rekordu)
-    if format_ == "json":
-        return rekordy_json(dane), ""
-    return rekordy_csv(dane), ""
+        rek, tag = rekordy_xml(dane, sciezka_rekordu)
+    elif format_ == "json":
+        rek, tag = rekordy_json(dane), ""
+    else:
+        rek, tag = rekordy_csv(dane), ""
+    for r in rek:
+        r.update(pola_z_opisu(r))
+    return rek, tag
+
+
+# --- pola wyłuskane z opisów ----------------------------------------------
+
+# Halmar nie ma wymiarów w osobnych polach, tylko w opisie:
+#   „wymiary: 99/210/89 cm, materiał: stal malowana proszkowo, kolor: biały”
+# Kolejności liczb NIE zgadujemy — dla łóżka to szer/dł/wys, u innego
+# producenta może być inaczej. Dajemy „wymiar 1/2/3”, a człowiek wskazuje
+# w mapowaniu, które jest którym (raz na źródło).
+SEP_OPISU = " » "
+_LICZBA = r"(\d+(?:[.,]\d+)?)"
+RE_WYMIARY = re.compile(
+    r"wymiar\w*\s*(?:\([^)]*\))?\s*[:\-]?\s*" + _LICZBA
+    + r"\s*[/x×]\s*" + _LICZBA + r"(?:\s*[/x×]\s*" + _LICZBA + r")?\s*(cm|mm)?",
+    re.I)
+# „nazwa: wartość” aż do przecinka, za którym zaczyna się następna para.
+# Przecinek wewnątrz wartości („szary,grafitowy”) zostaje, bo nie stoi
+# za nim kolejne „nazwa:”.
+RE_PARA_OPISU = re.compile(
+    r"(?:^|[,;.]\s*)([A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż][\wĄĆĘŁŃÓŚŹŻąćęłńóśźż ]{1,24}?)\s*:\s*"
+    r"(.+?)(?=\s*[,;]\s*[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż][\wĄĆĘŁŃÓŚŹŻąćęłńóśźż ]{1,24}?\s*:|\s*$)")
+
+
+def pola_z_opisu(r: dict) -> dict[str, str]:
+    """Dodatkowe pola z tekstowych opisów: wymiary i pary „nazwa: wartość”."""
+    out: dict[str, str] = {}
+    for pole, wartosc in r.items():
+        if SEP_OPISU in pole or len(wartosc or "") < 12 or ":" not in wartosc:
+            continue
+        m = RE_WYMIARY.search(wartosc)
+        if m:
+            dzielnik = 10.0 if (m.group(4) or "").lower() == "mm" else 1.0
+            for i in (1, 2, 3):
+                liczba = do_liczby(m.group(i)) if m.group(i) else None
+                if liczba is not None:
+                    out[f"{pole}{SEP_OPISU}wymiar {i}"] = _fmt(liczba / dzielnik)
+        for nazwa, tekst in RE_PARA_OPISU.findall(wartosc):
+            nazwa = nazwa.strip().lower()
+            if nazwa.startswith("wymiar") or not tekst.strip():
+                continue
+            out[f"{pole}{SEP_OPISU}{nazwa}"] = tekst.strip().rstrip(".")
+    return out
 
 
 # --- podgląd pól ----------------------------------------------------------
@@ -327,6 +373,19 @@ def zgadnij_klucz(rek: list[dict], pola: list[Pole],
     return najlepsze, najwiecej
 
 
+# Halmar podaje w <package><pack> szerokość i wagę KARTONU. Podpowiedź po
+# słowie „width” brała je za szerokość mebla — łóżko 99 cm dostawało
+# rozjazd „powinno być 110”. Wymiarów paczki nigdy nie podpowiadamy;
+# kto naprawdę chce je porównać, zmapuje ręcznie.
+SLOWA_PACZKI = ("package", "pack", "paczk", "karton", "opakow", "shipping", "wysylk",
+                "gros", "brutto")   # waga brutto to mebel razem z kartonem
+
+
+def _to_paczka(nazwa_pola: str) -> bool:
+    n = norm(nazwa_pola)
+    return any(s in n for s in SLOWA_PACZKI)
+
+
 def zgadnij_mapowanie(pola: list[Pole]) -> dict[str, str]:
     """Wstępna propozycja mapowania — do poprawienia ręcznie w UI.
 
@@ -340,7 +399,7 @@ def zgadnij_mapowanie(pola: list[Pole]) -> dict[str, str]:
         "Szerokość": ("szerokosc", "width", "szer"),
         "Wysokość": ("wysokosc", "height", "wys"),
         "Głębokość": ("glebokosc", "depth", "gleb"),
-        "Waga": ("waga", "weight", "masa"),
+        "Waga": ("nett_weight", "waga netto", "waga", "weight", "masa"),
         "Materiał": ("material", "materialy", "tworzywo"),
         "Liczba drzwi": ("drzwi", "doors"),
         "Liczba szuflad": ("szuflad", "drawers"),
@@ -355,6 +414,8 @@ def zgadnij_mapowanie(pola: list[Pole]) -> dict[str, str]:
                 if p.nazwa in uzyte or slowo not in norm(p.nazwa):
                     continue
                 if docelowe in POLA_LICZBOWE and not p.wyglada_na_liczbe:
+                    continue
+                if docelowe in POLA_LICZBOWE and _to_paczka(p.nazwa):
                     continue
                 trafione = p.nazwa
                 break

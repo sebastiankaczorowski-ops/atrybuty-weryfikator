@@ -14,6 +14,14 @@ Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 - Zakładka może trzymać XML w komórkach (jak Bogart), JSON w komórkach
   albo zwykłą tabelę z nagłówkami w pierwszym wierszu (jak Wójcik) —
   narzędzie rozpoznaje to samo.
+- **Wymiary z opisu.** Gdy producent (np. Halmar) podaje wymiary tylko
+  w opisie („wymiary: 99/210/89 cm, materiał: …, kolor: …”), w podglądzie
+  pojawiają się pola `description » wymiar 1/2/3`, `» materiał`, `» kolor`.
+  Kolejności liczb narzędzie nie zgaduje — w mapowaniu wskazujesz, który
+  wymiar jest szerokością, a który wysokością.
+- **Wymiary paczki nie udają wymiarów mebla.** Podpowiedź mapowania pomija
+  pola z `<package>` i wagę brutto — inaczej szerokość kartonu trafiałaby
+  do porównania z szerokością łóżka.
 - Pusta zakładka to błąd, a nie zero pozycji — inaczej po cichu zniknęłyby
   wszystkie dane producenta.
 
