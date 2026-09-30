@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 52 trasy, 199 testów (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 52 trasy, 202 testy (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 
@@ -151,6 +151,10 @@ frameworka, bez ORM-a. 52 trasy, 199 testów (`python3 -m pytest -q`).
 - **Nagłówki pliku panelu zamarzają na dniu eksportu.** Po przemianowaniu
   atrybutu mapa `zmiany_nazw` jest stosowana przy odczycie wzorca — bez tego
   atrybut po cichu wypada z importu.
+- **Jednostki w feedach (mm/cm).** Przelicznik mierzymy na dopasowanych
+  produktach — tych samych co przy porównaniu (kod **i** nazwa). Wersja
+  mierząca tylko po kodzie przepuściła mm Wójcika (~650 fałszywych
+  rozjazdów). Bezpiecznik `_to_jednostki` zatrzymuje różnice ×10/100/1000.
 - **`_smieci/`** — katalog na blokady gita. Powłoka na Macu nie może kasować
   plików w mouncie, więc `.git/index.lock` i `HEAD.lock` przenosi się tam
   przed commitem. Jest w `.gitignore` i zdjęty z wersjonowania — sam wpis

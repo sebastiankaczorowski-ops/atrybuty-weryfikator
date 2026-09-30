@@ -247,6 +247,8 @@ td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;tex
 <section class="karta">
   <h2>Konflikty między źródłami — {{ konflikty.ile }}</h2>
   <p class="pod">Tu źródła tego samego produktu podają sprzeczne wartości (poza tolerancją).
+    Tu też lądują różnice dokładnie ×10/×100/×1000 wobec naszej bazy (znacznik
+    „jednostki?”) — to prawie zawsze mm zamiast cm, a nie błąd w danych.
     Takich produktów <b>nie porównujemy</b> z naszą bazą i nie proponujemy zmian — nie
     wiadomo, która wersja jest prawdziwa. Najczęściej kłóci się stara wersja feedu z nową
     (V2 z V3) albo feed w innych jednostkach: wyłącz źródło, które się myli, i przelicz import.</p>
@@ -262,7 +264,9 @@ td.n{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;tex
     {% for k in konflikty.lista %}
       <tr><td><a href="/produkt/{{ k.produkt_id }}">{{ k.produkt_id }}</a> {{ k.nazwa or '' }}
             <div class="przyklady">{{ k.producent or '' }}</div></td>
-        <td>{{ k.atrybut }}</td><td class="n">{{ k.nasza or '—' }}</td>
+        <td>{{ k.atrybut }}{% if k.powod == 'jednostki' %}<div><span class="znacznik zle"
+              title="Wartość źródła jest dokładnie 10, 100 albo 1000 razy inna niż nasza">jednostki?</span></div>{% endif %}</td>
+        <td class="n">{{ k.nasza or '—' }}</td>
         <td>{% for z, v in k.wartosci %}<div><b class="n">{{ v }}</b> · {{ z }}</div>{% endfor %}</td></tr>
     {% endfor %}
     </tbody>

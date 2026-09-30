@@ -3,6 +3,20 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-09-30 · Poprawka: mm Wójcika dalej szły jako cm
+
+- **Co było źle:** jednostkę sprawdzaliśmy tylko na produktach dopasowanych
+  po kodzie (EAN). Wójcik dopasowuje się po nazwie, więc narzędzie nie miało
+  na czym sprawdzić i zostawiało mm. Wynik: ok. 650 witryn i komód
+  z propozycją „Szerokość 500, u nas 50”.
+- Jednostkę ustalamy teraz na tych samych dopasowaniach, których używa
+  porównanie — po kodzie i po nazwie.
+- **Bezpiecznik:** różnica dokładnie ×10, ×100 albo ×1000 względem naszej
+  bazy nigdy nie trafia do kolejki. Ląduje w „Konfliktach między źródłami”
+  ze znacznikiem „jednostki?”, bo to prawie zawsze mm zamiast cm.
+- Po wdrożeniu: Odśwież źródło Wójcika i przelicz import — fałszywe rozjazdy
+  znikną z kolejki.
+
 ## 2026-09-29 · Kilka źródeł na produkt: najpierw uzgadniamy, potem porównujemy
 
 - Jeden produkt może mieć teraz kilka źródeł naraz (np. PIM Wójcika

@@ -64,7 +64,8 @@ CREATE TABLE IF NOT EXISTS konflikty_zrodel (
     produkt_id TEXT NOT NULL,
     atrybut TEXT NOT NULL,
     nasza TEXT,
-    wartosci TEXT                  -- JSON: [[źródło, wartość], ...]
+    wartosci TEXT,                 -- JSON: [[źródło, wartość], ...]
+    powod TEXT DEFAULT 'zrodla'    -- zrodla | jednostki
 );
 CREATE INDEX IF NOT EXISTS ix_kz_przebieg ON konflikty_zrodel(przebieg_id);
 """
@@ -73,7 +74,8 @@ CREATE INDEX IF NOT EXISTS ix_kz_przebieg ON konflikty_zrodel(przebieg_id);
 MIGRACJE_ZRODLA = [("zrodla", "strategia", "TEXT DEFAULT 'auto'"),
                    ("pozycje_zrodla", "nazwa_pozycji", "TEXT DEFAULT ''"),
                    ("pozycje_zrodla", "kolekcja_pozycji", "TEXT DEFAULT ''"),
-                   ("zrodla", "skale", "TEXT DEFAULT '{}'")]
+                   ("zrodla", "skale", "TEXT DEFAULT '{}'"),
+                   ("konflikty_zrodel", "powod", "TEXT DEFAULT 'zrodla'")]
 
 # Pola, które umiemy wykorzystać. Klucz jest obowiązkowy — bez niego nie ma
 # jak połączyć pozycji feedu z naszym produktem.
@@ -570,35 +572,49 @@ def skala_z_par(pary: list[tuple[float, float]], docelowe: str) -> tuple[float |
     return (najlepsza if najlepszy_udzial >= 0.5 else None), len(pary)
 
 
-def _indeks_naszych(con: sqlite3.Connection, producent: str) -> dict[str, dict]:
-    """kod -> nasze liczby, do sprawdzenia jednostek na dopasowanych produktach."""
-    out: dict[str, dict] = {}
-    zapytanie = "SELECT nazwa, kody, liczby FROM produkty"
-    for r in con.execute(zapytanie + (" WHERE producent=?" if producent else ""),
-                         (producent,) if producent else ()):
-        liczby = json.loads(r["liczby"] or "{}")
-        for k in klucze_produktu(r["nazwa"], "", json.loads(r["kody"] or "{}")):
-            out[k] = liczby
-    return out
+def _pary_do_skali(con: sqlite3.Connection, z: dict) -> list[tuple[dict, dict]]:
+    """(surowe dane pozycji, nasze liczby) dla produktów dopasowanych do TEGO
+    źródła — po kodzie i po nazwie, tak samo jak przy porównaniu.
+
+    Dawniej jednostkę sprawdzaliśmy tylko po kluczu. Wójcik dopasowuje się
+    po nazwie, więc par nie było, przelicznik zostawał 1 i każda witryna
+    dostawała „Szerokość 500, u nas 50” — 658 fałszywych rozjazdów naraz.
+    """
+    pozycje = [dict(r) for r in con.execute(
+        "SELECT klucz, dane, nazwa_pozycji, kolekcja_pozycji FROM pozycje_zrodla "
+        "WHERE zrodlo_id=?", (z["id"],))]
+    if not pozycje:
+        return []
+    produkty = [dict(r) for r in con.execute(
+        "SELECT id, nazwa, producent, kolekcja, kody, liczby FROM produkty"
+        + (" WHERE producent = ?" if z["producent"] else ""),
+        (z["producent"],) if z["producent"] else ())]
+    trafione: dict[str, dict] = {}
+    strategia = z.get("strategia") or "auto"
+    if strategia in ("auto", "klucz"):
+        _dopasuj_po_kodzie(z, pozycje, produkty, trafione)
+    if strategia in ("auto", "nazwa"):
+        _dopasuj_po_nazwie(z, pozycje, produkty, trafione)
+    liczby = {p["id"]: json.loads(p["liczby"] or "{}") for p in produkty}
+    return [(t["dane"], liczby.get(pid, {})) for pid, t in trafione.items()]
 
 
 def wykryj_skale(con: sqlite3.Connection, z: dict, rek: list[dict],
                  mapowanie: dict[str, str]) -> tuple[dict[str, float], list[str]]:
-    """{atrybut: przelicznik} dla zmapowanych pól liczbowych + opis dla człowieka."""
+    """{atrybut: przelicznik} dla zmapowanych pól liczbowych + opis dla człowieka.
+
+    Wołane PO zapisaniu surowych pozycji — dopasowanie potrzebuje ich w bazie.
+    """
     skale: dict[str, float] = {}
     opis: list[str] = []
-    klucz = mapowanie.get("klucz")
-    nasze = _indeks_naszych(con, z.get("producent") or "") if klucz else {}
+    dopasowane = _pary_do_skali(con, z)
     for docelowe in SKALE:
         pole = mapowanie.get(docelowe)
         if not pole:
             continue
         wartosci = [r.get(pole, "") for r in rek if r.get(pole)]
-        pary = []
-        for r in rek:
-            n = nasze.get(norm(r.get(klucz, ""))) if klucz else None
-            if n and n.get(docelowe):
-                pary.append((do_liczby(r.get(pole, "")), n[docelowe]))
+        pary = [(do_liczby(dane.get(docelowe, "")), nasze.get(docelowe))
+                for dane, nasze in dopasowane if nasze.get(docelowe)]
         skala, ile_par = skala_z_par(pary, docelowe)
         skad = f"zgodność z naszymi danymi na {ile_par} produktach"
         if skala is None:
@@ -613,6 +629,20 @@ def wykryj_skale(con: sqlite3.Connection, z: dict, rek: list[dict],
                 opis.append(f"{docelowe}: mediana {_fmt(liczby[len(liczby) // 2])} — "
                             f"wygląda na mm, ale nie ma jak tego potwierdzić, nie przeliczam")
     return skale, opis
+
+
+def _przelicz_pozycje(con: sqlite3.Connection, zid: int, skale: dict[str, float]) -> None:
+    zmiany = []
+    for r in con.execute("SELECT klucz, dane FROM pozycje_zrodla WHERE zrodlo_id=?", (zid,)):
+        dane = json.loads(r["dane"] or "{}")
+        for atrybut, skala in skale.items():
+            liczba = do_liczby(dane.get(atrybut, ""))
+            if liczba is not None:
+                dane[atrybut] = _fmt(liczba * skala)
+            else:
+                dane.pop(atrybut, None)
+        zmiany.append((json.dumps(dane, ensure_ascii=False), zid, r["klucz"]))
+    con.executemany("UPDATE pozycje_zrodla SET dane=? WHERE zrodlo_id=? AND klucz=?", zmiany)
 
 
 # --- odświeżenie źródła ---------------------------------------------------
@@ -663,7 +693,8 @@ def odswiez(con: sqlite3.Connection, zid: int, katalog_danych: Path) -> dict:
         # przy dopasowaniu po nazwie klucz jest tylko identyfikatorem wiersza
         mapowanie = dict(mapowanie)
         mapowanie["klucz"] = mapowanie["nazwa"]
-    skale, opis_skal = wykryj_skale(con, z, rek, mapowanie)
+    skale: dict[str, float] = {}
+    opis_skal: list[str] = []
     if mapowanie.get("klucz"):
         con.execute("DELETE FROM pozycje_zrodla WHERE zrodlo_id=?", (zid,))
         wiersze = []
@@ -676,11 +707,6 @@ def odswiez(con: sqlite3.Connection, zid: int, katalog_danych: Path) -> dict:
                 if docelowe == "klucz":
                     continue
                 wartosc = (r.get(zrodlowe) or "").strip()
-                if wartosc and docelowe in skale:
-                    liczba = do_liczby(wartosc)
-                    # zapisujemy już w naszych jednostkach — porównanie,
-                    # dowód w kolejce i propozycja widzą to samo
-                    wartosc = _fmt(liczba * skale[docelowe]) if liczba is not None else ""
                 if wartosc:
                     dane[docelowe] = wartosc
             wiersze.append((zid, klucz, json.dumps(dane, ensure_ascii=False),
@@ -691,6 +717,14 @@ def odswiez(con: sqlite3.Connection, zid: int, katalog_danych: Path) -> dict:
             "(zrodlo_id,klucz,dane,surowe,nazwa_pozycji,kolekcja_pozycji)"
             " VALUES (?,?,?,?,?,?)", wiersze)
         zapisane = len(wiersze)
+
+        # Drugie przejście: jednostki ustalamy na dopasowaniach do surowych
+        # pozycji, a potem zapisujemy je już w naszych jednostkach — porównanie,
+        # dowód w kolejce i propozycja widzą wtedy to samo.
+        z = dict(z, id=zid, strategia=strategia, producent=z.get("producent") or "")
+        skale, opis_skal = wykryj_skale(con, z, rek, mapowanie)
+        if skale:
+            _przelicz_pozycje(con, zid, skale)
 
     con.execute(
         "UPDATE zrodla SET format=?, sciezka_rekordu=?, mapowanie=?, blad=NULL,"
@@ -994,6 +1028,13 @@ def _porownaj(con: sqlite3.Connection) -> tuple[list[dict], list[dict]]:
                 continue
 
             odchylka = abs(nasza - wartosc_ref) / wartosc_ref
+            if odchylka > tolerancja and _to_jednostki(nasza, wartosc_ref, tolerancja):
+                # Dokładnie 10/100/1000 razy — to prawie na pewno mm vs cm,
+                # a nie błąd w naszych danych. Nie proponujemy „500 zamiast 50”.
+                konflikty.append({"produkt_id": r["id"], "atrybut": klucz,
+                                  "nasza": _fmt(nasza), "powod": "jednostki",
+                                  "wartosci": [[z, _fmt(v)] for z, v in ustalenie["glosy"]]})
+                continue
             if odchylka > tolerancja:
                 findingi.append({
                     "produkt_id": r["id"], "atrybut": klucz,
@@ -1006,6 +1047,20 @@ def _porownaj(con: sqlite3.Connection) -> tuple[list[dict], list[dict]]:
                     "grupa": f"L4-ROZJAZD|{klucz}|{grupa_zrodel}",
                 })
     return findingi, konflikty
+
+
+MNOZNIKI_JEDNOSTEK = (10.0, 100.0, 1000.0)
+
+
+def _to_jednostki(nasza: float, ref: float, tolerancja: float) -> bool:
+    """Czy różnica to tylko inna jednostka (mm/cm/m, g/kg)."""
+    if nasza <= 0 or ref <= 0:
+        return False
+    for m in MNOZNIKI_JEDNOSTEK:
+        for a, b in ((nasza * m, ref), (ref * m, nasza)):
+            if abs(a - b) / b <= tolerancja:
+                return True
+    return False
 
 
 def _opis_uzgodnienia(uzyte: list[dict], ustalenie: dict) -> str:
@@ -1058,10 +1113,11 @@ def dopisz_findingi_l4(con: sqlite3.Connection, przebieg_id: int) -> int:
     znalezione, konflikty = _porownaj(con)
     con.execute("DELETE FROM konflikty_zrodel WHERE przebieg_id=?", (przebieg_id,))
     con.executemany(
-        "INSERT INTO konflikty_zrodel (przebieg_id,produkt_id,atrybut,nasza,wartosci)"
-        " VALUES (?,?,?,?,?)",
+        "INSERT INTO konflikty_zrodel (przebieg_id,produkt_id,atrybut,nasza,wartosci,powod)"
+        " VALUES (?,?,?,?,?,?)",
         [(przebieg_id, k["produkt_id"], k["atrybut"], k["nasza"],
-          json.dumps(k["wartosci"], ensure_ascii=False)) for k in konflikty])
+          json.dumps(k["wartosci"], ensure_ascii=False), k.get("powod", "zrodla"))
+         for k in konflikty])
     con.commit()
     if not znalezione:
         return 0
@@ -1086,11 +1142,14 @@ def konflikty_ostatniego(con: sqlite3.Connection, limit: int = 200) -> dict:
         return {"ile": 0, "pary": [], "lista": []}
     przebieg = r[0]
     wiersze = [dict(w) for w in con.execute(
-        "SELECT k.produkt_id, k.atrybut, k.nasza, k.wartosci, p.nazwa, p.producent "
+        "SELECT k.produkt_id, k.atrybut, k.nasza, k.wartosci, k.powod, p.nazwa, p.producent "
         "FROM konflikty_zrodel k LEFT JOIN produkty p ON p.id = k.produkt_id "
         "WHERE k.przebieg_id=? ORDER BY p.producent, k.produkt_id", (przebieg,))]
     pary: Counter = Counter()
     for w in wiersze:
         w["wartosci"] = json.loads(w["wartosci"] or "[]")
-        pary[" ↔ ".join(sorted(z for z, _ in w["wartosci"]))] += 1
+        nazwa = " ↔ ".join(sorted(z for z, _ in w["wartosci"]))
+        if w.get("powod") == "jednostki":
+            nazwa += " — inne jednostki niż u nas?"
+        pary[nazwa] += 1
     return {"ile": len(wiersze), "pary": pary.most_common(10), "lista": wiersze[:limit]}

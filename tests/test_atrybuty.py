@@ -3275,3 +3275,66 @@ def test_strona_zrodel_pokazuje_konflikty(tmp_path, monkeypatch):
     monkeypatch.setattr(app_mod, "BAZA", tmp_path / "t.db")
     html = TestClient(app_mod.app).get("/zrodla").text
     assert "Konflikty między źródłami — 1" in html and "WojcikProductsV3" in html
+
+
+def _wojcik_po_nazwie(tmp_path, n):
+    """n witryn Imperial u nas (cm) i feed Wójcika w mm, bez wspólnego kodu
+    — dopasowanie tylko po nazwie, jak na produkcji."""
+    from atrybuty import db, zrodla
+    con = db.polacz(tmp_path / "t.db")
+    zrodla.przygotuj_baze(con)
+    wiersze = ["nazwa;kolekcja;szer;wys"]
+    # różne meble, bo po wycięciu kodów i kolekcji identyczne nazwy
+    # nie przeszłyby marginesu nad drugim kandydatem
+    meble = ["witryna", "komoda", "regał", "szafka nocna", "ława", "toaletka"]
+    for i in range(n):
+        con.execute(
+            "INSERT INTO produkty (id,nazwa,producent,kolekcja,kompletnosc,atrybuty,liczby)"
+            " VALUES (?,?,'Meble Wójcik','Imperial','ok',?,?)",
+            (str(24700 + i), f"{meble[i].capitalize()} Imperial orzech",
+             json.dumps({"Szerokość": "50", "Wysokość": "195"}),
+             json.dumps({"Szerokość": 50.0, "Wysokość": 195.0})))
+        wiersze.append(f"IMPERIAL TYP 0{i} {meble[i].upper()} ORZECH IMPERIAL;Imperial;500;1950")
+    con.execute("INSERT INTO przebiegi (id,plik,utworzono,liczba_produktow,"
+                "liczba_findingow) VALUES (1,'x','2026-09-30',1,0)")
+    (tmp_path / "wojcik.csv").write_text("\n".join(wiersze), encoding="utf-8")
+    zid = zrodla.dodaj_zrodlo(con, "Wójcik", "Meble Wójcik", plik="wojcik.csv")
+    zrodla.zapisz_mapowanie(con, zid, {"nazwa": "nazwa", "kolekcja": "kolekcja",
+                                       "Szerokość": "szer", "Wysokość": "wys"})
+    con.commit()
+    return con, zid
+
+
+def test_jednostki_wykrywane_takze_przy_dopasowaniu_po_nazwie(tmp_path):
+    """Wójcik dopasowuje się po nazwie, a jednostkę sprawdzaliśmy tylko po
+    kluczu — par nie było, przelicznik zostawał 1 i 658 witryn dostało
+    „Szerokość 500, u nas 50”."""
+    from atrybuty import zrodla
+    con, zid = _wojcik_po_nazwie(tmp_path, 6)
+    wynik = zrodla.odswiez(con, zid, tmp_path)
+    assert wynik["skale"] == {"Szerokość": 0.1, "Wysokość": 0.1}
+    zrodla.dopisz_findingi_l4(con, 1)
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE warstwa='L4'").fetchone()[0] == 0
+    con.close()
+
+
+def test_roznica_dokladnie_x10_nie_trafia_do_kolejki(tmp_path):
+    """Bezpiecznik: gdy par jest za mało, żeby ustalić jednostkę, różnica
+    dokładnie ×10 i tak nie może stać się propozycją „500 zamiast 50”."""
+    from atrybuty import zrodla
+    con, zid = _wojcik_po_nazwie(tmp_path, 2)          # za mało na pomiar skali
+    assert zrodla.odswiez(con, zid, tmp_path)["skale"] == {}
+    zrodla.dopisz_findingi_l4(con, 1)
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE warstwa='L4'").fetchone()[0] == 0
+    k = zrodla.konflikty_ostatniego(con)
+    assert k["ile"] == 4 and all(w["powod"] == "jednostki" for w in k["lista"])
+    assert "inne jednostki" in k["pary"][0][0]
+    con.close()
+
+
+def test_zwykly_rozjazd_nadal_trafia_do_kolejki():
+    from atrybuty import zrodla
+    assert zrodla._to_jednostki(50, 500, 0.03)
+    assert zrodla._to_jednostki(1950, 195, 0.03)
+    assert not zrodla._to_jednostki(50, 60, 0.03)
+    assert not zrodla._to_jednostki(50, 520, 0.03)
