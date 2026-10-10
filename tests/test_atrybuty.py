@@ -3338,3 +3338,18 @@ def test_zwykly_rozjazd_nadal_trafia_do_kolejki():
     assert zrodla._to_jednostki(1950, 195, 0.03)
     assert not zrodla._to_jednostki(50, 60, 0.03)
     assert not zrodla._to_jednostki(50, 520, 0.03)
+
+
+def test_kolumna_kod_ean_trafia_do_kodow_produktu(tmp_path):
+    """Nagłówki porównujemy po .lower(), a lista miała „kod EAN” wielkimi
+    literami — EAN-y z eksportu nigdy nie trafiały do bazy i Wójcik
+    (728 wspólnych EAN-ów z PIM-em) dopasowywał się po nazwie."""
+    from atrybuty import pipeline
+    plik = tmp_path / "products.csv"
+    plik.write_text(
+        "id;nazwa;producent;kolekcja;kod produktu;kod EAN;nasz kod EAN;atrybuty\n"
+        "24721;Witryna Imperial;Meble Wójcik;Imperial;IMP_T01_WIT_1D-2S;"
+        "5900355032136;5909990000001;Szerokość: 50\n", encoding="utf-8")
+    produkty, _ = pipeline.wczytaj_csv(plik)
+    assert produkty[0].kody["kod EAN"] == "5900355032136"
+    assert produkty[0].kody["nasz kod EAN"] == "5909990000001"

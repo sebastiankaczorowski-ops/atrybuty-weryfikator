@@ -3,6 +3,17 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-10 · Poprawka: EAN-y z eksportu nie trafiały do bazy
+
+- **Co było źle:** nagłówki eksportu porównujemy małymi literami, a lista
+  oczekiwanych kolumn miała „kod EAN” i „nasz kod EAN” pisane wielkimi.
+  EAN-y nigdy nie trafiały do bazy, więc żaden feed nie mógł dopasować się
+  po EAN-ie — Wójcik łapał się po nazwie.
+- Po poprawce i ponownym imporcie PIM Wójcika łączy się po EAN-ie z 728
+  produktami (z 911), jednostki mm → cm wykrywają się z danych, a w kolejce
+  zostaje 72 rozjazdów zamiast ~650 fałszywych.
+- **Wymaga ponownego importu eksportu** — EAN-y czytamy przy imporcie.
+
 ## 2026-09-30 · Poprawka: mm Wójcika dalej szły jako cm
 
 - **Co było źle:** jednostkę sprawdzaliśmy tylko na produktach dopasowanych

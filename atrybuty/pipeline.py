@@ -45,7 +45,10 @@ KOLUMNY_PODTYPU = ("podtyp", "subtype")
 
 # Kody produktu z eksportu 15.09 — to one odblokowują pewne dopasowanie
 # do feedów producentów (wcześniej zostawało zgadywanie po nazwie).
-KOLUMNY_KODOW = ("kod produktu", "kod producenta", "kod EAN", "nasz kod EAN",
+# Małymi literami — nagłówki porównujemy po `.lower()`. Wersja z „kod EAN”
+# pisanym wielkimi literami nigdy nie pasowała, więc EAN-y z eksportu nie
+# trafiały do bazy i feedy dopasowywały się po nazwie zamiast po EAN-ie.
+KOLUMNY_KODOW = ("kod produktu", "kod producenta", "kod ean", "nasz kod ean",
                  "unikatowy kod produktu", "sku", "ean")
 KOLUMNY_ZDJEC = ("zdjecia", "zdjęcia", "images")
 # Nazwa kolumny ze składowymi zmieniała się między eksportami — trzymamy
