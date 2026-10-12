@@ -36,6 +36,9 @@ podtyp:
 nazwa:
   - atrybut: Oświetlenie
     wzorzec: '\bled\b|z oswietleniem|z podswietleniem|podswietlan'
+    # „bez LED”, „LED w opcji”, „opcjonalne oświetlenie” — słowo jest, ale
+    # nie znaczy „w zestawie”; wtedy brak propozycji
+    wyklucz: '\bbez\b[^,;]{0,20}(led|oswietl|podswietl)|opcj|\bw opcji\b|dokup'
     wartosc: w zestawie
   - atrybut: Na nóżkach
     wzorzec: '\bna (nozkach|nogach)\b'

@@ -3858,3 +3858,75 @@ def test_przemianowana_wartosc_dopuszczalna_nie_robi_sprzecznosci(konfig_luk):
     assert "owal" in config.luki()["podtyp"][3]["dopuszczalne"]
     wynik = _luki([_pl("1", "stol", "Stół", {"Kształt blatu": "owal"}, podtyp="Stoły okrągłe")])
     assert ("1", "Kształt blatu") not in wynik
+
+
+def test_zgloszenie_do_importu_nie_zamyka_braku_bez_propozycji(konfig_luk, tmp_path, monkeypatch):
+    """„Do importu” wysyła produkt z obecnymi atrybutami — luki to nie zmienia.
+    Zamknięcie braku schowałoby go na stałe, choć wartości dalej nie ma (R15)."""
+    import atrybuty.app as app_mod
+    from atrybuty import db
+    baza = _baza_luk(tmp_path, monkeypatch)
+    con = db.polacz(baza)
+    przed = con.execute("SELECT regula_id FROM findingi WHERE produkt_id='y'").fetchall()
+    assert ("L1-LUKA-BRAK",) in [tuple(r) for r in przed]
+    app_mod._domknij_po_zgloszeniu(con, "y")
+    q = """SELECT f.regula_id FROM findingi f LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id
+           AND d.atrybut=f.atrybut AND d.hasz_starej=f.hasz_starej
+           WHERE f.produkt_id='y' AND d.status IS NULL"""
+    assert "L1-LUKA-BRAK" in [r[0] for r in con.execute(q)]
+    con.close()
+
+
+def test_kolejka_nie_daje_do_importu_przy_braku_bez_propozycji(konfig_luk, tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    _baza_luk(tmp_path, monkeypatch)
+    klient = TestClient(app_mod.app)
+    for grupuj in ("1", ""):
+        html = klient.get("/anomalie", params={"regula": "L1-LUKA-BRAK", "grupuj": grupuj}).text
+        assert "brak wartości, bez propozycji" in html
+        assert 'hx-post="/zglos-grupe"' not in html
+        assert 'hx-post="/zglos-produkt" hx-target="#akcje-' not in html
+    # kontrola: przy propozycjach przycisk jest, więc test nie przechodzi „na pusto”
+    html = klient.get("/anomalie", params={"regula": "L2-LUKA-*", "grupuj": ""}).text
+    assert 'hx-post="/zglos-produkt" hx-target="#akcje-' in html
+
+
+def test_pusty_napis_w_starej_wartosci_to_ta_sama_komorka(konfig_luk):
+    """`db.hasz` traktuje None i '' jednakowo — zgłoszenie słownikowe z „Oświetlenie: ”
+    i propozycja z nazwy dzieliły klucz decyzji i oba zostawały (R16)."""
+    from atrybuty import luki
+    from atrybuty.model import L1, L2, SREDNIA, Finding
+    slownikowe = Finding("1", "Oświetlenie", "L1-SPOZA-SLOWNIKA", L1, SREDNIA, 0.9, "", None, "x")
+    z_nazwy = Finding("1", "Oświetlenie", "L2-LUKA-NAZWA", L2, SREDNIA, 0.8, None, "w zestawie", "LED")
+    wynik = luki.uzgodnij([slownikowe], [z_nazwy])
+    assert [f.regula_id for f in wynik] == ["L2-LUKA-NAZWA"]
+
+
+def test_sporna_propozycja_poza_grupa_niespornych(konfig_luk):
+    """Sporny wariant (60%) siedział w grupie z niespornymi (93%) — „Zastosuj ×N”
+    zatwierdzał go razem z nimi pod 93% (R17)."""
+    from atrybuty import luki
+    from atrybuty.model import L2, SREDNIA, Finding
+    grupa = "L2-LUKA-RODZINA|Liczba drzwi|2-drzwiowe|BRW|komoda|model|alfa typ 01"
+    spokojna = Finding("2", "Liczba drzwi", "L2-LUKA-RODZINA", L2, SREDNIA, 0.93, None,
+                       "2-drzwiowe", "rodzina", grupa=grupa)
+    sporna = Finding("1", "Liczba drzwi", "L2-LUKA-RODZINA", L2, SREDNIA, 0.93, None,
+                     "2-drzwiowe", "rodzina", grupa=grupa)
+    z_nazwy = Finding("1", "Liczba drzwi", "L2-NAZWA-UZUPELNIA", L2, SREDNIA, 0.7, None,
+                      "3-drzwiowe", "nazwa")
+    wynik = {f.produkt_id: f for f in luki.uzgodnij([z_nazwy], [sporna, spokojna])}
+    assert wynik["1"].grupa != wynik["2"].grupa and wynik["1"].pewnosc == 0.6
+
+
+@_pytest.mark.parametrize("nazwa,oczekiwana", [
+    ("Szafa Alfa LED biała", "w zestawie"),
+    ("Szafa Alfa z oświetleniem", "w zestawie"),
+    ("Szafa Alfa bez LED", None),
+    ("Szafa Alfa LED opcjonalne", None),
+    ("Szafa Alfa - oświetlenie LED w opcji", None),
+])
+def test_led_w_nazwie_tylko_gdy_oznacza_zestaw(konfig_luk, nazwa, oczekiwana):
+    """„bez LED” i „LED opcjonalnie” dawały „Oświetlenie: w zestawie” (R18)."""
+    f = _luki([_pl("1", nazwa=nazwa)])[("1", "Oświetlenie")]
+    assert f.proponowana_wartosc == oczekiwana

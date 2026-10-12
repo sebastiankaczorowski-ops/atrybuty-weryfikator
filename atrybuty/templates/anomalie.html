@@ -528,7 +528,11 @@ tr.htmx-request .szkielet{display:flex}
       {# Zgłoszenie do importu to nie decyzja o wartości, tylko „przepuść ten
          produkt przez import z tym, co ma teraz" — dlatego wolno je zrobić
          hurtem także na grupie o różnych wartościach. #}
-      {% if fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1 %}
+      {# Brak bez propozycji nie ma czego wysłać — „do importu” zamknęłoby lukę
+         bez wartości i schowało ją w kolejnych importach (inspekcja R15).
+         Tu tylko własna wartość albo odłożenie. #}
+      {% if w.regula_id == 'L1-LUKA-BRAK' %}
+      {% elif fl.grupuj and w.ile_w_grupie and w.ile_w_grupie > 1 %}
       <form hx-post="/zglos-grupe" hx-target="#akcje-{{ loop.index }}"
             hx-swap="innerHTML" hx-disabled-elt="find button">
         <input type="hidden" name="grupa" value="{{ w.grupa }}">

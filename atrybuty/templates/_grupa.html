@@ -70,6 +70,8 @@
           {{ c.nazwa }}
           <div class="dowod">{{ c.producent }}{% if c.kolekcja %} · {{ c.kolekcja }}{% endif %}
             · {{ nazwy_kat.get(c.kategoria, c.kategoria) }}
+            {% if c.pewnosc is not none %}· {{ '%.0f'|format(c.pewnosc * 100) }}%{% endif %}
+            {% if c.dowod and 'Uwaga:' in c.dowod %}<div class="stara">{{ c.dowod.split('Uwaga:', 1)[1] }}</div>{% endif %}
             · <a class="panel" href="{{ link_panelu(c.produkt_id) }}" target="_blank"
                  rel="noopener">edytuj w panelu ↗</a>
           </div>

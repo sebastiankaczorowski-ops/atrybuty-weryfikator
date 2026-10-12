@@ -1335,7 +1335,10 @@ def _domknij_po_zgloszeniu(con, produkt_id: str, atrybut: str = "",
     w kolejce pod tym drugim błędem.
     """
     przebieg = _przebieg(con)
-    q = (zapytania.BAZA_SQL + " AND f.produkt_id = :pid AND d.status IS NULL")
+    # Brak bez propozycji zostaje otwarty: wysłanie produktu z obecnymi
+    # atrybutami niczego w tej luce nie zmienia (inspekcja R15).
+    q = (zapytania.BAZA_SQL + " AND f.produkt_id = :pid AND d.status IS NULL"
+         " AND f.regula_id <> 'L1-LUKA-BRAK'")
     par = {"przebieg": przebieg, "pid": produkt_id}
     if atrybut:
         q += " AND f.atrybut = :atr"; par["atr"] = atrybut

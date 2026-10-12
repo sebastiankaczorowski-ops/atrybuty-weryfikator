@@ -143,6 +143,9 @@ def z_nazwy(p: Produkt, wartosci: dict[str, str], filtry: set[str],
             continue
         if not re.search(r["wzorzec"], nazwa):
             continue
+        # „bez LED”, „LED opcjonalnie” — słowo jest, ale mówi odwrotnie (R18)
+        if r.get("wyklucz") and re.search(r["wyklucz"], nazwa):
+            continue
         wartosc = kanoniczna(atr, r["wartosc"], etykiety)
         if wartosc is None:
             log.warning("luki.yaml: wartość %r spoza słownika %r — reguła pominięta",
@@ -270,6 +273,13 @@ def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None) -> list[
     return list(najlepsze.values())
 
 
+def _pusta(stara: str | None) -> bool:
+    """Ta sama „pustość” co w kluczu decyzji (`db.hasz`: None i '' to jedno) —
+    inaczej „Oświetlenie: ” z eksportu i luka dla tej samej komórki
+    przechodziły obok siebie z jednym kluczem (inspekcja R16)."""
+    return stara is None or not str(stara).strip()
+
+
 # Gdy dwa źródła proponują różne wartości dla tej samej pustej komórki,
 # zostaje jedna propozycja, ale z pewnością poniżej progu automatu —
 # rozstrzyga człowiek, widząc obie wersje w dowodzie (inspekcja R03).
@@ -292,12 +302,12 @@ def uzgodnij(istniejace: list[Finding], luki_: list[Finding]) -> list[Finding]:
     # słownikowego odpowiednika ma ten sam klucz decyzji co luka.
     puste = {}
     for i, f in enumerate(istniejace):
-        if f.stara_wartosc is None:
+        if _pusta(f.stara_wartosc):
             puste.setdefault((f.produkt_id, f.atrybut), []).append(i)
     usun_ist: set[int] = set()
     wynik_luk: list[Finding] = []
     for f in luki_:
-        if f.stara_wartosc is not None:
+        if not _pusta(f.stara_wartosc):
             wynik_luk.append(f)
             continue
         indeksy = puste.get((f.produkt_id, f.atrybut))
@@ -320,6 +330,9 @@ def uzgodnij(istniejace: list[Finding], luki_: list[Finding]) -> list[Finding]:
             lepsze.pewnosc = min(lepsze.pewnosc, PEWNOSC_SPOR)
             lepsze.dowod += (f" · Uwaga: {gorsze.regula_id} proponuje "
                              f"„{gorsze.proponowana_wartosc}” — źródła się nie zgadzają")
+            # sporna komórka nie może jechać na „Zastosuj ×N” razem z niespornymi
+            # wariantami tej samej rodziny (inspekcja R17)
+            lepsze.grupa += f"|SPOR|{gorsze.regula_id}|{gorsze.proponowana_wartosc}"
         if lepsze is f:
             usun_ist.update(indeksy)
             wynik_luk.append(f)
