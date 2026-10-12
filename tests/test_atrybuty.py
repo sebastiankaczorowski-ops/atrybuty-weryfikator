@@ -4074,3 +4074,18 @@ def test_zakladka_pokazuje_szacunek_odczytu_ze_zdjec(konfig_luk, tmp_path, monke
     _baza_luk(tmp_path, monkeypatch)
     html = TestClient(app_mod.app).get("/filtry").text
     assert "Odczyt ze zdjęć" in html and "wizja --luki" in html and "~$" in html
+
+
+def test_szacunek_kosztu_ze_sredniej_zaplaconych_zapytan(tmp_path):
+    """Stała 508 tokenów zaniżała koszt o połowę ($0.07 szacunku, $0.139 faktury
+    za próbkę 100). Szacunek ma się uczyć z cache, gdy jest dość próbek."""
+    from atrybuty import db, wizja
+    con = db.polacz(tmp_path / "k.db"); wizja.przygotuj_baze(con)
+    poz = [{"produkt_id": str(i), "atrybut": "Na nóżkach"} for i in range(100)]
+    assert wizja.przetworz(con, poz, na_sucho=True)["tok_we"] == 152000
+    con.executemany("INSERT INTO cache_wizji (hasz,odpowiedz,tokenow_wejscia,tokenow_wyjscia,"
+                    "utworzono) VALUES (?,?,?,?,?)",
+                    [(str(i), "{}", 2000, 100, "t") for i in range(25)])
+    w = wizja.przetworz(con, poz, na_sucho=True)
+    assert w["tok_we"] == 200000 and w["srednia_z_historii"]
+    con.close()

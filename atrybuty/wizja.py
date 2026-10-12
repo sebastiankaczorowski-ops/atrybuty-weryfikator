@@ -402,6 +402,19 @@ def _dozwolone(atrybut: str) -> list[str]:
     return sorted(set((panel_format.wczytaj_etykiety().get(atrybut) or {}).values()))
 
 
+# Bez historii: wartości z próbki 100 odczytów luk (12.10.2026).
+DOMYSLNE_TOKENY = (1520.0, 70.0)
+MIN_PROBEK_SREDNIEJ = 20
+
+
+def _srednie_tokeny(con: sqlite3.Connection) -> tuple[float, float]:
+    r = con.execute("SELECT COUNT(*), AVG(tokenow_wejscia), AVG(tokenow_wyjscia) "
+                    "FROM cache_wizji WHERE tokenow_wejscia > 0").fetchone()
+    if not r or (r[0] or 0) < MIN_PROBEK_SREDNIEJ:
+        return DOMYSLNE_TOKENY
+    return float(r[1]), float(r[2])
+
+
 def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
               model: str = MODEL_WOLUMEN, katalog_zdjec: Path | None = None,
               na_sucho: bool = False, echo=print) -> dict:
@@ -418,10 +431,15 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
     pozycje = list(pozycje)
 
     if na_sucho:
-        # szacunek: ~258 tokenów za zdjęcie 512px + ~250 promptu, ~80 wyjścia
+        # Średnia z faktycznie zapłaconych zapytań, gdy jest ich dość. Stała
+        # 508 tokenów (jeden kafelek + prompt) zaniżała koszt o połowę: próbka
+        # 100 odczytów luk kosztowała $0.139 przy szacunku $0.07 — realnie
+        # ~1 500 tokenów wejścia na zapytanie.
+        we, wy = _srednie_tokeny(con)
         podsumowanie["zapytan"] = len(pozycje)
-        podsumowanie["tok_we"] = len(pozycje) * 508
-        podsumowanie["tok_wy"] = len(pozycje) * 80
+        podsumowanie["tok_we"] = round(len(pozycje) * we)
+        podsumowanie["tok_wy"] = round(len(pozycje) * wy)
+        podsumowanie["srednia_z_historii"] = (we, wy) != DOMYSLNE_TOKENY
         podsumowanie["koszt_usd"] = koszt_usd(model, podsumowanie["tok_we"],
                                               podsumowanie["tok_wy"])
         podsumowanie["szacunek"] = True

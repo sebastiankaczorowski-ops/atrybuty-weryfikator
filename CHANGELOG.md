@@ -17,7 +17,7 @@ Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
   z `--na-sucho`, które tylko liczy koszt.
 - Zakładka `/filtry` pokazuje, ile braków da się sprawdzić zdjęciem i szacunek
   kosztu. Na eksporcie z 30.09: ok. 30,8 tys. braków (głównie oświetlenie
-  i nóżki), ok. 21 USD za całość modelem Flash.
+  i nóżki), ok. 43 USD za całość modelem Flash (po próbce: ok. 1 500 tokenów na zapytanie; szacunek liczy się teraz ze średniej z zapłaconych zapytań).
 
 ## 2026-10-12 · Luki w filtrach: czy produkty mają to, po czym klient filtruje
 
