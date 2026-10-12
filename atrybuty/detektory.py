@@ -343,7 +343,8 @@ def l2_duplikaty(produkty: list[Produkt]) -> list[Finding]:
 # ---------------------------------------------------------------- runner
 
 
-def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = ()) -> list[Finding]:
+def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = (),
+            odczyty_zdjec: dict | None = None) -> list[Finding]:
     # Produkty bez danych nie idą przez detektory: "brak Szerokości" przy
     # produkcie, który nie ma ŻADNEGO atrybutu, to nie finding do poprawy
     # tylko brak danych u źródła. Lądują na osobnej liście (/braki).
@@ -373,7 +374,8 @@ def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = 
         # zabrać komórki włączonemu źródłu ani zdjąć braku (inspekcja R09).
         wyl = config.wylaczone()
         out = [f for f in out if f.regula_id not in wyl]
-        out = luki.uzgodnij(out, luki.uruchom(do_analizy, wylaczone=wyl))
+        out = luki.uzgodnij(out, luki.uruchom(do_analizy, wylaczone=wyl,
+                                              odczyty_zdjec=odczyty_zdjec))
 
     # Reguły wyłączone z podstrony /reguly nie trafiają do kolejki.
     # Filtrujemy na końcu, a nie w każdym detektorze osobno — jedno miejsce,

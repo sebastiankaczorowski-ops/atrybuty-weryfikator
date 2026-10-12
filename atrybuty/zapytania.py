@@ -822,7 +822,7 @@ def pokrycie_filtrow(con: sqlite3.Connection, przebieg: int | None) -> list[dict
         lista = wg_kat.get(kat, [])
         for atr in atrybuty:
             z = brak = sprzecznych = 0
-            zrodla = {"podtyp": 0, "nazwa": 0, "rodzina": 0, "inne": 0}
+            zrodla = {"podtyp": 0, "nazwa": 0, "rodzina": 0, "zdjecie": 0, "inne": 0}
             for pid, w in lista:
                 o = otwarte.get((pid, atr))
                 if atr in w:
@@ -838,7 +838,8 @@ def pokrycie_filtrow(con: sqlite3.Connection, przebieg: int | None) -> list[dict
                     brak += 1             # zgłoszony brak bez propozycji, z dowolnej reguły
                 else:
                     zrodla[{"L2-LUKA-PODTYP": "podtyp", "L2-LUKA-NAZWA": "nazwa",
-                            "L2-LUKA-RODZINA": "rodzina"}.get(o["regula"], "inne")] += 1
+                            "L2-LUKA-RODZINA": "rodzina",
+                            "L2-LUKA-ZDJECIE": "zdjecie"}.get(o["regula"], "inne")] += 1
             out.append({"kategoria": kat, "atrybut": atr, "produktow": len(lista),
                         "z_wartoscia": z, "bez_wartosci": len(lista) - z,
                         "pokrycie": (z / len(lista)) if lista else None,

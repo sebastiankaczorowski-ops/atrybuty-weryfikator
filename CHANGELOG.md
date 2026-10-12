@@ -3,6 +3,22 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-12 · Luki w filtrach: odczyt brakującej wartości ze zdjęcia
+
+- Gdy żadne źródło nie zna wartości filtra, można ją **odczytać ze zdjęcia**
+  (Gemini). Model dostaje jedno zamknięte pytanie i listę dozwolonych wartości
+  ze słownika panelu; gdy cechy nie widać — odpowiada „nie widać”.
+- Odczyt zamienia brak w kolejce w **propozycję „ze zdjęcia”** z prawdopodobieństwem
+  najwyżej 80% — zawsze do akceptacji człowieka, nigdy automatycznie. Zostaje
+  zapamiętany: kolejny import nie płaci drugi raz za to samo zdjęcie.
+- Pojedynczy brak: przycisk „Sprawdź zdjęciem” w kolejce (przy pustym polu pokazuje
+  „Gemini odczytał”). Całość albo próbka: komenda
+  `python -m atrybuty.pipeline wizja --luki --limit 100 --losowo` — najpierw
+  z `--na-sucho`, które tylko liczy koszt.
+- Zakładka `/filtry` pokazuje, ile braków da się sprawdzić zdjęciem i szacunek
+  kosztu. Na eksporcie z 30.09: ok. 30,8 tys. braków (głównie oświetlenie
+  i nóżki), ok. 21 USD za całość modelem Flash.
+
 ## 2026-10-12 · Luki w filtrach: czy produkty mają to, po czym klient filtruje
 
 - Nowa zakładka **„luki w filtrach”** (`/filtry`). Dla każdej kategorii i każdego

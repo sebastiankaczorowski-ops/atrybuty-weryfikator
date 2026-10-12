@@ -22,7 +22,7 @@ import re
 from collections import Counter, defaultdict
 
 from . import config, panel_format
-from .model import INFO, KRYTYCZNA, L1, L2, SREDNIA, Finding, Produkt
+from .model import INFO, KRYTYCZNA, L1, L2, L3, SREDNIA, Finding, Produkt
 from .tekst import norm
 
 log = logging.getLogger(__name__)
@@ -43,7 +43,10 @@ SUFIT_WYPOSAZENIE = 0.80
 PEWNOSC_BRAK = 1.0
 
 REGULY_PROPOZYCJI = ("L2-LUKA-PODTYP", "L2-LUKA-PODTYP-SPRZECZNE",
-                     "L2-LUKA-NAZWA", "L2-LUKA-RODZINA")
+                     "L2-LUKA-NAZWA", "L2-LUKA-RODZINA", "L2-LUKA-ZDJECIE")
+# Odczyt ze zdjęcia (Gemini) — najwyżej tyle, czyli zawsze pod progiem automatu:
+# model bywa pewny siebie także wtedy, gdy nóżki zasłania narzuta.
+SUFIT_ZDJECIE = 0.80
 REGULA_BRAKU = "L1-LUKA-BRAK"
 REGULY = REGULY_PROPOZYCJI + (REGULA_BRAKU,)
 
@@ -225,9 +228,36 @@ def z_rodziny(produkty: list[Produkt], wartosci: dict[str, dict[str, str]],
     return f
 
 
+def propozycja_ze_zdjecia(produkt_id: str, atrybut: str, kategoria: str, producent: str,
+                          odczyt: dict, etykiety: dict) -> Finding | None:
+    """Odczyt Gemini dla pustego pola → propozycja, o ile wartość jest w słowniku."""
+    wartosc = kanoniczna(atrybut, odczyt.get("wartosc") or "", etykiety)
+    if wartosc is None:
+        return None
+    pewnosc = round(min(SUFIT_ZDJECIE, float(odczyt.get("pewnosc") or 0)), 3)
+    return Finding(
+        produkt_id, atrybut, "L2-LUKA-ZDJECIE", L3, SREDNIA, pewnosc, None, wartosc,
+        f"Odczyt ze zdjęcia: „{odczyt.get('uzasadnienie') or wartosc}”",
+        grupa=f"L2-LUKA-ZDJECIE|{kategoria}|{atrybut}|{wartosc}|{producent}")
+
+
+def ze_zdjec(p: Produkt, wartosci: dict[str, str], filtry: set[str],
+             odczyty: dict, etykiety: dict) -> list[Finding]:
+    f: list[Finding] = []
+    for atr in filtry:
+        if atr in wartosci or (p.id, atr) not in odczyty:
+            continue
+        prop = propozycja_ze_zdjecia(p.id, atr, p.kategoria, p.producent,
+                                     odczyty[(p.id, atr)], etykiety)
+        if prop:
+            f.append(prop)
+    return f
+
+
 # --- całość ----------------------------------------------------------------
 
-def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None) -> list[Finding]:
+def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None,
+            odczyty_zdjec: dict | None = None) -> list[Finding]:
     """Propozycje dla luk + braki bez propozycji, najwyżej jedno na komórkę.
 
     Gdy kilka źródeł coś mówi o tym samym (produkt, atrybut), wygrywa najwyższe
@@ -247,6 +277,8 @@ def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None) -> list[
         filtry_p = set(filtry.get(p.kategoria, ()))
         kandydaci += z_podtypu(p, wartosci[p.id], filtry_p, etykiety)
         kandydaci += z_nazwy(p, wartosci[p.id], filtry_p, etykiety)
+        if odczyty_zdjec:
+            kandydaci += ze_zdjec(p, wartosci[p.id], filtry_p, odczyty_zdjec, etykiety)
     kandydaci += z_rodziny(produkty, wartosci, etykiety)
     # Źródło wyłączone w /reguly nie wygrywa komórki — wtedy wchodzi następne
     # źródło albo brak bez propozycji (inspekcja R09).

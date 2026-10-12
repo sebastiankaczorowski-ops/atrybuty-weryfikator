@@ -144,7 +144,8 @@ def komenda_schema(sciezka: str, plik_kategorii: str | None = None) -> None:
     print(f"  grupy nadrzędne: {len(dane['grupy'])}")
 
 
-def wszystkie_findingi(produkty: list[Produkt], f_norm: list[Finding]) -> list[Finding]:
+def wszystkie_findingi(produkty: list[Produkt], f_norm: list[Finding],
+                       odczyty_zdjec: dict | None = None) -> list[Finding]:
     """Komplet warstw liczonych z samego pliku (L0-L2).
 
     Jedno miejsce dla obu ścieżek importu — z konsoli i ze strony. Wcześniej
@@ -156,7 +157,7 @@ def wszystkie_findingi(produkty: list[Produkt], f_norm: list[Finding]) -> list[F
     # (produkt, atrybut, hasz pustej starej) — rozstrzygnięcie jednego ukryłoby
     # drugie. Wygrywa L0: wartość już jest, trzeba ją tylko przenieść (LUKI-01).
     z_l0 = {(f.produkt_id, f.atrybut) for f in f_l0}
-    f_det = [f for f in detektory.uruchom(produkty, f_norm)
+    f_det = [f for f in detektory.uruchom(produkty, f_norm, odczyty_zdjec)
              if not (f.regula_id in luki.REGULY and (f.produkt_id, f.atrybut) in z_l0)]
     return f_det + f_l0
 
@@ -169,7 +170,8 @@ def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
         print("Brak config/schema.yaml — generuję z tych danych…")
         config.zapisz_schema(schema_gen.zbuduj(produkty))
 
-    findingi = wszystkie_findingi(produkty, f_norm)
+    # odczyty ze zdjęć z poprzednich przebiegów — już opłacone, nie pytamy ponownie
+    findingi = wszystkie_findingi(produkty, f_norm, wizja.odczyty_z_bazy(BAZA))
     print(f"Findingów: {len(findingi)}")
     if any(p.skladowe for p in produkty):
         s = skladowe.podsumowanie(produkty, findingi)
@@ -233,7 +235,7 @@ def _podsumowanie(produkty: list[Produkt], findingi: list[Finding]) -> None:
 
 
 def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
-                  na_sucho: bool, losowo: bool, wszystko: bool) -> None:
+                  na_sucho: bool, losowo: bool, wszystko: bool, luki_: bool = False) -> None:
     """Warstwa L3 — Gemini na kandydatach przepuszczonych przez bramkę kosztową."""
     con = db.polacz(BAZA)
     wizja.przygotuj_baze(con)
@@ -242,8 +244,12 @@ def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
         print("Brak przebiegów — uruchom najpierw `import`.")
         return
 
-    poz = wizja.kandydaci(con, int(p["id"]), limit=limit, atrybut=atrybut,
-                          producent=producent, tylko_nowe=not wszystko, losowo=losowo)
+    if luki_:
+        poz = wizja.kandydaci_luk(con, int(p["id"]), limit=limit, atrybut=atrybut,
+                                  producent=producent, losowo=losowo)
+    else:
+        poz = wizja.kandydaci(con, int(p["id"]), limit=limit, atrybut=atrybut,
+                              producent=producent, tylko_nowe=not wszystko, losowo=losowo)
     print(f"Kandydatów do sprawdzenia: {len(poz)}")
     if not poz:
         con.close()
@@ -269,6 +275,10 @@ def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
         print(f"  {n:5d}  {k}")
     print(f"Tokeny: {w['tok_we']:,} wejścia / {w['tok_wy']:,} wyjścia "
           f"→ ${w['koszt_usd']:.3f}")
+    if luki_:
+        n = wizja.zamien_braki(con, int(p["id"]))
+        print(f"Braki zamienione na propozycje ze zdjęcia (L2-LUKA-ZDJECIE): {n} — "
+              f"do akceptacji w kolejce")
     con.close()
 
 
@@ -425,6 +435,8 @@ def main(argv: list[str] | None = None) -> int:
     w.add_argument("--losowo", action="store_true", help="losowa kolejność (do próbki)")
     w.add_argument("--wszystko", action="store_true",
                    help="także te, które mają już werdykt")
+    w.add_argument("--luki", action="store_true",
+                   help="odczytaj ze zdjęć braki w filtrach bez propozycji (L1-LUKA-BRAK)")
 
     k = sub.add_parser("kalibracja", help="próbka do ręcznej oceny i raport trafności")
     k.add_argument("akcja", choices=["eksport", "raport"])
@@ -457,7 +469,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "wizja":
         model = wizja.MODEL_SPORNE if args.sporne else args.model
         komenda_wizja(args.limit, args.atrybut, args.producent, model,
-                      args.na_sucho, args.losowo, args.wszystko)
+                      args.na_sucho, args.losowo, args.wszystko, args.luki)
     elif args.cmd == "kalibracja":
         komenda_kalibracja(args.akcja, args.plik)
     elif args.cmd == "wyczysc":

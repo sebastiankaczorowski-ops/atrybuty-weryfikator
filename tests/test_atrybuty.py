@@ -3977,3 +3977,100 @@ def test_csv_dla_dostawcy_bez_formul(konfig_luk):
     assert app_mod._komorka_csv('=HYPERLINK("x")') == """'=HYPERLINK("x")"""
     assert app_mod._komorka_csv("-5") == "'-5"
     assert app_mod._komorka_csv("Komoda") == "Komoda" and app_mod._komorka_csv(None) == ""
+
+
+# --- luki: odczyt ze zdjęcia --------------------------------------------------
+
+def test_pusta_wartosc_to_pytanie_o_odczyt_a_nie_o_zgodnosc(konfig_luk):
+    """Przy pustym polu „oceń, czy wartość z bazy się zgadza” nie ma sensu —
+    model ma odczytać wartość z listy albo powiedzieć „nie widać”."""
+    from atrybuty import wizja
+    t = wizja._tresc_pytania("Czy ten mebel stoi na widocznych nóżkach?", "Na nóżkach", "",
+                             ["nie", "tak"])
+    assert "trzeba ją odczytać" in t and "Nie zgaduj" in t and "„tak”" in t
+    t2 = wizja._tresc_pytania("Czy…", "Na nóżkach", "tak", ["nie", "tak"])
+    assert "Oceń, czy wartość z bazy zgadza się ze zdjęciem" in t2
+
+
+def test_lista_dozwolonych_ze_slownika_panelu(konfig_luk):
+    """Bez listy model odpowiadał prozą („raczej tak”), której nie da się zaimportować."""
+    from atrybuty import wizja
+    assert wizja._dozwolone("Na nóżkach") == ["nie", "tak"]
+
+
+def _baza_ze_zdjeciami(tmp_path, monkeypatch, odpowiedzi):
+    """Baza po imporcie + atrapa Gemini: {(produkt, atrybut): (werdykt, wartość, pewność)}."""
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    baza = tmp_path / "zdj.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza); monkeypatch.setattr(app_mod, "BAZA", baza)
+    produkty = [_pl(str(i), atrybuty={"Szerokość": "80", "Materiał": "płyta", "Oświetlenie": "brak",
+                                      "Liczba drzwi": "2-drzwiowe"}) for i in range(3)]
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    przebieg = db.zapisz_przebieg(con, "t.csv", produkty, pipeline.wszystkie_findingi(produkty, []))
+    monkeypatch.setattr(wizja, "wybierz_zdjecie", lambda poz, atr: ("http://x/1.jpg", "packshot"))
+    monkeypatch.setattr(wizja, "pobierz_zdjecie", lambda url, kat: b"jpg")
+    pytania = []
+
+    def atrapa(zdjecie, pytanie, atrybut, wartosc, dozwolone, model, ujecie=""):
+        pytania.append(wizja._tresc_pytania(pytanie, atrybut, wartosc, dozwolone, ujecie))
+        return wizja.Odpowiedz(*odpowiedzi[atrybut], uzasadnienie="widać cztery nóżki",
+                               tokenow_wejscia=500, tokenow_wyjscia=80)
+    monkeypatch.setattr(wizja, "zapytaj", atrapa)
+    return con, przebieg, pytania
+
+
+def test_odczyt_ze_zdjecia_zamienia_brak_w_propozycje(konfig_luk, tmp_path, monkeypatch):
+    """Cały obieg bez sieci: kandydaci luk → odczyt → brak staje się propozycją
+    z prawdopodobieństwem pod progiem automatu."""
+    from atrybuty import wizja
+    from atrybuty.model import PROG_AUTO
+    con, przebieg, pytania = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "Tak", 0.97)})
+    kand = wizja.kandydaci_luk(con, przebieg)
+    assert {k["atrybut"] for k in kand} == {"Na nóżkach"} and len(kand) == 3
+    wizja.przetworz(con, kand, echo=lambda *_: None)
+    assert all("trzeba ją odczytać" in p for p in pytania)
+    assert wizja.zamien_braki(con, przebieg) == 3
+    r = con.execute("SELECT regula_id, warstwa, proponowana_wartosc, pewnosc, grupa FROM findingi "
+                    "WHERE produkt_id='0' AND atrybut='Na nóżkach'").fetchone()
+    assert r[0] == "L2-LUKA-ZDJECIE" and r[1] == "L3" and r[2] == "tak"
+    assert r[3] == 0.8 and r[3] < PROG_AUTO
+    assert wizja.kandydaci_luk(con, przebieg) == []      # już odczytane — nie płacimy drugi raz
+    con.close()
+
+
+def test_nie_widac_i_wartosc_spoza_slownika_zostaja_brakiem(konfig_luk, tmp_path, monkeypatch):
+    from atrybuty import wizja
+    con, przebieg, _ = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "raczej tak", 0.9)})
+    wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    assert wizja.zamien_braki(con, przebieg) == 0
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE regula_id='L1-LUKA-BRAK'"
+                       " AND atrybut='Na nóżkach'").fetchone()[0] == 3
+    con.close()
+
+
+def test_odczyt_wraca_przy_kolejnym_imporcie_bez_ponownej_oplaty(konfig_luk, tmp_path, monkeypatch):
+    """Zapisany odczyt zamienia brak w propozycję także przy następnym imporcie."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import wizja
+    con, przebieg, _ = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "nie", 0.6)})
+    wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    con.close()
+    odczyty = wizja.odczyty_z_bazy(tmp_path / "zdj.db")
+    p = _pl("0", atrybuty={"Szerokość": "80", "Materiał": "płyta", "Oświetlenie": "brak",
+                           "Liczba drzwi": "2-drzwiowe"})
+    f = [f for f in pipeline.wszystkie_findingi([p], [], odczyty) if f.atrybut == "Na nóżkach"]
+    assert len(f) == 1 and f[0].regula_id == "L2-LUKA-ZDJECIE"
+    assert f[0].proponowana_wartosc == "nie" and f[0].pewnosc == 0.6
+
+
+def test_zakladka_pokazuje_szacunek_odczytu_ze_zdjec(konfig_luk, tmp_path, monkeypatch):
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    _baza_luk(tmp_path, monkeypatch)
+    html = TestClient(app_mod.app).get("/filtry").text
+    assert "Odczyt ze zdjęć" in html and "wizja --luki" in html and "~$" in html

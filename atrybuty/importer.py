@@ -16,7 +16,7 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-from . import config, db, kategorie, schema_gen, weryfikacja, zrodla
+from . import config, db, kategorie, schema_gen, weryfikacja, wizja, zrodla
 from .model import PROG_DO_WIZJI, WIDOCZNE_NA_ZDJECIU
 from .pipeline import BAZA, wczytaj_csv, wszystkie_findingi
 
@@ -76,7 +76,7 @@ def _przebieg(plik: Path, plik_kategorii: Path | None, regeneruj_schema: bool) -
             config.zapisz_schema(schema_gen.zbuduj(produkty))
 
         STAN["etap"] = "uruchamianie detektorów"
-        findingi = wszystkie_findingi(produkty, f_norm)
+        findingi = wszystkie_findingi(produkty, f_norm, wizja.odczyty_z_bazy(BAZA))
 
         STAN["etap"] = "zapis do bazy"
         con = db.polacz(BAZA)

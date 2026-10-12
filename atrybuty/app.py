@@ -718,6 +718,10 @@ def wizja_sprawdz(request: Request,
     r = con.execute(
         "SELECT * FROM werdykty_wizji WHERE produkt_id=? AND atrybut=? "
         "ORDER BY utworzono DESC LIMIT 1", (produkt_id, atrybut)).fetchone()
+    # Brak w filtrze z odczytem ze zdjęcia staje się od razu propozycją luki —
+    # widoczną w /filtry i trwałą przy kolejnych importach.
+    if not (stara or "").strip():
+        wizja.zamien_braki(con, _przebieg(con), produkt_id, atrybut)
     con.close()
     if not r or r["werdykt"] == "blad":
         return szablony.TemplateResponse(
@@ -844,12 +848,20 @@ def filtry(request: Request, kategoria: str = "", atrybut: str = "",
                      "producenci": zapytania.producenci_filtra(con, przebieg, kategoria, atrybut)}
     kategorie_db = [r[0] for r in con.execute(
         "SELECT DISTINCT kategoria FROM produkty ORDER BY 1")]
+    wizja.przygotuj_baze(con)
+    do_zdjec = wizja.kandydaci_luk(con, przebieg) if przebieg else []
+    szac = wizja.przetworz(con, do_zdjec, na_sucho=True) if do_zdjec else None
+    wg_atr_zdjec: dict[str, int] = {}
+    for k in do_zdjec:
+        wg_atr_zdjec[k["atrybut"]] = wg_atr_zdjec.get(k["atrybut"], 0) + 1
     con.close()
     razem = {k: sum(w[k] for w in wiersze)
              for k in ("bez_wartosci", "propozycji", "brakow", "sprzecznych")}
     return szablony.TemplateResponse(request, "filtry.html", {
         "request": request, "wiersze": wiersze, "razem": razem, "szczegoly": szczegoly,
         "konfiguracja": config.filtry(), "kategorie_db": kategorie_db,
+        "do_zdjec": len(do_zdjec), "szac_zdjec": szac,
+        "wg_atr_zdjec": sorted(wg_atr_zdjec.items(), key=lambda x: -x[1]),
         "atrybuty_panelu": sorted(panel_format.wczytaj_etykiety()),
         "nazwy_kat": kategorie.nazwy_kategorii(),
         "komunikat": komunikat, "blad": bool(blad),

@@ -4,7 +4,12 @@
   <div class="wizja blad">Nie udało się sprawdzić: {{ blad }}</div>
 {% else %}
   <div class="wizja">
+    {% if not stara and w.werdykt == 'niezgodne' %}
+    {# Puste pole: „niezgodne” znaczy tu „odczytano wartość” — tak to pokazujemy. #}
+    <span class="werdykt zgodne">Gemini odczytał</span>
+    {% else %}
     <span class="werdykt {{ w.werdykt }}">Gemini: {{ w.werdykt.replace('_', ' ') }}</span>
+    {% endif %}
     {% if w.wartosc_ze_zdjecia and w.werdykt == 'niezgodne' %}
       → <span class="nowa">{{ w.wartosc_ze_zdjecia }}</span>
     {% endif %}

@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 55 tras, 254 testy (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 55 tras, 260 testów (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 
@@ -96,6 +96,8 @@ frameworka, bez ORM-a. 55 tras, 254 testy (`python3 -m pytest -q`).
   i rodziny (`config/luki.yaml`) z prawdopodobieństwem, braki bez propozycji
   jako `L1-LUKA-BRAK`. Model w rodzinie tylko po kodzie producenta — same
   wymiary i `baza_nazwy` łączyły różne meble (plan: `docs/PLAN-LUKI.md`).
+  Braki widoczne na zdjęciu odczytuje `wizja.kandydaci_luk` / `wizja --luki`
+  (płatne, tylko na żądanie) → `L2-LUKA-ZDJECIE`, najwyżej 0,80.
 - `weryfikacja.py` — domknięcie pętli: czy wysłana poprawka faktycznie weszła.
 - `reguly.py`, `config.py` — reguły i konfiguracja z YAML-i, sterowane z UI.
 

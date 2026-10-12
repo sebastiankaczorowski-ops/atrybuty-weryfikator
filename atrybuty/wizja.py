@@ -225,9 +225,26 @@ class Odpowiedz:
     z_cache: bool = False
 
 
+# Pusta wartość w bazie to nie „sprawdź”, tylko „odczytaj” — luka w filtrze.
+# Sufiks wchodzi do haszu pytania, żeby odpowiedzi z dawnego promptu
+# „oceń zgodność z (pusta)” nie wracały z cache jako odczyt.
+TRYB_ODCZYTU = "odczyt-luki-v1"
+
+
 def _tresc_pytania(pytanie: str, atrybut: str, wartosc_w_bazie: str,
                    dozwolone: list[str], ujecie: str = "") -> str:
     lista = ", ".join(f"„{d}”" for d in dozwolone) if dozwolone else "(wartość opisowa)"
+    if not (wartosc_w_bazie or "").strip():
+        return ((f"Rodzaj zdjęcia: {ujecie}\n" if ujecie else "")
+                + f"Pytanie: {pytanie}\n"
+                f"Atrybut w bazie: {atrybut}\n"
+                f"Wartość zapisana w bazie: (pusta — trzeba ją odczytać)\n"
+                f"Dozwolone wartości: {lista}\n\n"
+                "Odczytaj wartość ze zdjęcia. Jeśli cechę widać jednoznacznie — "
+                "werdykt 'niezgodne' (baza jest pusta, więc różni się od zdjęcia) "
+                "i w 'wartosc_ze_zdjecia' dokładnie jedna wartość z listy dozwolonych. "
+                "Jeśli nie da się tego stwierdzić ze zdjęcia — 'nie_widac'. "
+                "Nie zgaduj z typowego wyglądu takich mebli.")
     return ((f"Rodzaj zdjęcia: {ujecie}\n" if ujecie else "")
             + f"Pytanie: {pytanie}\n"
             f"Atrybut w bazie: {atrybut}\n"
@@ -375,7 +392,14 @@ def wybierz_zdjecie(poz: dict, atrybut: str) -> tuple[str, str]:
 
 
 def _dozwolone(atrybut: str) -> list[str]:
-    return config.slowniki().get("atrybuty", {}).get(atrybut, {}).get("wartosci", []) or []
+    """Lista wartości do wyboru: ręczny słownik, a gdy go nie ma — słownik
+    panelu. Bez listy model odpowiada prozą („raczej tak”), której nie da się
+    zaimportować."""
+    reczne = config.slowniki().get("atrybuty", {}).get(atrybut, {}).get("wartosci", []) or []
+    if reczne:
+        return reczne
+    from . import panel_format
+    return sorted(set((panel_format.wczytaj_etykiety().get(atrybut) or {}).values()))
 
 
 def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
@@ -413,7 +437,9 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
         if not url:
             podsumowanie["pominietych"] += 1
             continue
-        h = hasz_zapytania(url, pytanie, poz["stara_wartosc"] or "", model)
+        pusta = not (poz["stara_wartosc"] or "").strip()
+        h = hasz_zapytania(url, pytanie + ("|" + TRYB_ODCZYTU if pusta else ""),
+                           poz["stara_wartosc"] or "", model)
         z_cache = con.execute(
             "SELECT odpowiedz, tokenow_wejscia, tokenow_wyjscia FROM cache_wizji WHERE hasz=?",
             (h,)).fetchone()
@@ -692,3 +718,101 @@ def _zparsuj_wymiary(surowe: dict) -> OdpowiedzWymiary:
         tokenow_wejscia=int(uzycie.get("promptTokenCount") or 0),
         tokenow_wyjscia=int(uzycie.get("candidatesTokenCount") or 0),
     )
+
+
+# --- luki w filtrach: odczyt brakującej wartości ze zdjęcia -----------------
+
+def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = None,
+                  atrybut: str = "", producent: str = "", losowo: bool = False) -> list[dict]:
+    """Braki bez propozycji (L1-LUKA-BRAK), które da się odczytać ze zdjęcia.
+
+    Osobno od `kandydaci`: brak ma pewność 1,0 właśnie po to, żeby nie wpadał
+    do zwykłej bramki — tu trafia tylko wtedy, gdy człowiek uruchomi odczyt.
+    """
+    obslugiwane = ",".join(f"'{a}'" for a in sorted(obslugiwane_atrybuty()))
+    q = f"""
+      SELECT f.produkt_id, f.atrybut, f.stara_wartosc, f.regula_id, f.pewnosc,
+             p.nazwa, p.producent, p.kategoria, p.zdjecie, p.zdjecia
+      FROM findingi f JOIN produkty p ON p.id = f.produkt_id
+      LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
+                         AND d.hasz_starej=f.hasz_starej
+      LEFT JOIN werdykty_wizji w ON w.produkt_id = f.produkt_id AND w.atrybut = f.atrybut
+      WHERE f.przebieg_id = :przebieg AND f.regula_id = 'L1-LUKA-BRAK'
+        AND d.status IS NULL AND w.werdykt IS NULL
+        AND p.zdjecie <> '' AND f.atrybut IN ({obslugiwane})
+    """
+    par: dict = {"przebieg": przebieg}
+    if atrybut:
+        q += " AND f.atrybut = :atrybut"; par["atrybut"] = atrybut
+    if producent:
+        q += " AND p.producent = :producent"; par["producent"] = producent
+    q += " ORDER BY RANDOM()" if losowo else " ORDER BY f.atrybut, p.producent, f.produkt_id"
+    if limit:
+        q += " LIMIT :limit"; par["limit"] = limit
+    return [dict(r) for r in con.execute(q, par)]
+
+
+def odczyty_luk(con: sqlite3.Connection) -> dict[tuple[str, str], dict]:
+    """{(produkt, atrybut): odczyt} — wartości odczytane ze zdjęcia dla pustych pól.
+
+    Trwałe między importami: kolejny import zamienia brak w propozycję bez
+    ponownego płacenia za to samo zdjęcie.
+    """
+    przygotuj_baze(con)
+    q = """SELECT produkt_id, atrybut, wartosc_ze_zdjecia, pewnosc, uzasadnienie, model
+           FROM werdykty_wizji
+           WHERE werdykt = 'niezgodne' AND TRIM(IFNULL(wartosc_w_bazie, '')) = ''
+             AND TRIM(IFNULL(wartosc_ze_zdjecia, '')) <> ''"""
+    return {(r[0], r[1]): {"wartosc": r[2], "pewnosc": float(r[3] or 0),
+                           "uzasadnienie": r[4] or "", "model": r[5] or ""}
+            for r in con.execute(q)}
+
+
+def odczyty_z_bazy(sciezka: Path) -> dict[tuple[str, str], dict]:
+    """Jak `odczyty_luk`, ale dla importu, który otwiera bazę dopiero później."""
+    if not Path(sciezka).exists():
+        return {}
+    con = sqlite3.connect(str(sciezka))
+    try:
+        if not con.execute("SELECT 1 FROM sqlite_master WHERE name='werdykty_wizji'").fetchone():
+            return {}
+        return odczyty_luk(con)
+    finally:
+        con.close()
+
+
+def zamien_braki(con: sqlite3.Connection, przebieg: int, produkt_id: str = "",
+                 atrybut: str = "") -> int:
+    """Otwarte braki z odczytem ze zdjęcia → propozycje L2-LUKA-ZDJECIE w tym przebiegu.
+
+    Ten sam klucz decyzji (pusta stara wartość), więc to ta sama komórka
+    w kolejce — tylko teraz z wartością i prawdopodobieństwem do akceptacji.
+    """
+    from . import luki, panel_format
+    odczyty = odczyty_luk(con)
+    if not odczyty:
+        return 0
+    etykiety = panel_format.wczytaj_etykiety()
+    q = """SELECT f.id, f.produkt_id, f.atrybut, p.kategoria, p.producent
+           FROM findingi f JOIN produkty p ON p.id = f.produkt_id
+           LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
+                              AND d.hasz_starej=f.hasz_starej
+           WHERE f.przebieg_id = ? AND f.regula_id = 'L1-LUKA-BRAK' AND d.status IS NULL"""
+    par: list = [przebieg]
+    if produkt_id:
+        q += " AND f.produkt_id = ?"; par.append(produkt_id)
+    if atrybut:
+        q += " AND f.atrybut = ?"; par.append(atrybut)
+    zmiany = []
+    for r in con.execute(q, par).fetchall():
+        odczyt = odczyty.get((r[1], r[2]))
+        if not odczyt:
+            continue
+        f = luki.propozycja_ze_zdjecia(r[1], r[2], r[3], r[4], odczyt, etykiety)
+        if f:
+            zmiany.append((f.regula_id, f.warstwa, f.waga, f.pewnosc, f.proponowana_wartosc,
+                           f.dowod, f.grupa, r[0]))
+    con.executemany("UPDATE findingi SET regula_id=?, warstwa=?, waga=?, pewnosc=?,"
+                    " proponowana_wartosc=?, dowod=?, grupa=? WHERE id=?", zmiany)
+    con.commit()
+    return len(zmiany)

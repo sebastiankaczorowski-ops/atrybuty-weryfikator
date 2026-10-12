@@ -17,7 +17,7 @@ import sqlite3
 from dataclasses import dataclass
 
 from . import config
-from .model import INFO, KRYTYCZNA, L1, L2, SREDNIA
+from .model import INFO, KRYTYCZNA, L1, L2, L3, SREDNIA
 
 
 @dataclass
@@ -102,6 +102,8 @@ WBUDOWANE: list[tuple[str, str, str, str]] = [
      "Luka w filtrze: słowo w nazwie wyznacza wartość (LED, welur…)"),
     ("L2-LUKA-RODZINA", L2, SREDNIA,
      "Luka w filtrze: reszta kolekcji albo wariantów modelu zgodnie ma wartość"),
+    ("L2-LUKA-ZDJECIE", L3, SREDNIA,
+     "Luka w filtrze: wartość odczytana ze zdjęcia przez Gemini (najwyżej 80%)"),
     ("L1-LUKA-BRAK", L1, INFO,
      "Luka w filtrze bez propozycji: atrybut-filtr pusty, żadne źródło go nie zna"),
     ("L2-DUPLIKAT", L2, INFO,

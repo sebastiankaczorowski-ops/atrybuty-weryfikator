@@ -67,6 +67,23 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
   Nic nie zmienia się samo: propozycja trafia do pliku importu dopiero po akceptacji.
   Liczby z ostatniego importu; po zmianie konfiguracji przelicz import.</p>
 
+{% if do_zdjec %}
+<section class="szczegoly" id="zdjecia">
+  <h2>Odczyt ze zdjęć — {{ '{:,}'.format(do_zdjec).replace(',', ' ') }} braków da się sprawdzić</h2>
+  <p class="legenda">Braki bez propozycji w filtrach widocznych na zdjęciu
+    ({% for a, n in wg_atr_zdjec %}{{ a }} {{ n }}{{ ', ' if not loop.last }}{% endfor %}).
+    Gemini dostaje jedno zamknięte pytanie i listę dozwolonych wartości; gdy nie widać — mówi
+    „nie widać”. Odczyt staje się propozycją z prawdopodobieństwem najwyżej 80% — zawsze do
+    akceptacji. Szacunek kosztu całości: <b>~${{ '%.2f'|format(szac_zdjec.koszt_usd) }}</b>
+    (Flash, ~{{ '{:,}'.format(szac_zdjec.tok_we).replace(',', ' ') }} tokenów wejścia).
+    Pojedynczy brak sprawdzisz przyciskiem „Sprawdź zdjęciem” w kolejce; całość albo próbkę
+    uruchamia się z konsoli:</p>
+  <pre><code>python -m atrybuty.pipeline wizja --luki --limit 100 --losowo --na-sucho</code></pre>
+  <p class="legenda">Bez <code>--na-sucho</code> zapytania są płatne. Zacznij od próbki
+    (np. 100 losowych) i sprawdź trafność w kolejce, zanim puścisz resztę.</p>
+</section>
+{% endif %}
+
 {% if szczegoly %}
 <section class="szczegoly" id="szczegoly">
   <h2>{{ nazwy_kat.get(szczegoly.kategoria, szczegoly.kategoria) }} · {{ szczegoly.atrybut }} — kto ma braki</h2>
@@ -108,7 +125,8 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
         {%- set z = w.zrodla %}{% if z.podtyp %}podkat. {{ z.podtyp }}{% endif %}
         {%- if z.nazwa %}{% if z.podtyp %} · {% endif %}nazwa {{ z.nazwa }}{% endif %}
         {%- if z.rodzina %}{% if z.podtyp or z.nazwa %} · {% endif %}rodzina {{ z.rodzina }}{% endif %}
-        {%- if z.inne %}{% if z.podtyp or z.nazwa or z.rodzina %} · {% endif %}inne reguły {{ z.inne }}{% endif %}</div>{% endif %}</td>
+        {%- if z.zdjecie %}{% if z.podtyp or z.nazwa or z.rodzina %} · {% endif %}zdjęcie {{ z.zdjecie }}{% endif %}
+        {%- if z.inne %}{% if z.podtyp or z.nazwa or z.rodzina or z.zdjecie %} · {% endif %}inne reguły {{ z.inne }}{% endif %}</div>{% endif %}</td>
       <td>{{ w.brakow }}</td><td>{{ w.sprzecznych or '' }}</td>
       <td class="l">
         {% if w.propozycji or w.sprzecznych %}<a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut, 'regula': 'L2-LUKA-*'}|urlencode }}">propozycje</a>{% endif %}
