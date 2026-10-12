@@ -14,7 +14,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from . import (config, db, detektory, kategorie, normalizacja, schema_gen,
+from . import (config, db, detektory, kategorie, luki, normalizacja, schema_gen,
                skladowe, weryfikacja, wizja, zdjecia as zdjecia_mod, zrodla)
 from .model import Finding, Produkt, oszacuj_kompletnosc
 
@@ -151,7 +151,14 @@ def wszystkie_findingi(produkty: list[Produkt], f_norm: list[Finding]) -> list[F
     każda składała findingi po swojemu i nowa warstwa weszła tylko do jednej,
     więc przez pół dnia nie było jej widać w kolejce.
     """
-    return detektory.uruchom(produkty, f_norm) + skladowe.znajdz(produkty)
+    f_l0 = skladowe.znajdz(produkty)
+    # L0 i luka dla tej samej pustej komórki mają ten sam klucz decyzji
+    # (produkt, atrybut, hasz pustej starej) — rozstrzygnięcie jednego ukryłoby
+    # drugie. Wygrywa L0: wartość już jest, trzeba ją tylko przenieść (LUKI-01).
+    z_l0 = {(f.produkt_id, f.atrybut) for f in f_l0}
+    f_det = [f for f in detektory.uruchom(produkty, f_norm)
+             if not (f.regula_id in luki.REGULY and (f.produkt_id, f.atrybut) in z_l0)]
+    return f_det + f_l0
 
 
 def komenda_import(sciezka: str, plik_kategorii: str | None = None) -> None:
@@ -434,6 +441,10 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--potwierdzam", default="", metavar="TAK",
                    help="bez tego nic się nie kasuje")
 
+    fz = sub.add_parser("filtry-z-diagnozy",
+                        help="zasiej config/filtry.yaml z pomiarów filtrów strony")
+    fz.add_argument("plik", nargs="?", default="docs/diagnoza-filtrow-2026-10-10.csv")
+
     r = sub.add_parser("rozpoznaj-arkusz",
                        help="przejdź zakładki arkusza RAW FILES i zaproponuj źródła L4")
     r.add_argument("url", help="adres arkusza Google (bez #gid=)")
@@ -452,11 +463,26 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "wyczysc":
         komenda_wyczysc(args.zakres, args.z_wizja, args.pliki_partii,
                         args.potwierdzam)
+    elif args.cmd == "filtry-z-diagnozy":
+        komenda_filtry_z_diagnozy(args.plik)
     elif args.cmd == "rozpoznaj-arkusz":
         komenda_rozpoznaj_arkusz(args.url)
     else:
         komenda_raport()
     return 0
+
+
+def komenda_filtry_z_diagnozy(plik: str) -> None:
+    with open(plik, encoding="utf-8") as f:
+        wiersze = list(csv.DictReader(f))
+    kategorie_, nieznane = luki.ziarno_z_diagnozy(wiersze, config.mapa_sklepu())
+    sciezka = config.zapisz_filtry(kategorie_, {"zrodlo": Path(plik).name,
+                                               "opis": "diagnoza next.twojemeble.pl"})
+    print(f"Zapisano {sciezka}: {len(kategorie_)} kategorii, "
+          f"{sum(len(v) for v in kategorie_.values())} par kategoria–filtr")
+    if nieznane:
+        print("Kategorie strony bez odpowiednika u nas (dopisz ręcznie w /filtry): "
+              + ", ".join(nieznane))
 
 
 def komenda_rozpoznaj_arkusz(url: str) -> None:

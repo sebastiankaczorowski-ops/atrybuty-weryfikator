@@ -104,7 +104,13 @@ def _warunki(fl: Filtr) -> tuple[str, dict]:
         sql += " AND p.kategoria = :kategoria"; par["kategoria"] = fl.kategoria
     if fl.producent:
         sql += " AND p.producent = :producent"; par["producent"] = fl.producent
-    if fl.regula:
+    if fl.regula.endswith("*"):
+        # rodzina reguł: „L2-LUKA-*” — jeden link z /filtry obejmuje wszystkie
+        # źródła propozycji, a zasięg akcji grupowej idzie tym samym warunkiem
+        sql += " AND f.regula_id LIKE :regula ESCAPE '\\'"
+        par["regula"] = (fl.regula[:-1].replace("\\", "\\\\").replace("%", "\\%")
+                         .replace("_", "\\_") + "%")
+    elif fl.regula:
         sql += " AND f.regula_id = :regula"; par["regula"] = fl.regula
     if fl.warstwa:
         sql += " AND f.warstwa = :warstwa"; par["warstwa"] = fl.warstwa
@@ -753,3 +759,125 @@ def braki_statystyki(con: sqlite3.Connection) -> dict:
         "producenci": wg_producenta,
         "kategorie": wg_kategorii,
     }
+
+
+# --- luki w filtrach (/filtry) ----------------------------------------------
+
+def _efektywne(atrybuty: str | None, skladowe: str | None, odciete: int) -> dict:
+    """Jak `luki.wartosci_efektywne`, na wierszu z bazy: atrybut albo
+    nieodcięte składowe — to, co widzi front."""
+    a = {k: v for k, v in json.loads(atrybuty or "{}").items() if v and str(v).strip()}
+    if odciete or not skladowe:
+        return a
+    s = {k: v for k, v in json.loads(skladowe or "{}").items() if v and str(v).strip()}
+    return {**s, **a}
+
+
+def _produkty_filtrow(con: sqlite3.Connection, kategoria: str = "") -> list[sqlite3.Row]:
+    # Produkty bez danych (pusty/szczątkowy) są na /braki i nie dostają luk —
+    # liczymy pokrycie na tym samym zbiorze, na którym powstają findingi.
+    q = ("SELECT id, nazwa, producent, kolekcja, kategoria, atrybuty, skladowe, "
+         "skladowe_odciete FROM produkty WHERE kompletnosc NOT IN ('pusty','szczatkowy')")
+    par: tuple = ()
+    if kategoria:
+        q += " AND kategoria = ?"; par = (kategoria,)
+    return con.execute(q, par).fetchall()
+
+
+def _otwarte_luki(con: sqlite3.Connection, przebieg: int, kategoria: str = "",
+                  atrybut: str = "") -> dict[tuple[str, str], dict]:
+    """{(produkt, atrybut): {regula, propozycja, pewnosc}} — otwarte zgłoszenia luk.
+
+    Także z innych reguł, jeśli dotyczą pustej komórki: `luki.uzgodnij` zostawia
+    np. L2-NAZWA-UZUPELNIA zamiast luki — zakładka musi widzieć to zgłoszenie,
+    inaczej brak wyglądałby na niezgłoszony (inspekcja R11).
+    """
+    q = """SELECT f.produkt_id, f.atrybut, f.regula_id, f.proponowana_wartosc, f.pewnosc
+           FROM findingi f JOIN produkty p ON p.id = f.produkt_id
+           LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
+                              AND d.hasz_starej=f.hasz_starej
+           WHERE f.przebieg_id = ? AND d.status IS NULL
+             AND (f.regula_id LIKE 'L2-LUKA-%' OR f.regula_id = 'L1-LUKA-BRAK'
+                  OR f.stara_wartosc IS NULL)"""
+    par: list = [przebieg]
+    if kategoria:
+        q += " AND p.kategoria = ?"; par.append(kategoria)
+    if atrybut:
+        q += " AND f.atrybut = ?"; par.append(atrybut)
+    return {(r[0], r[1]): {"regula": r[2], "propozycja": r[3], "pewnosc": r[4]}
+            for r in con.execute(q, par)}
+
+
+def pokrycie_filtrow(con: sqlite3.Connection, przebieg: int | None) -> list[dict]:
+    """Kategoria × filtr z config/filtry.yaml: pokrycie i otwarte luki."""
+    from . import config
+    filtry = config.filtry()
+    otwarte = _otwarte_luki(con, przebieg) if przebieg else {}
+    wg_kat: dict[str, list] = {}
+    for r in _produkty_filtrow(con):
+        wg_kat.setdefault(r["kategoria"], []).append(
+            (r["id"], _efektywne(r["atrybuty"], r["skladowe"], r["skladowe_odciete"])))
+    out = []
+    for kat, atrybuty in sorted(filtry.items()):
+        lista = wg_kat.get(kat, [])
+        for atr in atrybuty:
+            z = brak = sprzecznych = 0
+            zrodla = {"podtyp": 0, "nazwa": 0, "rodzina": 0, "inne": 0}
+            for pid, w in lista:
+                o = otwarte.get((pid, atr))
+                if atr in w:
+                    z += 1
+                    # sprzeczność podkategorii dotyczy wypełnionej komórki —
+                    # to poprawka, nie uzupełnienie luki (inspekcja R05)
+                    if o and o["regula"] == "L2-LUKA-PODTYP-SPRZECZNE":
+                        sprzecznych += 1
+                    continue
+                if not o:
+                    continue
+                if o["propozycja"] is None:
+                    brak += 1             # zgłoszony brak bez propozycji, z dowolnej reguły
+                else:
+                    zrodla[{"L2-LUKA-PODTYP": "podtyp", "L2-LUKA-NAZWA": "nazwa",
+                            "L2-LUKA-RODZINA": "rodzina"}.get(o["regula"], "inne")] += 1
+            out.append({"kategoria": kat, "atrybut": atr, "produktow": len(lista),
+                        "z_wartoscia": z, "bez_wartosci": len(lista) - z,
+                        "pokrycie": (z / len(lista)) if lista else None,
+                        "propozycji": sum(zrodla.values()), "zrodla": zrodla,
+                        "brakow": brak, "sprzecznych": sprzecznych})
+    return out
+
+
+def braki_filtra(con: sqlite3.Connection, przebieg: int | None, kategoria: str,
+                 atrybut: str, producent: str = "") -> list[dict]:
+    """Produkty kategorii bez wartości filtra — z propozycją, jeśli jest."""
+    otwarte = _otwarte_luki(con, przebieg, kategoria, atrybut) if przebieg else {}
+    out = []
+    for r in _produkty_filtrow(con, kategoria):
+        if producent and r["producent"] != producent:
+            continue
+        if atrybut in _efektywne(r["atrybuty"], r["skladowe"], r["skladowe_odciete"]):
+            continue
+        o = otwarte.get((r["id"], atrybut)) or {}
+        out.append({"id": r["id"], "nazwa": r["nazwa"], "producent": r["producent"],
+                    "kolekcja": r["kolekcja"], "regula": o.get("regula", ""),
+                    "propozycja": o.get("propozycja"), "pewnosc": o.get("pewnosc")})
+    return out
+
+
+def producenci_filtra(con: sqlite3.Connection, przebieg: int | None, kategoria: str,
+                      atrybut: str) -> list[dict]:
+    """Kto odpowiada za lukę: braki według producenta, od największych."""
+    wszystkie: dict[str, int] = {}
+    for r in _produkty_filtrow(con, kategoria):
+        wszystkie[r["producent"]] = wszystkie.get(r["producent"], 0) + 1
+    braki: dict[str, dict] = {}
+    for b in braki_filtra(con, przebieg, kategoria, atrybut):
+        w = braki.setdefault(b["producent"], {"producent": b["producent"], "bez_wartosci": 0,
+                                               "propozycji": 0})
+        w["bez_wartosci"] += 1
+        w["propozycji"] += b["propozycja"] is not None
+    out = []
+    for p, w in braki.items():
+        w["produktow"] = wszystkie.get(p, 0)
+        out.append(w)
+    return sorted(out, key=lambda w: -w["bez_wartosci"])

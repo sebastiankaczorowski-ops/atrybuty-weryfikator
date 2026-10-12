@@ -3,6 +3,32 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-12 · Luki w filtrach: czy produkty mają to, po czym klient filtruje
+
+- Nowa zakładka **„luki w filtrach”** (`/filtry`). Dla każdej kategorii i każdego
+  filtra ze strony sklepu: ile produktów ma wartość, ile nie, ile braków ma już
+  propozycję. Klik w filtr pokazuje, **którzy producenci** mają braki, i daje
+  **CSV** listy produktów bez wartości — do wysłania dostawcy.
+- **Konfiguracja filtrów** (które atrybuty są filtrami w której kategorii)
+  zasiana z diagnozy next.twojemeble.pl z 10.10 i edytowalna w tej zakładce.
+- Przy każdym imporcie narzędzie szuka wartości dla pustych filtrów i wrzuca je
+  do kolejki jako **propozycje z prawdopodobieństwem**:
+  - z **podkategorii** („Komoda na nóżkach” → Na nóżkach: tak) — 92%;
+    sprzeczność podkategorii z atrybutem zgłaszana jako błąd;
+  - z **nazwy** („LED” → Oświetlenie: w zestawie, „welur” → obicie) — 80%;
+  - z **rodziny**: reszta kolekcji (nóżki, obicie) albo wariantów tego samego
+    modelu po kodzie producenta (drzwi, szuflady, wyposażenie) — im więcej
+    zgodnych, tym wyżej, np. 3 z 3 → 80%, 12 z 12 → 93%. Wyposażenie (oświetlenie,
+    materac, stelaż, pojemnik) najwyżej 80% — zawsze ocena człowieka.
+- **Braki bez propozycji też są w kolejce** (`L1-LUKA-BRAK`), pogrupowane po
+  kategorii, filtrze i producencie — rozstrzygasz je grupą albo wpisujesz wartość.
+- Kolejkę można zawęzić do wszystkich propozycji luk naraz (link z `/filtry`).
+- Nic nie zmienia się samo: propozycja trafia do pliku importu po akceptacji.
+
+Na eksporcie z 30.09: ok. 2 tys. propozycji, 28 sprzeczności i 48,6 tys. braków bez propozycji
+w ok. 2,2 tys. grup. Największe braki (np. ADRK w łóżkach) wymagają danych od
+producenta — kolejny etap to feedy producentów i zdjęcia.
+
 ## 2026-10-10 · Poprawka: EAN-y z eksportu nie trafiały do bazy
 
 - **Co było źle:** nagłówki eksportu porównujemy małymi literami, a lista

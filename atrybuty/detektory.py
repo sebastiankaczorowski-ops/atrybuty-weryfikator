@@ -10,7 +10,7 @@ import re
 from collections import Counter, defaultdict
 from typing import Iterable
 
-from . import config, kategorie, schema_gen
+from . import config, kategorie, luki, schema_gen
 from .model import INFO, KRYTYCZNA, L1, L2, SREDNIA, Finding, Produkt
 from .tekst import baza_nazwy, liczebniki_z_nazwy, norm, wymiary_z_nazwy
 
@@ -348,6 +348,7 @@ def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = 
     # produkcie, który nie ma ŻADNEGO atrybutu, to nie finding do poprawy
     # tylko brak danych u źródła. Lądują na osobnej liście (/braki).
     do_analizy = [p for p in produkty if not p.do_zrodla]
+    kategoria_produktu = {p.id: p.kategoria for p in produkty}
     bez_danych = {p.id for p in produkty if p.do_zrodla}
 
     out: list[Finding] = [f for f in findingi_normalizacji if f.produkt_id not in bez_danych]
@@ -359,6 +360,20 @@ def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = 
         out += l2_nazwa_vs_atrybuty(p)
     out += l2_rodzina(do_analizy)
     out += l2_duplikaty(do_analizy)
+
+    # Luki w filtrach. Brak atrybutu-filtra to jedno zgłoszenie z luk —
+    # L1-BRAK-WYMAGANEGO dla tej samej komórki byłby drugim kliknięciem
+    # z tym samym kluczem decyzji, więc go zdejmujemy.
+    filtry = config.filtry()
+    if filtry:
+        out = [f for f in out if not (
+            f.regula_id == "L1-BRAK-WYMAGANEGO"
+            and f.atrybut in filtry.get(kategoria_produktu.get(f.produkt_id, ""), ()))]
+        # Wyłączone reguły odpadają PRZED uzgadnianiem: wyłączona reguła nie może
+        # zabrać komórki włączonemu źródłu ani zdjąć braku (inspekcja R09).
+        wyl = config.wylaczone()
+        out = [f for f in out if f.regula_id not in wyl]
+        out = luki.uzgodnij(out, luki.uruchom(do_analizy, wylaczone=wyl))
 
     # Reguły wyłączone z podstrony /reguly nie trafiają do kolejki.
     # Filtrujemy na końcu, a nie w każdym detektorze osobno — jedno miejsce,

@@ -1,0 +1,156 @@
+{# Luki w filtrach: czy produkty mają atrybuty, po których klient filtruje.
+
+   Pokrycie liczone na produktach z danymi (bez pustych i szczątkowych z /braki),
+   „wartość” = atrybut albo nieodcięte składowe — to, co widzi front. #}
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luki w filtrach — atrybuty OXM</title>
+{% include "_styl.html" %}
+<style>
+table.pk{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line)}
+table.pk th,table.pk td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;
+                        white-space:nowrap;font-variant-numeric:tabular-nums}
+table.pk th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+            background:var(--surface-2);font-weight:600}
+table.pk td.l,table.pk th.l{text-align:left}
+table.pk tr.kat td{background:var(--surface-2);font-weight:600;text-align:left}
+.pasek{display:inline-block;width:80px;height:7px;border-radius:4px;background:var(--surface-2);
+       vertical-align:middle;margin-left:6px;overflow:hidden;position:relative}
+.pasek b{position:absolute;inset:0 auto 0 0;background:var(--ok)}
+.pasek.zle b{background:var(--crit)}
+.legenda{color:var(--muted);font-size:12.5px;max-width:960px;margin:0}
+.kafle{display:flex;flex-wrap:wrap;gap:12px}
+.kafel{background:var(--surface);border:1px solid var(--line);padding:10px 14px;min-width:180px;
+       display:flex;flex-direction:column;gap:2px}
+.kafel b{font-size:22px}
+.kafel span{color:var(--muted);font-size:12.5px}
+.szczegoly{background:var(--surface);border:1px solid var(--line);padding:14px 16px}
+.szczegoly h2{font-size:15px;margin:0 0 8px}
+details.konf .tresc{display:flex;flex-direction:column;gap:12px}
+.konf-kat{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.konf-kat b{min-width:130px}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);
+      border-radius:999px;padding:1px 4px 1px 10px;font-size:12.5px;background:var(--surface)}
+.chip button{border:none;background:none;padding:0 6px;cursor:pointer;color:var(--muted)}
+.chip button:hover{color:var(--crit)}
+</style>
+{% include "_motyw.html" %}
+</head>
+<body>
+<header>
+  <h1>Luki w filtrach</h1>
+  <span class="zrodlo">produkt bez wartości filtra znika z wyników po zaznaczeniu filtra</span>
+  <nav>
+    <a href="/anomalie">← kolejka weryfikacji</a>
+    <a href="/braki">braki danych</a>
+    <a href="/producenci">producenci</a>
+    <a href="/reguly">reguły</a>
+    <a href="/zmiany">co nowego</a>
+  </nav>
+</header>
+
+<main>
+{% if komunikat %}<div class="komunikat {{ 'zle' if blad else 'ok' }}">{{ komunikat }}</div>{% endif %}
+
+<div class="kafle">
+  <div class="kafel"><b>{{ '{:,}'.format(razem.bez_wartosci).replace(',', ' ') }}</b><span>brakujących wartości w filtrach</span></div>
+  <div class="kafel"><b>{{ '{:,}'.format(razem.propozycji).replace(',', ' ') }}</b><span>z propozycją do akceptacji</span></div>
+  <div class="kafel"><b>{{ '{:,}'.format(razem.brakow).replace(',', ' ') }}</b><span>bez propozycji — trzeba ze źródła</span></div>
+  <div class="kafel"><b>{{ '{:,}'.format(razem.sprzecznych).replace(',', ' ') }}</b><span>wartości sprzecznych z podkategorią</span></div>
+</div>
+
+<p class="legenda">Propozycje pochodzą z podkategorii sklepu, słów w nazwie i reszty kolekcji albo
+  wariantów tego samego modelu. Każda ma prawdopodobieństwo — widać je w kolejce przy zgłoszeniu.
+  Nic nie zmienia się samo: propozycja trafia do pliku importu dopiero po akceptacji.
+  Liczby z ostatniego importu; po zmianie konfiguracji przelicz import.</p>
+
+{% if szczegoly %}
+<section class="szczegoly" id="szczegoly">
+  <h2>{{ nazwy_kat.get(szczegoly.kategoria, szczegoly.kategoria) }} · {{ szczegoly.atrybut }} — kto ma braki</h2>
+  <p class="legenda">
+    <a href="/filtry/braki.csv?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut}|urlencode }}">Pobierz CSV wszystkich produktów bez wartości</a>
+    · <a href="/anomalie?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut, 'regula': 'L2-LUKA-*'}|urlencode }}">propozycje w kolejce</a>
+    · <a href="/anomalie?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut, 'regula': 'L1-LUKA-BRAK'}|urlencode }}">braki w kolejce</a>
+  </p>
+  <table class="pk" style="width:auto;min-width:520px">
+    <thead><tr><th class="l">Producent</th><th>Bez wartości</th><th>Jego produktów</th><th>Z propozycją</th><th class="l">CSV</th></tr></thead>
+    <tbody>
+    {% for p in szczegoly.producenci %}
+      <tr><td class="l">{{ p.producent or '—' }}</td><td>{{ p.bez_wartosci }}</td><td>{{ p.produktow }}</td><td>{{ p.propozycji }}</td>
+        <td class="l"><a href="/filtry/braki.csv?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut, 'producent': p.producent}|urlencode }}">lista</a></td></tr>
+    {% else %}
+      <tr><td class="l" colspan="5">Wszystkie produkty mają wartość.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<table class="pk">
+  <thead><tr>
+    <th class="l">Kategoria · filtr</th><th>Produktów</th><th>Z wartością</th><th class="l">Pokrycie</th>
+    <th>Bez wartości</th><th>Z propozycją</th><th>Bez propozycji</th><th>Sprzeczne</th><th class="l">Do kolejki</th>
+  </tr></thead>
+  <tbody>
+  {% for kat, grupa in wiersze|groupby('kategoria') %}
+    <tr class="kat"><td colspan="9">{{ nazwy_kat.get(kat, kat) }} <span class="zrodlo">· {{ grupa[0].produktow }} produktów</span></td></tr>
+    {% for w in grupa|sort(attribute='bez_wartosci', reverse=True) %}
+    <tr>
+      <td class="l"><a href="/filtry?{{ {'kategoria': kat, 'atrybut': w.atrybut}|urlencode }}#szczegoly">{{ w.atrybut }}</a></td>
+      <td>{{ w.produktow }}</td><td>{{ w.z_wartoscia }}</td>
+      <td class="l">{% if w.pokrycie is not none %}{{ '%.0f'|format(w.pokrycie * 100) }}%
+        <span class="pasek {{ 'zle' if w.pokrycie < 0.8 }}"><b style="width:{{ '%.0f'|format(w.pokrycie * 100) }}%"></b></span>{% else %}—{% endif %}</td>
+      <td>{{ w.bez_wartosci }}</td>
+      <td>{{ w.propozycji }}{% if w.propozycji %}<div class="zrodlo">
+        {%- set z = w.zrodla %}{% if z.podtyp %}podkat. {{ z.podtyp }}{% endif %}
+        {%- if z.nazwa %}{% if z.podtyp %} · {% endif %}nazwa {{ z.nazwa }}{% endif %}
+        {%- if z.rodzina %}{% if z.podtyp or z.nazwa %} · {% endif %}rodzina {{ z.rodzina }}{% endif %}
+        {%- if z.inne %}{% if z.podtyp or z.nazwa or z.rodzina %} · {% endif %}inne reguły {{ z.inne }}{% endif %}</div>{% endif %}</td>
+      <td>{{ w.brakow }}</td><td>{{ w.sprzecznych or '' }}</td>
+      <td class="l">
+        {% if w.propozycji or w.sprzecznych %}<a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut, 'regula': 'L2-LUKA-*'}|urlencode }}">propozycje</a>{% endif %}
+        {% if w.brakow %}{% if w.propozycji %} · {% endif %}<a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut, 'regula': 'L1-LUKA-BRAK'}|urlencode }}">braki</a>{% endif %}
+        {% if w.zrodla.inne %} · <a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut}|urlencode }}" title="Propozycje innych reguł dla pustych komórek — kolejka bez zawężenia do reguły">inne</a>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  {% else %}
+    <tr><td class="l" colspan="9">Brak konfiguracji filtrów — dodaj filtry poniżej albo zasiej je komendą
+      <code>python -m atrybuty.pipeline filtry-z-diagnozy</code>.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<details class="konf">
+  <summary>Konfiguracja filtrów ({{ konfiguracja|length }} kategorii)</summary>
+  <div class="tresc">
+    <p class="legenda">Które atrybuty są filtrami w której kategorii. Zasiane z diagnozy strony
+      z 10.10.2026. Zmiana zadziała przy najbliższym imporcie.</p>
+    {% for kat, atrybuty in konfiguracja|dictsort %}
+    <div class="konf-kat"><b>{{ nazwy_kat.get(kat, kat) }}</b>
+      {% for a in atrybuty %}
+      <form method="post" action="/filtry/konfiguracja" class="inline chip">
+        <input type="hidden" name="akcja" value="usun"><input type="hidden" name="kategoria" value="{{ kat }}">
+        <input type="hidden" name="atrybut" value="{{ a }}">{{ a }}
+        <button type="submit" title="Zdejmij filtr „{{ a }}” w tej kategorii" aria-label="Zdejmij {{ a }}">×</button>
+      </form>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <form method="post" action="/filtry/konfiguracja" class="pola">
+      <input type="hidden" name="akcja" value="dodaj">
+      <div class="pole"><label for="fk-kat">Kategoria</label>
+        <select id="fk-kat" name="kategoria">{% for k in kategorie_db %}<option value="{{ k }}">{{ nazwy_kat.get(k, k) }}</option>{% endfor %}</select></div>
+      <div class="pole"><label for="fk-atr">Atrybut-filtr</label>
+        <input id="fk-atr" type="text" name="atrybut" list="fk-atrybuty" placeholder="np. Na nóżkach"></div>
+      <datalist id="fk-atrybuty">{% for a in atrybuty_panelu %}<option value="{{ a }}">{% endfor %}</datalist>
+      <button class="p" type="submit">Dodaj filtr</button>
+    </form>
+  </div>
+</details>
+</main>
+</body>
+</html>

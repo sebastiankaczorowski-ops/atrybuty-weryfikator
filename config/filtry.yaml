@@ -1,0 +1,141 @@
+# Filtry sklepu: które atrybuty klient może filtrować w której naszej kategorii.
+#
+# Ziarno: diagnoza next.twojemeble.pl z 10.10.2026 (docs/diagnoza-filtrow-*.csv,
+# komenda `pipeline filtry-z-diagnozy`). Potem edytowalny z zakładki /filtry —
+# plik jest NADPISYWANY przez aplikację, komentarze poza nagłówkiem nie przetrwają.
+#
+# Produkt bez wartości filtra znika z wyników, gdy klient zaznaczy filtr —
+# dlatego każdy brak tutaj wymienionego atrybutu to luka do uzupełnienia.
+meta:
+  zrodlo: diagnoza-filtrow-2026-10-10.csv
+  opis: diagnoza next.twojemeble.pl
+kategorie:
+  biurko:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  fotel:
+  - Na nóżkach
+  - Rodzaj obicia
+  - Właściwości obicia
+  hoker:
+  - Rodzaj obicia
+  - Właściwości obicia
+  komoda:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  kontenerek:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Oświetlenie
+  krzeslo:
+  - Rodzaj obicia
+  - Właściwości obicia
+  lawa:
+  - Kształt blatu
+  lawka:
+  - Rodzaj obicia
+  - Właściwości obicia
+  lawostol:
+  - Kształt blatu
+  - Liczba miejsc
+  - Rozkładane
+  lozko:
+  - Liczba miejsc
+  - Materac w zestawie
+  - Na nóżkach
+  - Oświetlenie
+  - Rodzaj obicia
+  - Stelaż w zestawie
+  - Właściwości obicia
+  - Z pojemnikiem
+  materac:
+  - Liczba miejsc
+  - Twardość materaca
+  meblosciana:
+  - Liczba drzwi
+  - Liczba drążków
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  narożnik:
+  - Liczba miejsc
+  - Na nóżkach
+  - Rodzaj obicia
+  - Właściwości obicia
+  - Z pojemnikiem
+  polka:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Oświetlenie
+  pufa:
+  - Na nóżkach
+  - Rodzaj obicia
+  - Właściwości obicia
+  regal:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  sofa:
+  - Liczba miejsc
+  - Na nóżkach
+  - Rodzaj obicia
+  - Właściwości obicia
+  - Z pojemnikiem
+  stelaz:
+  - Liczba miejsc
+  stol:
+  - Kształt blatu
+  - Liczba miejsc
+  - Rozkładane
+  szafa:
+  - Liczba drzwi
+  - Liczba drążków
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  szafka:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  szafka_nocna:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  szafka_rtv:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  toaletka:
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  wieszak:
+  - Liczba drzwi
+  - Liczba drążków
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie
+  witryna:
+  - Liczba drzwi
+  - Liczba półek
+  - Liczba szuflad
+  - Na nóżkach
+  - Oświetlenie

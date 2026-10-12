@@ -3353,3 +3353,508 @@ def test_kolumna_kod_ean_trafia_do_kodow_produktu(tmp_path):
     produkty, _ = pipeline.wczytaj_csv(plik)
     assert produkty[0].kody["kod EAN"] == "5900355032136"
     assert produkty[0].kody["nasz kod EAN"] == "5909990000001"
+
+
+# --- luki w filtrach ---------------------------------------------------------
+
+import shutil as _shutil
+
+import pytest as _pytest
+
+ETYKIETY_LUK = {
+    "Na nóżkach": {"tak": "tak", "nie": "nie"},
+    "Oświetlenie": {"brak": "brak", "w zestawie": "w zestawie", "opcjonalne": "opcjonalne"},
+    "Rodzaj obicia": {"welur": "welur", "ekoskora": "ekoskóra"},
+    "Liczba drzwi": {"2-drzwiowe": "2-drzwiowe", "3-drzwiowe": "3-drzwiowe"},
+    "Materac w zestawie": {"tak": "tak", "nie": "nie"},
+    "Kształt blatu": {"okragly": "okrągły", "owalny": "owalny", "prostokatny": "prostokątny"},
+}
+FILTRY_LUK = {"komoda": ["Na nóżkach", "Oświetlenie", "Liczba drzwi"],
+              "lozko": ["Na nóżkach", "Materac w zestawie", "Rodzaj obicia"],
+              "stol": ["Kształt blatu"]}
+
+
+@_pytest.fixture
+def konfig_luk(tmp_path, monkeypatch):
+    """Konfiguracja luk w katalogu tymczasowym — testy nie ruszają config/."""
+    import yaml
+    from atrybuty import config, panel_format as pf
+    repo_config = config.KATALOG_CONFIG
+    monkeypatch.setattr(config, "KATALOG_CONFIG", tmp_path)
+    monkeypatch.setattr(pf, "PLIK_ETYKIET", tmp_path / "etykiety_panelu.yaml")
+    monkeypatch.setattr(pf, "PLIK_ZMIAN_NAZW", tmp_path / "zmiany_nazw.yaml")
+    monkeypatch.setattr(pf, "PLIK_WZORCA", tmp_path / "wzorzec_panelu.yaml")
+    _shutil.copy(repo_config / "luki.yaml", tmp_path / "luki.yaml")
+    (tmp_path / "etykiety_panelu.yaml").write_text(
+        yaml.safe_dump(ETYKIETY_LUK, allow_unicode=True), encoding="utf-8")
+    config.wyczysc_cache()
+    config.zapisz_filtry(FILTRY_LUK)
+    yield tmp_path
+    config.wyczysc_cache()
+
+
+def _pl(pid, kategoria="komoda", nazwa="Komoda Test", atrybuty=None, **kw):
+    from atrybuty.model import Produkt
+    return Produkt(id=pid, nazwa=nazwa, producent=kw.pop("producent", "BRW"),
+                   kolekcja=kw.pop("kolekcja", "Alfa"), zdjecie="http://x/1.jpg", styl="",
+                   kategoria=kategoria, atrybuty=dict(atrybuty or {}), **kw)
+
+
+def _luki(produkty):
+    from atrybuty import luki
+    return {(f.produkt_id, f.atrybut): f for f in luki.uruchom(produkty)}
+
+
+def test_podkategoria_wyznacza_wartosc_pustego_filtra(konfig_luk):
+    """„Komoda na nóżkach” bez wartości „Na nóżkach” znika z filtra „tak”,
+    choć sama kategoria mówi, że ma nóżki."""
+    f = _luki([_pl("1", podtyp="Komoda na nóżkach")])[("1", "Na nóżkach")]
+    assert f.regula_id == "L2-LUKA-PODTYP" and f.proponowana_wartosc == "tak"
+    assert f.pewnosc == 0.92
+
+
+def test_podkategoria_sprzeczna_z_atrybutem(konfig_luk):
+    f = _luki([_pl("1", podtyp="Komoda na nóżkach", atrybuty={"Na nóżkach": "nie"})])
+    f = f[("1", "Na nóżkach")]
+    assert f.regula_id == "L2-LUKA-PODTYP-SPRZECZNE"
+    assert f.stara_wartosc == "nie" and f.proponowana_wartosc == "tak"
+
+
+def test_owalny_stol_w_okraglych_to_nie_sprzecznosc(konfig_luk):
+    wynik = _luki([_pl("1", "stol", "Stół Owal", {"Kształt blatu": "owalny"},
+                      podtyp="Stoły okrągłe")])
+    assert ("1", "Kształt blatu") not in wynik
+
+
+def test_led_w_nazwie_proponuje_oswietlenie(konfig_luk):
+    f = _luki([_pl("1", nazwa="Komoda Alfa LED biała")])[("1", "Oświetlenie")]
+    assert f.regula_id == "L2-LUKA-NAZWA" and f.proponowana_wartosc == "w zestawie"
+    assert f.pewnosc == 0.80
+
+
+def test_slowo_w_nazwie_nie_robi_luki_gdzie_nie_ma_filtra(konfig_luk):
+    """„Welur” w nazwie komody: w komodach nie ma filtra obicia, więc to nie luka."""
+    wynik = _luki([_pl("1", nazwa="Komoda welurowa")])
+    assert ("1", "Rodzaj obicia") not in wynik
+
+
+def test_wartosc_spoza_slownika_jest_pomijana(konfig_luk):
+    """Reguła z wartością, której panel nie zna, nie może dać propozycji —
+    i tak nie przeszłaby importem."""
+    import yaml
+    from atrybuty import config
+    e = dict(ETYKIETY_LUK); e["Oświetlenie"] = {"brak": "brak"}
+    (konfig_luk / "etykiety_panelu.yaml").write_text(yaml.safe_dump(e, allow_unicode=True),
+                                                    encoding="utf-8")
+    config.wyczysc_cache()
+    f = _luki([_pl("1", nazwa="Komoda LED")])[("1", "Oświetlenie")]
+    assert f.regula_id == "L1-LUKA-BRAK" and f.proponowana_wartosc is None
+
+
+def test_slownik_czytany_swiezo_przy_kazdym_przebiegu(konfig_luk):
+    """Słownik zmieniony między importami w tym samym procesie ma działać od
+    razu — buforowany na stałe proponowałby usunięte wartości (LUKI-04)."""
+    import yaml
+    from atrybuty import luki
+    p = _pl("1", nazwa="Komoda LED")
+    assert {f.atrybut: f for f in luki.uruchom([p])}["Oświetlenie"].proponowana_wartosc == "w zestawie"
+    e = dict(ETYKIETY_LUK); e["Oświetlenie"] = {"w zestawie": "W zestawie"}
+    (konfig_luk / "etykiety_panelu.yaml").write_text(yaml.safe_dump(e, allow_unicode=True),
+                                                    encoding="utf-8")
+    assert {f.atrybut: f for f in luki.uruchom([p])}["Oświetlenie"].proponowana_wartosc == "W zestawie"
+
+
+def _kolekcja(n_z, wartosc="tak", **kw):
+    return [_pl(str(i), atrybuty={"Na nóżkach": wartosc}, **kw) for i in range(n_z)]
+
+
+def test_kolekcja_podpowiada_pustemu_czlonkowi(konfig_luk):
+    f = _luki(_kolekcja(3) + [_pl("x")])[("x", "Na nóżkach")]
+    assert f.regula_id == "L2-LUKA-RODZINA" and f.proponowana_wartosc == "tak"
+    assert f.pewnosc == 0.8           # (3+1)/(3+2)
+    assert "3 z 3" in f.dowod
+
+
+def test_prawdopodobienstwo_rosnie_z_liczba_zgodnych(konfig_luk):
+    from atrybuty import luki
+    assert luki.prawdopodobienstwo_rodziny(3, 3, False) == 0.8
+    assert luki.prawdopodobienstwo_rodziny(12, 12, False) == 0.929
+    assert luki.prawdopodobienstwo_rodziny(9, 10, False) == 0.833
+    assert luki.prawdopodobienstwo_rodziny(100, 100, False) == 0.95
+    assert luki.prawdopodobienstwo_rodziny(12, 12, True) == 0.8
+
+
+def test_rozbiezna_kolekcja_nie_zgaduje(konfig_luk):
+    produkty = _kolekcja(5) + [_pl(f"n{i}", atrybuty={"Na nóżkach": "nie"}) for i in range(2)]
+    f = _luki(produkty + [_pl("x")])[("x", "Na nóżkach")]
+    assert f.regula_id == "L1-LUKA-BRAK"
+
+
+def test_model_tylko_po_kodzie_producenta(konfig_luk):
+    """Warianty kolorystyczne z tym samym kodem producenta dzielą liczbę drzwi;
+    `baza_nazwy` łączyła „Szafę 100” z „200” — dlatego tylko kod (LUKI-02)."""
+    kod = {"kod producenta": "ALFA TYP 01"}
+    dawcy = [_pl(str(i), nazwa=f"Komoda Alfa {k}", atrybuty={"Liczba drzwi": "2-drzwiowe"},
+                kody=kod) for i, k in enumerate(["biała", "czarna", "dąb"])]
+    f = _luki(dawcy + [_pl("x", nazwa="Komoda Alfa szara", kody=kod)])[("x", "Liczba drzwi")]
+    assert f.regula_id == "L2-LUKA-RODZINA" and f.proponowana_wartosc == "2-drzwiowe"
+
+
+def test_bez_kodu_producenta_rodzina_modelu_nie_proponuje(konfig_luk):
+    """Te same wymiary nie dowodzą, że to ten sam mebel — łóżko z materacem
+    i bez ma identyczne wymiary zewnętrzne (LUKI-06)."""
+    dawcy = [_pl(str(i), "lozko", "Łóżko Alfa 160", {"Materac w zestawie": "tak"},
+                liczby={"Szerokość": 170.0, "Wysokość": 90.0, "Głębokość": 210.0})
+             for i in range(6)]
+    pusty = _pl("x", "lozko", "Łóżko Alfa 160",
+               liczby={"Szerokość": 170.0, "Wysokość": 90.0, "Głębokość": 210.0})
+    f = _luki(dawcy + [pusty])[("x", "Materac w zestawie")]
+    assert f.regula_id == "L1-LUKA-BRAK"
+
+
+def test_wyposazenie_z_rodziny_nigdy_nie_idzie_do_automatu(konfig_luk):
+    from atrybuty.model import PROG_AUTO
+    kod = {"kod producenta": "ALFA LOZ"}
+    dawcy = [_pl(str(i), "lozko", "Łóżko Alfa", {"Materac w zestawie": "tak"}, kody=kod)
+             for i in range(12)]
+    f = _luki(dawcy + [_pl("x", "lozko", "Łóżko Alfa", kody=kod)])[("x", "Materac w zestawie")]
+    assert f.pewnosc == 0.8 and f.pewnosc < PROG_AUTO
+
+
+def test_dwie_rodziny_to_dwie_grupy(konfig_luk):
+    """„Zastosuj ×N” ma dotyczyć wariantów jednego mebla, nie całej kategorii (LUKI-08)."""
+    a = _kolekcja(3, kolekcja="Alfa") + [_pl("xa", kolekcja="Alfa")]
+    b = [_pl(f"b{i}", kolekcja="Beta", atrybuty={"Na nóżkach": "tak"}) for i in range(3)] \
+        + [_pl("xb", kolekcja="Beta")]
+    w = _luki(a + b)
+    assert w[("xa", "Na nóżkach")].grupa != w[("xb", "Na nóżkach")].grupa
+
+
+def test_jedna_propozycja_na_komorke_wygrywa_najpewniejsza(konfig_luk):
+    """Podkategoria (0,92) i kolekcja (0,80) mówią o tej samej komórce —
+    w kolejce ma być jedno zgłoszenie, nie dwa kliknięcia."""
+    from atrybuty import luki
+    produkty = _kolekcja(3) + [_pl("x", podtyp="Komoda na nóżkach")]
+    dla_x = [f for f in luki.uruchom(produkty) if f.produkt_id == "x" and f.atrybut == "Na nóżkach"]
+    assert len(dla_x) == 1 and dla_x[0].regula_id == "L2-LUKA-PODTYP"
+
+
+def test_brak_bez_propozycji_nie_trafia_do_gemini(konfig_luk):
+    """Tysiące braków z niską pewnością po cichu stałyby się płatnymi
+    kandydatami do zdjęć — pewność 1,0 trzyma je poza bramką."""
+    from atrybuty.model import PROG_DO_WIZJI
+    f = _luki([_pl("1")])[("1", "Na nóżkach")]
+    assert f.regula_id == "L1-LUKA-BRAK" and f.proponowana_wartosc is None
+    assert f.pewnosc >= PROG_DO_WIZJI
+    assert f.grupa == "L1-LUKA-BRAK|komoda|Na nóżkach|BRW"
+
+
+def test_wartosc_w_nieodcietych_skladowych_to_nie_luka(konfig_luk):
+    """Front widzi składowe, dopóki nie są odcięte — taki produkt nie znika
+    z filtra; przeniesieniem zajmuje się L0 (LUKI-01)."""
+    wynik = _luki([_pl("1", skladowe={"Na nóżkach": "tak"})])
+    assert ("1", "Na nóżkach") not in wynik
+    wynik = _luki([_pl("2", skladowe={"Na nóżkach": "tak"}, skladowe_odciete=True)])
+    assert wynik[("2", "Na nóżkach")].regula_id == "L1-LUKA-BRAK"
+
+
+def test_l0_wygrywa_z_luka_dla_tej_samej_komorki(konfig_luk, monkeypatch):
+    """Oba zgłoszenia miałyby ten sam klucz decyzji — rozstrzygnięcie jednego
+    ukryłoby drugie. L0 wie, gdzie jest wartość, więc zostaje tylko L0."""
+    from atrybuty import pipeline, skladowe
+    from atrybuty.model import L0, KRYTYCZNA, Finding
+    monkeypatch.setattr(skladowe, "znajdz", lambda produkty: [
+        Finding("1", "Na nóżkach", "L0-ZE-SKLADOWYCH", L0, KRYTYCZNA, 0.9, None, "tak", "x")])
+    p = _pl("1", skladowe={"Na nóżkach": "tak"}, skladowe_odciete=True)
+    wynik = [f for f in pipeline.wszystkie_findingi([p], []) if f.atrybut == "Na nóżkach"]
+    assert [f.regula_id for f in wynik] == ["L0-ZE-SKLADOWYCH"]
+
+
+def test_brak_wymaganego_nie_dubluje_luki(konfig_luk, monkeypatch):
+    """L1-BRAK-WYMAGANEGO i luka dla tej samej komórki to dwa kliknięcia
+    z jednym kluczem decyzji — przy filtrze zostaje tylko luka."""
+    from atrybuty import config, detektory
+    schema = lambda: {"kategorie": {"komoda": {
+        "pokrycie": {"Na nóżkach": 0.99, "Liczba drzwi": 0.99}}}}
+    schema.cache_clear = lambda: None
+    monkeypatch.setattr(config, "schema", schema)
+    reg = {f.regula_id for f in detektory.uruchom([_pl("1", atrybuty={"Szerokość": "80",
+                                                                      "Materiał": "płyta"})])
+           if f.atrybut == "Na nóżkach"}
+    assert reg == {"L1-LUKA-BRAK"}
+
+
+def test_atrybut_wylaczony_nie_robi_luk(konfig_luk, monkeypatch):
+    from atrybuty import config, detektory
+    monkeypatch.setattr(config, "atrybuty_wylaczone", lambda: {"Na nóżkach"})
+    assert not [f for f in detektory.uruchom([_pl("1", atrybuty={"Szerokość": "80",
+                                                               "Materiał": "płyta",
+                                                               "Styl": "nowoczesny"})])
+                if f.atrybut == "Na nóżkach"]
+
+
+def test_przemianowanie_atrybutu_przepisuje_filtry_bez_restartu(konfig_luk):
+    """Panel przemianował „Na nóżkach” → „Nóżki”. Mapa przemianowań była już
+    w pamięci po wcześniejszym imporcie — bez czyszczenia filtry trzymałyby
+    starą nazwę i wszystko wyglądałoby na brak (LUKI-05, LUKI-07)."""
+    import yaml
+    from atrybuty import config, panel_format as pf
+    assert "Na nóżkach" in config.filtry()["komoda"]       # rozgrzany cache
+    pf.dopisz_zmiany_nazw({"atrybuty": {"Na nóżkach": "Nóżki"}})
+    assert "Nóżki" in config.filtry()["komoda"]            # alias od razu, bez restartu
+    assert "Nóżki" in config.luki()["rodzina"]["atrybuty"]
+    pf.migruj_config({"atrybuty": {"Na nóżkach": "Nóżki"}})
+    zapisane = yaml.safe_load((konfig_luk / "filtry.yaml").read_text(encoding="utf-8"))
+    assert "Nóżki" in zapisane["kategorie"]["komoda"]
+    assert "Na nóżkach" not in zapisane["kategorie"]["komoda"]
+
+
+def test_ziarno_z_diagnozy_mapuje_kategorie_strony(konfig_luk):
+    from atrybuty import luki
+    wiersze = [
+        {"poziom": "kategoria", "kategoria": "Komody", "filtr": "Na nóżkach", "rodzaj": "pewna"},
+        {"poziom": "kategoria", "kategoria": "Komody", "filtr": "Wyposażenie", "rodzaj": "opcjonalna"},
+        {"poziom": "kategoria", "kategoria": "Szafki nocne", "filtr": "Oświetlenie", "rodzaj": "pewna"},
+        {"poziom": "kategoria", "kategoria": "Lustra dziwne", "filtr": "Na nóżkach", "rodzaj": "pewna"},
+        {"poziom": "podkategoria", "kategoria": "Komody na nóżkach", "filtr": "Oświetlenie",
+         "rodzaj": "pewna"},
+    ]
+    mapa = {"Komody": "komoda", "Szafki Nocne": "szafka_nocna"}
+    kat, nieznane = luki.ziarno_z_diagnozy(wiersze, mapa)
+    assert kat == {"komoda": ["Na nóżkach"], "szafka_nocna": ["Oświetlenie"]}
+    assert nieznane == ["Lustra dziwne"]
+
+
+def _baza_luk(tmp_path, monkeypatch):
+    """Baza po imporcie z lukami — do testów zakładki i kolejki."""
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db
+    baza = tmp_path / "luki.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    monkeypatch.setattr(app_mod, "BAZA", baza)
+    produkty = (_kolekcja(3, kolekcja="Alfa") + [_pl("xa", kolekcja="Alfa"), _pl("xb", kolekcja="Alfa")]
+                + [_pl(f"b{i}", kolekcja="Beta", atrybuty={"Na nóżkach": "tak"}) for i in range(3)]
+                + [_pl("xc", kolekcja="Beta"), _pl("y", kolekcja="Gamma", producent="Halmar")])
+    for p in produkty:
+        p.atrybuty.update({"Szerokość": "80", "Materiał": "płyta"})
+    from atrybuty import wizja
+    con = db.polacz(baza)
+    wizja.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", produkty, pipeline.wszystkie_findingi(produkty, []))
+    con.close()
+    return baza
+
+
+def test_filtr_kolejki_z_gwiazdka_i_zasieg_grupy(konfig_luk, tmp_path, monkeypatch):
+    """Link „propozycje” z /filtry używa „L2-LUKA-*”. Licznik grupy pod tym
+    filtrem musi równać się liczbie findingów, które akcja zmieni."""
+    from atrybuty import db, zapytania
+    baza = _baza_luk(tmp_path, monkeypatch)
+    con = db.polacz(baza)
+    przebieg = db.ostatni_przebieg(con)["id"]
+    fl = zapytania.Filtr(regula="L2-LUKA-*", atrybut="Na nóżkach", grupuj=False, status="otwarte")
+    assert zapytania.policz(con, przebieg, fl) == 3          # xa, xb, xc — sama rodzina
+    q = """SELECT COUNT(*) FROM findingi WHERE przebieg_id=? AND regula_id LIKE 'L2-LUKA-%'
+           AND atrybut='Na nóżkach'"""
+    assert con.execute(q, (przebieg,)).fetchone()[0] == 3
+    fl_r = zapytania.Filtr(regula="L2-LUKA-RODZINA", grupuj=False, status="otwarte",
+                           atrybut="Na nóżkach")
+    assert zapytania.policz(con, przebieg, fl_r) == 3
+    assert zapytania.policz(con, przebieg, zapytania.Filtr(regula="L2-LUKA-", grupuj=False,
+                                                           status="otwarte")) == 0
+    con.close()
+
+
+def test_zakladka_filtry_pokrycie_producenci_csv_i_konfiguracja(konfig_luk, tmp_path, monkeypatch):
+    import yaml
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    _baza_luk(tmp_path, monkeypatch)
+    klient = TestClient(app_mod.app)
+    html = klient.get("/filtry").text
+    assert "Luki w filtrach" in html and "Na nóżkach" in html
+    assert "regula=L2-LUKA-%2A" in html or "regula=L2-LUKA-*" in html
+    html = klient.get("/filtry", params={"kategoria": "komoda", "atrybut": "Na nóżkach"}).text
+    assert "Halmar" in html and "kto ma braki" in html
+    csv_ = klient.get("/filtry/braki.csv", params={"kategoria": "komoda", "atrybut": "Na nóżkach"}).text
+    assert "xa;" in csv_ and ";tak;" in csv_ and "y;" in csv_
+    odp = klient.post("/filtry/konfiguracja", data={"akcja": "usun", "kategoria": "komoda",
+                                                    "atrybut": "Oświetlenie"}, follow_redirects=False)
+    assert odp.status_code == 303
+    zapisane = yaml.safe_load((konfig_luk / "filtry.yaml").read_text(encoding="utf-8"))
+    assert "Oświetlenie" not in zapisane["kategorie"]["komoda"]
+
+
+def test_rodzina_nie_proponuje_wartosci_spoza_slownika(konfig_luk):
+    """Dwunastu dawców z wartością, której panel już nie zna, dawało propozycję
+    z prawdopodobieństwem 93%, odrzucaną potem przy imporcie (inspekcja R01)."""
+    dawcy = [_pl(str(i), atrybuty={"Na nóżkach": "chyba"}) for i in range(12)]
+    f = _luki(dawcy + [_pl("x")])[("x", "Na nóżkach")]
+    assert f.regula_id == "L1-LUKA-BRAK"
+
+
+def test_bez_slownika_nie_ma_propozycji(konfig_luk):
+    from atrybuty import config
+    (konfig_luk / "etykiety_panelu.yaml").write_text("{}", encoding="utf-8")
+    config.wyczysc_cache()
+    f = _luki([_pl("1", nazwa="Komoda LED", podtyp="Komoda na nóżkach")])
+    assert f[("1", "Oświetlenie")].regula_id == "L1-LUKA-BRAK"
+    assert f[("1", "Na nóżkach")].regula_id == "L1-LUKA-BRAK"
+
+
+def test_zdjety_filtr_nie_produkuje_propozycji_z_podkategorii(konfig_luk):
+    """Zdjęcie „Na nóżkach” w /filtry ma zatrzymać wszystkie źródła —
+    podkategoria nie może go obchodzić (inspekcja R02)."""
+    from atrybuty import config
+    config.zapisz_filtry({"komoda": ["Oświetlenie"], "stol": []})
+    wynik = _luki([_pl("1", podtyp="Komoda na nóżkach")])
+    assert ("1", "Na nóżkach") not in wynik
+
+
+def test_lista_kategorii_reguly_nie_obchodzi_konfiguracji(konfig_luk):
+    from atrybuty import config
+    config.zapisz_filtry({"stol": ["Kształt blatu"]})
+    assert ("1", "Rozkładane") not in _luki([_pl("1", "stol", "Stół rozkładany")])
+
+
+def test_pusty_napis_to_brak_a_nie_wartosc(konfig_luk):
+    """„Na nóżkach: ” po parsowaniu zostaje pustym napisem — liczony jako
+    wartość chował produkt z listy braków (inspekcja R04)."""
+    wynik = _luki([_pl("1", atrybuty={"Na nóżkach": " "}, skladowe={"Na nóżkach": "tak"})])
+    assert ("1", "Na nóżkach") not in wynik             # widać wartość ze składowych
+    wynik = _luki([_pl("2", atrybuty={"Na nóżkach": ""})])
+    assert wynik[("2", "Na nóżkach")].regula_id == "L1-LUKA-BRAK"
+
+
+def test_propozycja_z_nazwy_nie_jest_chowana_przez_brak(konfig_luk, monkeypatch):
+    """„Szafa 3-drzwiowa” ma już propozycję L2-NAZWA-UZUPELNIA; brak bez propozycji
+    dla tej samej komórki dzieliłby z nią klucz decyzji, więc odłożenie braku
+    ukryłoby konkretną propozycję (inspekcja R03)."""
+    from atrybuty import detektory
+    p = _pl("1", nazwa="Komoda 3-drzwiowa", atrybuty={"Szerokość": "80", "Materiał": "płyta"})
+    wynik = [f for f in detektory.uruchom([p]) if f.atrybut == "Liczba drzwi"]
+    assert len(wynik) == 1 and wynik[0].regula_id == "L2-NAZWA-UZUPELNIA"
+
+
+def test_sprzeczne_propozycje_dla_tej_samej_komorki(konfig_luk):
+    """Dwa źródła, dwie różne wartości: zostaje jedno zgłoszenie, ale poniżej
+    progu automatu i z obiema wersjami w dowodzie."""
+    from atrybuty import luki
+    from atrybuty.model import L2, SREDNIA, PROG_AUTO, Finding
+    inne = Finding("1", "Liczba drzwi", "L2-NAZWA-UZUPELNIA", L2, SREDNIA, 0.70, None,
+                   "3-drzwiowe", "nazwa")
+    luka = Finding("1", "Liczba drzwi", "L2-LUKA-RODZINA", L2, SREDNIA, 0.93, None,
+                   "2-drzwiowe", "rodzina")
+    wynik = luki.uzgodnij([inne], [luka])
+    assert len(wynik) == 1 and wynik[0].regula_id == "L2-LUKA-RODZINA"
+    assert wynik[0].pewnosc < PROG_AUTO and "3-drzwiowe" in wynik[0].dowod
+
+
+def test_pokrycie_nie_liczy_sprzecznosci_jako_uzupelnien(konfig_luk, tmp_path, monkeypatch):
+    """Sprzeczność dotyczy wypełnionej komórki — wliczona do propozycji dawała
+    „0 braków, 1 propozycja” (inspekcja R05)."""
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja, zapytania
+    baza = tmp_path / "s.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza)
+    p = _pl("1", podtyp="Komoda na nóżkach",
+            atrybuty={"Na nóżkach": "nie", "Oświetlenie": "brak", "Liczba drzwi": "2-drzwiowe",
+                      "Szerokość": "80", "Materiał": "płyta"})
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", [p], pipeline.wszystkie_findingi([p], []))
+    w = {r["atrybut"]: r for r in zapytania.pokrycie_filtrow(con, db.ostatni_przebieg(con)["id"])
+         if r["kategoria"] == "komoda"}
+    con.close()
+    assert w["Na nóżkach"]["bez_wartosci"] == 0 and w["Na nóżkach"]["propozycji"] == 0
+    assert w["Na nóżkach"]["sprzecznych"] == 1
+
+
+def test_wylaczona_regula_nie_zabiera_komorki(konfig_luk, monkeypatch):
+    """Wyłączona L2-NAZWA-UZUPELNIA zdejmowała brak w uzgadnianiu, a potem sama
+    odpadała — aktywny filtr zostawał bez żadnego zgłoszenia (inspekcja R09)."""
+    from atrybuty import config, detektory
+    wyl = lambda: {"L2-NAZWA-UZUPELNIA"}
+    monkeypatch.setattr(config, "wylaczone", wyl)
+    p = _pl("1", nazwa="Komoda 3-drzwiowa", atrybuty={"Szerokość": "80", "Materiał": "płyta"})
+    wynik = [f for f in detektory.uruchom([p]) if f.atrybut == "Liczba drzwi"]
+    assert [f.regula_id for f in wynik] == ["L1-LUKA-BRAK"]
+
+
+def test_wylaczone_zrodlo_luki_oddaje_komorke_nastepnemu(konfig_luk):
+    from atrybuty import luki
+    produkty = _kolekcja(3) + [_pl("x", podtyp="Komoda na nóżkach")]
+    f = {(f.produkt_id, f.atrybut): f for f in luki.uruchom(produkty, wylaczone={"L2-LUKA-PODTYP"})}
+    assert f[("x", "Na nóżkach")].regula_id == "L2-LUKA-RODZINA"
+
+
+def test_ta_sama_kolekcja_w_dwoch_kategoriach_to_dwie_grupy(konfig_luk):
+    """Bez kategorii w grupie „Zastosuj ×N” na komodach Alfa zmieniałoby też
+    łóżka Alfa (inspekcja R10)."""
+    komody = _kolekcja(3) + [_pl("xk")]
+    lozka = [_pl(f"l{i}", "lozko", atrybuty={"Na nóżkach": "tak"}) for i in range(3)] + [_pl("xl", "lozko")]
+    w = _luki(komody + lozka)
+    assert w[("xk", "Na nóżkach")].grupa != w[("xl", "Na nóżkach")].grupa
+
+
+def test_zakladka_widzi_propozycje_innej_reguly(konfig_luk, tmp_path, monkeypatch):
+    """Pusta komórka z propozycją L2-NAZWA-UZUPELNIA nie może wyglądać na
+    niezgłoszoną: liczy się, trafia do CSV i ma link do kolejki (inspekcja R11)."""
+    import yaml
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from atrybuty import config, db, wizja, zapytania
+    (konfig_luk / "slowniki.yaml").write_text(yaml.safe_dump({"atrybuty": {"Liczba drzwi": {
+        "wartosci": ["2-drzwiowe", "3-drzwiowe"]}}}, allow_unicode=True), encoding="utf-8")
+    config.wyczysc_cache()
+    baza = tmp_path / "r11.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza); monkeypatch.setattr(app_mod, "BAZA", baza)
+    p = _pl("1", nazwa="Komoda 3-drzwiowa", atrybuty={"Szerokość": "80", "Materiał": "płyta",
+                                                      "Na nóżkach": "tak", "Oświetlenie": "brak"})
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", [p], pipeline.wszystkie_findingi([p], []))
+    w = {r["atrybut"]: r for r in zapytania.pokrycie_filtrow(con, db.ostatni_przebieg(con)["id"])
+         if r["kategoria"] == "komoda"}["Liczba drzwi"]
+    con.close()
+    assert w["bez_wartosci"] == 1 and w["zrodla"]["inne"] == 1 and w["brakow"] == 0
+    klient = TestClient(app_mod.app)
+    csv_ = klient.get("/filtry/braki.csv", params={"kategoria": "komoda", "atrybut": "Liczba drzwi"}).text
+    assert "3-drzwiowe" in csv_ and "L2-NAZWA-UZUPELNIA" not in csv_.splitlines()[0]
+    assert "inne reguły 1" in klient.get("/filtry").text
+
+
+def test_csv_dla_kategorii_z_polska_litera(konfig_luk, tmp_path, monkeypatch):
+    """„narożnik” w nazwie pliku wywracał pobieranie — nagłówek HTTP to Latin-1 (R12)."""
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    _baza_luk(tmp_path, monkeypatch)
+    odp = TestClient(app_mod.app).get("/filtry/braki.csv",
+                                      params={"kategoria": "narożnik", "atrybut": "Rodzaj obicia"})
+    assert odp.status_code == 200
+    assert "luki_naroznik-rodzaj-obicia_" in odp.headers["content-disposition"]
+
+
+def test_kolejka_zachowuje_filtr_z_gwiazdka_w_formularzu(konfig_luk, tmp_path, monkeypatch):
+    """Po wejściu z /filtry lista reguł nie miała „L2-LUKA-*” — zmiana producenta
+    wysyłała pustą regułę i zdejmowała zawężenie (R13)."""
+    from fastapi.testclient import TestClient
+    import atrybuty.app as app_mod
+    _baza_luk(tmp_path, monkeypatch)
+    html = TestClient(app_mod.app).get("/anomalie", params={"regula": "L2-LUKA-*"}).text
+    assert re.search(r'<option value="L2-LUKA-\*"\s+selected', html)
+
+
+def test_przemianowana_wartosc_dopuszczalna_nie_robi_sprzecznosci(konfig_luk):
+    """Panel przemianował „owalny” → „owal”. Bez aliasu w `dopuszczalne` owalny
+    stół w „Stołach okrągłych” dostawał fałszywą sprzeczność z 88% (R14)."""
+    import yaml
+    from atrybuty import config, panel_format as pf
+    e = dict(ETYKIETY_LUK); e["Kształt blatu"] = {"okragly": "okrągły", "owal": "owal"}
+    (konfig_luk / "etykiety_panelu.yaml").write_text(yaml.safe_dump(e, allow_unicode=True),
+                                                    encoding="utf-8")
+    pf.dopisz_zmiany_nazw({"wartosci": {"Kształt blatu": {"owalny": "owal"}}})
+    assert "owal" in config.luki()["podtyp"][3]["dopuszczalne"]
+    wynik = _luki([_pl("1", "stol", "Stół", {"Kształt blatu": "owal"}, podtyp="Stoły okrągłe")])
+    assert ("1", "Kształt blatu") not in wynik

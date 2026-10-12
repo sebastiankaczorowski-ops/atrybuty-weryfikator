@@ -162,6 +162,7 @@ tr.htmx-request .szkielet{display:flex}
   <h1>Kolejka weryfikacji atrybutów</h1>
   <nav><a href="/rozstrzygniete">rozstrzygnięte</a> · <a href="/eksport/partie">eksport</a> · <a href="/weryfikacja">czy weszło</a> · <a href="/braki">braki danych</a> · <a href="/reguly">reguły</a> · <a href="/zrodla">źródła</a> · <a href="/import">wgraj plik</a>
     <a href="/atrybuty" title="Atrybuty sklepu i ich wartości">atrybuty</a>
+    <a href="/filtry" title="Czy produkty mają atrybuty, po których klient filtruje">luki w filtrach</a>
     <a href="/producenci" title="Jakość danych wg producenta">producenci</a>
     <a href="/postep" title="Postęp prac dzień po dniu">postęp</a>
     <a href="/zmiany" title="Co się zmieniło w narzędziu">co nowego</a></nav>
@@ -216,6 +217,10 @@ tr.htmx-request .szkielet{display:flex}
   </select>
   <select name="regula">
     <option value="">— reguła —</option>
+    {# Filtr z gwiazdką (z /filtry) nie jest na liście reguł — bez tej opcji
+       zmiana innego filtra wysłałaby pustą regułę i zdjęła zawężenie (R13). #}
+    <option value="L2-LUKA-*" {{ 'selected' if fl.regula=='L2-LUKA-*' }}>L2-LUKA-* (wszystkie propozycje luk)</option>
+    {% if fl.regula.endswith('*') and fl.regula != 'L2-LUKA-*' %}<option value="{{ fl.regula }}" selected>{{ fl.regula }}</option>{% endif %}
     {% for k, n in slowniki.reguly %}
       <option value="{{ k }}" {{ 'selected' if fl.regula==k }}>{{ k }} ({{ n }})</option>
     {% endfor %}
@@ -439,7 +444,10 @@ tr.htmx-request .szkielet{display:flex}
   </td>
   <td>
     <span class="sev {{ w.waga }}">{{ w.waga }}</span>
-    <div class="dowod"><code>{{ w.regula_id }}</code> · {{ w.warstwa }} · {{ '%.0f'|format(w.pewnosc*100) }}%</div>
+    <div class="dowod"><code>{{ w.regula_id }}</code> · {{ w.warstwa }} ·
+      {%- if w.regula_id == 'L1-LUKA-BRAK' %} brak wartości, bez propozycji
+      {%- elif 'LUKA' in w.regula_id %} prawdopodobieństwo {{ '%.0f'|format(w.pewnosc*100) }}%
+      {%- else %} {{ '%.0f'|format(w.pewnosc*100) }}%{% endif %}</div>
   </td>
   <td>
     <div class="akcje" id="akcje-{{ loop.index }}">

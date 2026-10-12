@@ -165,6 +165,94 @@ def zapisz_schema(dane: dict[str, Any]) -> Path:
     return sciezka
 
 
+# --- luki w filtrach -------------------------------------------------------
+
+NAGLOWEK_FILTROW = """# Filtry sklepu: które atrybuty klient może filtrować w której naszej kategorii.
+#
+# Ziarno: diagnoza next.twojemeble.pl z 10.10.2026 (docs/diagnoza-filtrow-*.csv,
+# komenda `pipeline filtry-z-diagnozy`). Potem edytowalny z zakładki /filtry —
+# plik jest NADPISYWANY przez aplikację, komentarze poza nagłówkiem nie przetrwają.
+#
+# Produkt bez wartości filtra znika z wyników, gdy klient zaznaczy filtr —
+# dlatego każdy brak tutaj wymienionego atrybutu to luka do uzupełnienia.
+"""
+
+
+def _alias(nazwa: str) -> str:
+    """Nazwa atrybutu po przemianowaniach w panelu (stara -> aktualna)."""
+    return zmiany_nazw()["atrybuty"].get(nazwa, nazwa)
+
+
+@functools.lru_cache(maxsize=None)
+def filtry() -> dict[str, list[str]]:
+    """{kategoria: [atrybuty-filtry]} — nazwy już po przemianowaniach.
+
+    Alias przy odczycie, nie tylko migracja pliku: plik mógł zostać zapisany
+    zanim panel przemianował atrybut, a normalizacja produktów używa nowej
+    nazwy — bez aliasu pokrycie spadałoby pozornie do zera.
+    """
+    d = _wczytaj("filtry.yaml").get("kategorie") or {}
+    return {kat: list(dict.fromkeys(_alias(a) for a in (lista or [])))
+            for kat, lista in d.items()}
+
+
+def zapisz_filtry(kategorie: dict[str, list[str]], meta: dict | None = None) -> Path:
+    sciezka = KATALOG_CONFIG / "filtry.yaml"
+    dane = {"meta": meta or (_wczytaj("filtry.yaml").get("meta") or {}),
+            "kategorie": {k: sorted(set(v)) for k, v in sorted(kategorie.items()) if v}}
+    with sciezka.open("w", encoding="utf-8") as f:
+        f.write(NAGLOWEK_FILTROW)
+        yaml.safe_dump(dane, f, allow_unicode=True, sort_keys=False, width=100)
+    filtry.cache_clear()
+    return sciezka
+
+
+@functools.lru_cache(maxsize=None)
+def luki() -> dict[str, Any]:
+    """Reguły źródeł propozycji dla luk (config/luki.yaml), po aliasach nazw."""
+    d = _wczytaj("luki.yaml")
+    if not d:
+        return {}
+    wartosci = zmiany_nazw()["wartosci"]
+
+    def wartosc(atr: str, w: str) -> str:
+        return (wartosci.get(atr) or {}).get(w, w)
+
+    out = dict(d)
+    for klucz in ("podtyp", "nazwa"):
+        reguly_ = []
+        for r in d.get(klucz) or []:
+            r = dict(r)
+            r["atrybut"] = _alias(r["atrybut"])
+            r["wartosc"] = wartosc(r["atrybut"], r["wartosc"])
+            # dopuszczalne też — inaczej przemianowany „owalny” stałby się
+            # sprzecznością z „Stołami okrągłymi” (inspekcja R14)
+            if r.get("dopuszczalne"):
+                r["dopuszczalne"] = [wartosc(r["atrybut"], w) for w in r["dopuszczalne"]]
+            reguly_.append(r)
+        out[klucz] = reguly_
+    rodzina = dict(d.get("rodzina") or {})
+    rodzina["atrybuty"] = {_alias(k): v for k, v in (rodzina.get("atrybuty") or {}).items()}
+    rodzina["wyposazenie"] = [_alias(a) for a in rodzina.get("wyposazenie") or []]
+    out["rodzina"] = rodzina
+    return out
+
+
+def zapisz_luki(dane: dict[str, Any]) -> Path:
+    sciezka = KATALOG_CONFIG / "luki.yaml"
+    with sciezka.open("w", encoding="utf-8") as f:
+        yaml.safe_dump(dane, f, allow_unicode=True, sort_keys=False, width=100)
+    luki.cache_clear()
+    return sciezka
+
+
+def wyczysc_cache_nazw() -> None:
+    """Po zapisie mapy przemianowań: wszystko, co czyta nazwy przez alias."""
+    zmiany_nazw.cache_clear()
+    filtry.cache_clear()
+    luki.cache_clear()
+
+
 def wyczysc_cache() -> None:
     kategorie.cache_clear()
     mapa_sklepu.cache_clear()
@@ -174,3 +262,5 @@ def wyczysc_cache() -> None:
     reguly.cache_clear()
     schema.cache_clear()
     wielowartosciowe.cache_clear()
+    filtry.cache_clear()
+    luki.cache_clear()

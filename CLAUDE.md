@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 52 trasy, 203 testy (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 55 tras, 242 testy (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 
@@ -91,6 +91,11 @@ frameworka, bez ORM-a. 52 trasy, 203 testy (`python3 -m pytest -q`).
 - `rozpoznanie.py` — przejście całego arkusza RAW FILES: klucz, producent
   i pola wymiarów dobierane **pomiarem zgodności** z naszymi danymi, raport
   do zatwierdzenia w `/zrodla/rozpoznanie`.
+- `luki.py` — luki w filtrach: konfiguracja `config/filtry.yaml` (kategoria →
+  atrybuty-filtry, zakładka `/filtry`), propozycje z podkategorii, nazwy
+  i rodziny (`config/luki.yaml`) z prawdopodobieństwem, braki bez propozycji
+  jako `L1-LUKA-BRAK`. Model w rodzinie tylko po kodzie producenta — same
+  wymiary i `baza_nazwy` łączyły różne meble (plan: `docs/PLAN-LUKI.md`).
 - `weryfikacja.py` — domknięcie pętli: czy wysłana poprawka faktycznie weszła.
 - `reguly.py`, `config.py` — reguły i konfiguracja z YAML-i, sterowane z UI.
 

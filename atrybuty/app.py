@@ -8,6 +8,7 @@ przeniesienie na Mac Mini to później tylko Dockerfile.
 from __future__ import annotations
 
 import json
+import re
 import threading
 from datetime import datetime
 from pathlib import Path
@@ -824,6 +825,84 @@ def braki_eksport(producent: str = "", kategoria: str = "", rodzaj: str = "",
     return StreamingResponse(
         iter(["\ufeff" + bufor.getvalue()]), media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{nazwa}"'})
+
+
+@app.get("/filtry", response_class=HTMLResponse)
+def filtry(request: Request, kategoria: str = "", atrybut: str = "",
+           komunikat: str = "", blad: str = ""):
+    """Luki w filtrach: czy produkty mają atrybuty, po których klient filtruje.
+
+    Produkt bez wartości filtra znika z wyników, gdy klient go zaznaczy.
+    Konfiguracja (które filtry w której kategorii) jest tu edytowalna.
+    """
+    con = _con()
+    przebieg = _przebieg(con)
+    wiersze = zapytania.pokrycie_filtrow(con, przebieg)
+    szczegoly = None
+    if kategoria and atrybut:
+        szczegoly = {"kategoria": kategoria, "atrybut": atrybut,
+                     "producenci": zapytania.producenci_filtra(con, przebieg, kategoria, atrybut)}
+    kategorie_db = [r[0] for r in con.execute(
+        "SELECT DISTINCT kategoria FROM produkty ORDER BY 1")]
+    con.close()
+    razem = {k: sum(w[k] for w in wiersze)
+             for k in ("bez_wartosci", "propozycji", "brakow", "sprzecznych")}
+    return szablony.TemplateResponse(request, "filtry.html", {
+        "request": request, "wiersze": wiersze, "razem": razem, "szczegoly": szczegoly,
+        "konfiguracja": config.filtry(), "kategorie_db": kategorie_db,
+        "atrybuty_panelu": sorted(panel_format.wczytaj_etykiety()),
+        "nazwy_kat": kategorie.nazwy_kategorii(),
+        "komunikat": komunikat, "blad": bool(blad),
+    })
+
+
+@app.get("/filtry/braki.csv")
+def filtry_braki_csv(kategoria: str, atrybut: str, producent: str = ""):
+    """Produkty bez wartości filtra — do wysłania dostawcy albo uzupełnienia ręcznie."""
+    import csv as _csv
+    import io
+    con = _con()
+    wiersze = zapytania.braki_filtra(con, _przebieg(con), kategoria, atrybut, producent)
+    con.close()
+    bufor = io.StringIO()
+    w = _csv.writer(bufor, delimiter=";")
+    w.writerow(["id", "nazwa", "producent", "kolekcja", "filtr", "propozycja",
+                "prawdopodobienstwo", "link_panelu"])
+    for r in wiersze:
+        w.writerow([r["id"], r["nazwa"], r["producent"], r["kolekcja"], atrybut,
+                    r["propozycja"] or "",
+                    f"{r['pewnosc']:.0%}" if r["propozycja"] is not None and r["pewnosc"] else "",
+                    config.link_produktu(r["id"])])
+    bufor.seek(0)
+    # Nagłówek HTTP jest w Latin-1 — „narożnik” w nazwie pliku wywracał
+    # pobieranie (inspekcja R12). Nazwa tylko z ASCII.
+    bezpieczna = re.sub(r"[^a-z0-9]+", "-", norm(f"{kategoria} {atrybut}")).strip("-")
+    nazwa = f"luki_{bezpieczna}_{datetime.now():%Y-%m-%d}.csv"
+    return StreamingResponse(
+        iter(["\ufeff" + bufor.getvalue()]), media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{nazwa}"'})
+
+
+@app.post("/filtry/konfiguracja")
+def filtry_konfiguracja(akcja: str = Form(...), kategoria: str = Form(...),
+                        atrybut: str = Form(...)):
+    """Dodaje albo zdejmuje filtr w kategorii. Luki przeliczą się przy imporcie."""
+    kategoria, atrybut = kategoria.strip(), atrybut.strip()
+    konf = {k: list(v) for k, v in config.filtry().items()}
+    if not kategoria or not atrybut:
+        q = urlencode({"komunikat": "Podaj kategorię i atrybut.", "blad": "1"})
+        return RedirectResponse(f"/filtry?{q}", status_code=303)
+    if akcja == "dodaj":
+        konf.setdefault(kategoria, [])
+        if atrybut not in konf[kategoria]:
+            konf[kategoria].append(atrybut)
+        tekst = f"Dodano filtr „{atrybut}” w kategorii {kategoria}."
+    else:
+        konf[kategoria] = [a for a in konf.get(kategoria, []) if a != atrybut]
+        tekst = f"Zdjęto filtr „{atrybut}” w kategorii {kategoria}."
+    config.zapisz_filtry(konf)
+    q = urlencode({"komunikat": tekst + " Luki przeliczą się przy najbliższym imporcie."})
+    return RedirectResponse(f"/filtry?{q}", status_code=303)
 
 
 PLIK_ZMIAN = Path(__file__).resolve().parent.parent / "CHANGELOG.md"

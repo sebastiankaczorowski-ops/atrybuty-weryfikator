@@ -464,6 +464,11 @@ def dopisz_zmiany_nazw(nowe: dict) -> dict:
         "# słownika z panelu. Plik jest nadpisywany przez aplikację.\n"
         + yaml.safe_dump(mapa, allow_unicode=True, sort_keys=True),
         encoding="utf-8")
+    # Mapa jest buforowana w config; bez tego kolejny import w tym samym
+    # procesie normalizowałby po starej mapie, a filtry czytały aliasy
+    # sprzed przemianowania — pozorne braki nowego pola (recenzja LUKI-07).
+    from . import config
+    config.wyczysc_cache_nazw()
     return mapa
 
 
@@ -501,6 +506,20 @@ def migruj_config(zmiany: dict) -> list[str]:
         if nowy != reg:
             config.zapisz_reguly(nowy)
             ruszone.append("reguly.yaml")
+    # Filtry i reguły luk też trzymają nazwy atrybutów — przemianowanie
+    # zostawiłoby je przy starej nazwie (recenzja LUKI-05). Czytamy surowe
+    # pliki, bo config.filtry()/luki() już podstawiają aliasy.
+    for plik, zapisz in (("filtry.yaml", None), ("luki.yaml", config.zapisz_luki)):
+        surowe = config._wczytaj(plik)
+        if not surowe:
+            continue
+        nowy = przepisz(surowe)
+        if nowy != surowe:
+            if zapisz is None:
+                config.zapisz_filtry(nowy.get("kategorie") or {}, nowy.get("meta"))
+            else:
+                zapisz(nowy)
+            ruszone.append(plik)
     # Nagłówki pliku panelu też — inaczej atrybut wypada z importu jako
     # „kolumny nie ma w formacie panelu", a odczyt i tak je już podmienia.
     wz = wczytaj_wzorzec()

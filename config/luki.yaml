@@ -1,0 +1,96 @@
+# Uzupełnianie luk w filtrach — skąd brać propozycje dla pustych atrybutów.
+#
+# Pisany ręcznie i wersjonowany. Każda reguła produkuje wyłącznie PROPOZYCJĘ
+# do kolejki; nic nie zmienia się samo. Wartości muszą istnieć w słowniku
+# panelu (config/etykiety_panelu.yaml) — reguła z wartością spoza słownika
+# jest pomijana z ostrzeżeniem w logu importu.
+#
+# Kontekst: diagnoza filtrów z 10.10.2026 — np. „Na nóżkach” ma wartość
+# u 19% łóżek na stronie, rodzaj obicia u 9% łóżek tapicerowanych.
+
+# Które atrybuty są filtrami w której kategorii — w config/filtry.yaml
+# (zakładka /filtry).
+
+# Podkategoria sklepu sama mówi, jaka powinna być wartość. Najpewniejsze
+# źródło: puste pole dostaje propozycję, sprzeczne — zgłoszenie z poprawką.
+podtyp:
+  - podtyp: Komoda na nóżkach
+    atrybut: Na nóżkach
+    wartosc: tak
+  - podtyp: Łóżka z pojemnikiem
+    atrybut: Z pojemnikiem
+    wartosc: tak
+  - podtyp: Stoły rozkładane
+    atrybut: Rozkładane
+    wartosc: tak
+  - podtyp: Stoły okrągłe
+    atrybut: Kształt blatu
+    wartosc: okrągły
+    # owalny też jest okrągłym stołem w sensie podkategorii — nie zgłaszamy
+    # go jako sprzeczności, tylko prostokątny/kwadratowy
+    dopuszczalne: [owalny]
+
+# Słowa w nazwie produktu. Tylko jednoznaczne: „LED” w nazwie to oświetlenie
+# w zestawie, „z oświetleniem” — też. Wzorce na znormalizowanej nazwie
+# (małe litery, bez ogonków).
+nazwa:
+  - atrybut: Oświetlenie
+    wzorzec: '\bled\b|z oswietleniem|z podswietleniem|podswietlan'
+    wartosc: w zestawie
+  - atrybut: Na nóżkach
+    wzorzec: '\bna (nozkach|nogach)\b'
+    wartosc: tak
+  - atrybut: Z pojemnikiem
+    wzorzec: '\bz pojemnikiem\b'
+    wartosc: tak
+  - atrybut: Rozkładane
+    wzorzec: '\brozkladan'
+    wartosc: tak
+    kategorie: [stol, lawostol]
+  - atrybut: Rodzaj obicia
+    wzorzec: '\b(welur|velvet|welurow)'
+    wartosc: welur
+  - atrybut: Rodzaj obicia
+    wzorzec: '\bboucl'
+    wartosc: bouclé
+  - atrybut: Rodzaj obicia
+    wzorzec: '\bsztruks'
+    wartosc: sztruks
+  - atrybut: Rodzaj obicia
+    wzorzec: '\bszenil'
+    wartosc: szenil
+  - atrybut: Rodzaj obicia
+    wzorzec: '\bekoskor'
+    wartosc: ekoskóra
+
+# Rodzina: produkty tego samego producenta zwykle dzielą cechę. Gdy prawie
+# wszyscy członkowie z wartością się zgadzają, pusty członek dostaje tę samą
+# wartość jako propozycję, z prawdopodobieństwem (zgodnych+1)/(z_wartoscia+2).
+#   kolekcja — producent + kolekcja + kategoria (cechy linii: nóżki, obicie)
+#   model    — producent + kategoria + KOD PRODUCENTA z eksportu („IMPERIAL TYP 01”
+#              — wspólny dla wariantów kolorystycznych, różny dla konstrukcji).
+#              Bez kodu producenta: brak propozycji. Same wymiary nie dowodzą
+#              tożsamości — łóżko z materacem i bez ma te same wymiary.
+# wyposazenie — atrybuty, które bywają różne nawet przy jednym kodzie
+#              (wariant z LED i bez): prawdopodobieństwo najwyżej 0,80, czyli
+#              poniżej progu automatycznego zatwierdzania — zawsze ocena człowieka.
+rodzina:
+  min_z_wartoscia: 3
+  prog_zgodnosci: 0.9
+  atrybuty:
+    Na nóżkach: kolekcja
+    Rodzaj obicia: kolekcja
+    Właściwości obicia: kolekcja
+    Oświetlenie: model
+    Liczba drzwi: model
+    Liczba szuflad: model
+    Liczba półek: model
+    Liczba drążków: model
+    Z pojemnikiem: model
+    Materac w zestawie: model
+    Stelaż w zestawie: model
+  wyposazenie:
+    - Oświetlenie
+    - Materac w zestawie
+    - Stelaż w zestawie
+    - Z pojemnikiem

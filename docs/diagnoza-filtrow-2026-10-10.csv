@@ -1,0 +1,385 @@
+id,sciezka,grupa,kategoria,poziom,filtr,rodzaj,z_wartoscia,produktow,bez_wartosci
+meble|Liczba drzwi,/meble/,Wszystkie meble,Wszystkie meble,całość,Liczba drzwi,pewna,8356,21815,13459
+meble|Liczba szuflad,/meble/,Wszystkie meble,Wszystkie meble,całość,Liczba szuflad,pewna,7729,21815,14086
+meble|Liczba półek,/meble/,Wszystkie meble,Wszystkie meble,całość,Liczba półek,pewna,8531,21815,13284
+meble|Liczba drążków,/meble/,Wszystkie meble,Wszystkie meble,całość,Liczba drążków,pewna,2077,21815,19738
+meble|Liczba miejsc,/meble/,Wszystkie meble,Wszystkie meble,całość,Liczba miejsc,pewna,6041,21815,15774
+meble|Kształt blatu,/meble/,Wszystkie meble,Wszystkie meble,całość,Kształt blatu,pewna,2272,21815,19543
+meble|Rozkładane,/meble/,Wszystkie meble,Wszystkie meble,całość,Rozkładane,pewna,1141,21815,20674
+meble|Rodzaj obicia,/meble/,Wszystkie meble,Wszystkie meble,całość,Rodzaj obicia,obicie,728,21815,21087
+meble|Właściwości obicia,/meble/,Wszystkie meble,Wszystkie meble,całość,Właściwości obicia,obicie,763,21815,21052
+meble|Materac w zestawie,/meble/,Wszystkie meble,Wszystkie meble,całość,Materac w zestawie,pewna,2114,21815,19701
+meble|Stelaż w zestawie,/meble/,Wszystkie meble,Wszystkie meble,całość,Stelaż w zestawie,pewna,2114,21815,19701
+meble|Z pojemnikiem,/meble/,Wszystkie meble,Wszystkie meble,całość,Z pojemnikiem,pewna,4335,21815,17480
+meble|Twardość materaca,/meble/,Wszystkie meble,Wszystkie meble,całość,Twardość materaca,pewna,1154,21815,20661
+meble|Cechy materaca,/meble/,Wszystkie meble,Wszystkie meble,całość,Cechy materaca,opcjonalna,2289,21815,19526
+meble|Regulacja,/meble/,Wszystkie meble,Wszystkie meble,całość,Regulacja,opcjonalna,585,21815,21230
+meble|Funkcje,/meble/,Wszystkie meble,Wszystkie meble,całość,Funkcje,opcjonalna,1425,21815,20390
+meble|Na nóżkach,/meble/,Wszystkie meble,Wszystkie meble,całość,Na nóżkach,pewna,6591,21815,15224
+meble|Oświetlenie,/meble/,Wszystkie meble,Wszystkie meble,całość,Oświetlenie,pewna,3791,21815,18024
+meble|Wyposażenie,/meble/,Wszystkie meble,Wszystkie meble,całość,Wyposażenie,opcjonalna,411,21815,21404
+meble-do-przechowywania|Liczba drzwi,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Liczba drzwi,pewna,8031,10087,2056
+meble-do-przechowywania|Liczba szuflad,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Liczba szuflad,pewna,7313,10087,2774
+meble-do-przechowywania|Liczba półek,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Liczba półek,pewna,8169,10087,1918
+meble-do-przechowywania|Liczba drążków,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Liczba drążków,pewna,2076,10087,8011
+meble-do-przechowywania|Na nóżkach,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Na nóżkach,pewna,3694,10087,6393
+meble-do-przechowywania|Oświetlenie,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Oświetlenie,pewna,3496,10087,6591
+meble-do-przechowywania|Wyposażenie,/meble/meble-do-przechowywania,Meble do przechowywania,Meble do przechowywania,grupa,Wyposażenie,opcjonalna,400,10087,9687
+meble-do-przechowywania/komody|Liczba drzwi,/meble/meble-do-przechowywania/komody,Meble do przechowywania,Komody,kategoria,Liczba drzwi,pewna,1862,1972,110
+meble-do-przechowywania/komody|Liczba szuflad,/meble/meble-do-przechowywania/komody,Meble do przechowywania,Komody,kategoria,Liczba szuflad,pewna,1793,1972,179
+meble-do-przechowywania/komody|Liczba półek,/meble/meble-do-przechowywania/komody,Meble do przechowywania,Komody,kategoria,Liczba półek,pewna,1742,1972,230
+meble-do-przechowywania/komody|Na nóżkach,/meble/meble-do-przechowywania/komody,Meble do przechowywania,Komody,kategoria,Na nóżkach,pewna,832,1972,1140
+meble-do-przechowywania/komody|Oświetlenie,/meble/meble-do-przechowywania/komody,Meble do przechowywania,Komody,kategoria,Oświetlenie,pewna,1345,1972,627
+meble-do-przechowywania/komody|Wyposażenie,/meble/meble-do-przechowywania/komody,Meble do przechowywania,Komody,kategoria,Wyposażenie,opcjonalna,131,1972,1841
+meble-wypoczynkowe|Liczba miejsc,/meble/meble-wypoczynkowe,Meble wypoczynkowe,Meble wypoczynkowe,grupa,Liczba miejsc,pewna,1801,2899,1098
+meble-wypoczynkowe|Rodzaj obicia,/meble/meble-wypoczynkowe,Meble wypoczynkowe,Meble wypoczynkowe,grupa,Rodzaj obicia,obicie,318,2899,2581
+meble-wypoczynkowe|Właściwości obicia,/meble/meble-wypoczynkowe,Meble wypoczynkowe,Meble wypoczynkowe,grupa,Właściwości obicia,obicie,381,2899,2518
+meble-wypoczynkowe|Z pojemnikiem,/meble/meble-wypoczynkowe,Meble wypoczynkowe,Meble wypoczynkowe,grupa,Z pojemnikiem,pewna,1755,2899,1144
+meble-wypoczynkowe|Funkcje,/meble/meble-wypoczynkowe,Meble wypoczynkowe,Meble wypoczynkowe,grupa,Funkcje,opcjonalna,1425,2899,1474
+meble-wypoczynkowe|Na nóżkach,/meble/meble-wypoczynkowe,Meble wypoczynkowe,Meble wypoczynkowe,grupa,Na nóżkach,pewna,2398,2899,501
+lozka-i-materace|Liczba miejsc,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Liczba miejsc,pewna,3177,4343,1166
+lozka-i-materace|Rodzaj obicia,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Rodzaj obicia,obicie,127,4343,4216
+lozka-i-materace|Właściwości obicia,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Właściwości obicia,obicie,207,4343,4136
+lozka-i-materace|Materac w zestawie,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Materac w zestawie,pewna,2114,4343,2229
+lozka-i-materace|Stelaż w zestawie,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Stelaż w zestawie,pewna,2114,4343,2229
+lozka-i-materace|Z pojemnikiem,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Z pojemnikiem,pewna,2580,4343,1763
+lozka-i-materace|Twardość materaca,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Twardość materaca,pewna,1154,4343,3189
+lozka-i-materace|Cechy materaca,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Cechy materaca,opcjonalna,2289,4343,2054
+lozka-i-materace|Regulacja,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Regulacja,opcjonalna,52,4343,4291
+lozka-i-materace|Na nóżkach,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Na nóżkach,pewna,499,4343,3844
+lozka-i-materace|Oświetlenie,/meble/lozka-i-materace,Łóżka i materace,Łóżka i materace,grupa,Oświetlenie,pewna,272,4343,4071
+krzesla-i-siedziska|Rodzaj obicia,/meble/krzesla-i-siedziska,Krzesła i siedziska,Krzesła i siedziska,grupa,Rodzaj obicia,obicie,283,1547,1264
+krzesla-i-siedziska|Właściwości obicia,/meble/krzesla-i-siedziska,Krzesła i siedziska,Krzesła i siedziska,grupa,Właściwości obicia,obicie,175,1547,1372
+krzesla-i-siedziska|Regulacja,/meble/krzesla-i-siedziska,Krzesła i siedziska,Krzesła i siedziska,grupa,Regulacja,opcjonalna,498,1547,1049
+stoly-i-stoliki|Liczba miejsc,/meble/stoly-i-stoliki,Stoły i stoliki,Stoły i stoliki,grupa,Liczba miejsc,pewna,1061,2286,1225
+stoly-i-stoliki|Kształt blatu,/meble/stoly-i-stoliki,Stoły i stoliki,Stoły i stoliki,grupa,Kształt blatu,pewna,2214,2286,72
+stoly-i-stoliki|Rozkładane,/meble/stoly-i-stoliki,Stoły i stoliki,Stoły i stoliki,grupa,Rozkładane,pewna,1137,2286,1149
+biurka|Liczba drzwi,/meble/biurka,Biurka,Biurka,grupa,Liczba drzwi,pewna,289,378,89
+biurka|Liczba szuflad,/meble/biurka,Biurka,Biurka,grupa,Liczba szuflad,pewna,346,378,32
+biurka|Liczba półek,/meble/biurka,Biurka,Biurka,grupa,Liczba półek,pewna,306,378,72
+biurka|Regulacja,/meble/biurka,Biurka,Biurka,grupa,Regulacja,opcjonalna,35,378,343
+biurka|Wyposażenie,/meble/biurka,Biurka,Biurka,grupa,Wyposażenie,opcjonalna,11,378,367
+meble-do-przechowywania/szafy|Liczba drzwi,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Liczba drzwi,pewna,2797,2837,40
+meble-do-przechowywania/szafy|Liczba szuflad,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Liczba szuflad,pewna,1901,2837,936
+meble-do-przechowywania/szafy|Liczba półek,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Liczba półek,pewna,2727,2837,110
+meble-do-przechowywania/szafy|Liczba drążków,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Liczba drążków,pewna,1956,2837,881
+meble-do-przechowywania/szafy|Na nóżkach,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Na nóżkach,pewna,1539,2837,1298
+meble-do-przechowywania/szafy|Oświetlenie,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Oświetlenie,pewna,187,2837,2650
+meble-do-przechowywania/szafy|Wyposażenie,/meble/meble-do-przechowywania/szafy,Meble do przechowywania,Szafy,kategoria,Wyposażenie,opcjonalna,98,2837,2739
+meble-do-przechowywania/szafki-rtv|Liczba drzwi,/meble/meble-do-przechowywania/szafki-rtv,Meble do przechowywania,Szafki RTV,kategoria,Liczba drzwi,pewna,807,828,21
+meble-do-przechowywania/szafki-rtv|Liczba szuflad,/meble/meble-do-przechowywania/szafki-rtv,Meble do przechowywania,Szafki RTV,kategoria,Liczba szuflad,pewna,700,828,128
+meble-do-przechowywania/szafki-rtv|Liczba półek,/meble/meble-do-przechowywania/szafki-rtv,Meble do przechowywania,Szafki RTV,kategoria,Liczba półek,pewna,707,828,121
+meble-do-przechowywania/szafki-rtv|Na nóżkach,/meble/meble-do-przechowywania/szafki-rtv,Meble do przechowywania,Szafki RTV,kategoria,Na nóżkach,pewna,439,828,389
+meble-do-przechowywania/szafki-rtv|Oświetlenie,/meble/meble-do-przechowywania/szafki-rtv,Meble do przechowywania,Szafki RTV,kategoria,Oświetlenie,pewna,519,828,309
+meble-do-przechowywania/szafki-rtv|Wyposażenie,/meble/meble-do-przechowywania/szafki-rtv,Meble do przechowywania,Szafki RTV,kategoria,Wyposażenie,opcjonalna,58,828,770
+meble-do-przechowywania/witryny|Liczba drzwi,/meble/meble-do-przechowywania/witryny,Meble do przechowywania,Witryny,kategoria,Liczba drzwi,pewna,835,840,5
+meble-do-przechowywania/witryny|Liczba szuflad,/meble/meble-do-przechowywania/witryny,Meble do przechowywania,Witryny,kategoria,Liczba szuflad,pewna,721,840,119
+meble-do-przechowywania/witryny|Liczba półek,/meble/meble-do-przechowywania/witryny,Meble do przechowywania,Witryny,kategoria,Liczba półek,pewna,800,840,40
+meble-do-przechowywania/witryny|Na nóżkach,/meble/meble-do-przechowywania/witryny,Meble do przechowywania,Witryny,kategoria,Na nóżkach,pewna,395,840,445
+meble-do-przechowywania/witryny|Oświetlenie,/meble/meble-do-przechowywania/witryny,Meble do przechowywania,Witryny,kategoria,Oświetlenie,pewna,674,840,166
+meble-do-przechowywania/witryny|Wyposażenie,/meble/meble-do-przechowywania/witryny,Meble do przechowywania,Witryny,kategoria,Wyposażenie,opcjonalna,62,840,778
+meble-do-przechowywania/regaly|Liczba drzwi,/meble/meble-do-przechowywania/regaly,Meble do przechowywania,Regały,kategoria,Liczba drzwi,pewna,513,633,120
+meble-do-przechowywania/regaly|Liczba szuflad,/meble/meble-do-przechowywania/regaly,Meble do przechowywania,Regały,kategoria,Liczba szuflad,pewna,486,633,147
+meble-do-przechowywania/regaly|Liczba półek,/meble/meble-do-przechowywania/regaly,Meble do przechowywania,Regały,kategoria,Liczba półek,pewna,574,633,59
+meble-do-przechowywania/regaly|Na nóżkach,/meble/meble-do-przechowywania/regaly,Meble do przechowywania,Regały,kategoria,Na nóżkach,pewna,211,633,422
+meble-do-przechowywania/regaly|Oświetlenie,/meble/meble-do-przechowywania/regaly,Meble do przechowywania,Regały,kategoria,Oświetlenie,pewna,374,633,259
+meble-do-przechowywania/regaly|Wyposażenie,/meble/meble-do-przechowywania/regaly,Meble do przechowywania,Regały,kategoria,Wyposażenie,opcjonalna,17,633,616
+meble-do-przechowywania/mebloscianki|Liczba drzwi,/meble/meble-do-przechowywania/mebloscianki,Meble do przechowywania,Meblościanki,kategoria,Liczba drzwi,pewna,111,196,85
+meble-do-przechowywania/mebloscianki|Liczba szuflad,/meble/meble-do-przechowywania/mebloscianki,Meble do przechowywania,Meblościanki,kategoria,Liczba szuflad,pewna,120,196,76
+meble-do-przechowywania/mebloscianki|Liczba półek,/meble/meble-do-przechowywania/mebloscianki,Meble do przechowywania,Meblościanki,kategoria,Liczba półek,pewna,109,196,87
+meble-do-przechowywania/mebloscianki|Na nóżkach,/meble/meble-do-przechowywania/mebloscianki,Meble do przechowywania,Meblościanki,kategoria,Na nóżkach,pewna,8,196,188
+meble-do-przechowywania/mebloscianki|Oświetlenie,/meble/meble-do-przechowywania/mebloscianki,Meble do przechowywania,Meblościanki,kategoria,Oświetlenie,pewna,120,196,76
+meble-do-przechowywania/mebloscianki|Wyposażenie,/meble/meble-do-przechowywania/mebloscianki,Meble do przechowywania,Meblościanki,kategoria,Wyposażenie,opcjonalna,3,196,193
+meble-do-przechowywania/polki-i-szafki-wiszace|Liczba drzwi,/meble/meble-do-przechowywania/polki-i-szafki-wiszace,Meble do przechowywania,Półki i szafki wiszące,kategoria,Liczba drzwi,pewna,57,466,409
+meble-do-przechowywania/polki-i-szafki-wiszace|Liczba szuflad,/meble/meble-do-przechowywania/polki-i-szafki-wiszace,Meble do przechowywania,Półki i szafki wiszące,kategoria,Liczba szuflad,pewna,46,466,420
+meble-do-przechowywania/polki-i-szafki-wiszace|Liczba półek,/meble/meble-do-przechowywania/polki-i-szafki-wiszace,Meble do przechowywania,Półki i szafki wiszące,kategoria,Liczba półek,pewna,99,466,367
+meble-do-przechowywania/polki-i-szafki-wiszace|Oświetlenie,/meble/meble-do-przechowywania/polki-i-szafki-wiszace,Meble do przechowywania,Półki i szafki wiszące,kategoria,Oświetlenie,pewna,47,466,419
+meble-do-przechowywania/polki-i-szafki-wiszace|Wyposażenie,/meble/meble-do-przechowywania/polki-i-szafki-wiszace,Meble do przechowywania,Półki i szafki wiszące,kategoria,Wyposażenie,opcjonalna,4,466,462
+meble-do-przechowywania/szafki-nocne|Liczba drzwi,/meble/meble-do-przechowywania/szafki-nocne,Meble do przechowywania,Szafki nocne,kategoria,Liczba drzwi,pewna,299,399,100
+meble-do-przechowywania/szafki-nocne|Liczba szuflad,/meble/meble-do-przechowywania/szafki-nocne,Meble do przechowywania,Szafki nocne,kategoria,Liczba szuflad,pewna,372,399,27
+meble-do-przechowywania/szafki-nocne|Liczba półek,/meble/meble-do-przechowywania/szafki-nocne,Meble do przechowywania,Szafki nocne,kategoria,Liczba półek,pewna,315,399,84
+meble-do-przechowywania/szafki-nocne|Na nóżkach,/meble/meble-do-przechowywania/szafki-nocne,Meble do przechowywania,Szafki nocne,kategoria,Na nóżkach,pewna,58,399,341
+meble-do-przechowywania/szafki-nocne|Oświetlenie,/meble/meble-do-przechowywania/szafki-nocne,Meble do przechowywania,Szafki nocne,kategoria,Oświetlenie,pewna,32,399,367
+meble-do-przechowywania/szafki-nocne|Wyposażenie,/meble/meble-do-przechowywania/szafki-nocne,Meble do przechowywania,Szafki nocne,kategoria,Wyposażenie,opcjonalna,17,399,382
+meble-do-przechowywania/toaletki-i-konsole|Liczba szuflad,/meble/meble-do-przechowywania/toaletki-i-konsole,Meble do przechowywania,Toaletki i konsole,kategoria,Liczba szuflad,pewna,161,178,17
+meble-do-przechowywania/toaletki-i-konsole|Liczba półek,/meble/meble-do-przechowywania/toaletki-i-konsole,Meble do przechowywania,Toaletki i konsole,kategoria,Liczba półek,pewna,105,178,73
+meble-do-przechowywania/toaletki-i-konsole|Na nóżkach,/meble/meble-do-przechowywania/toaletki-i-konsole,Meble do przechowywania,Toaletki i konsole,kategoria,Na nóżkach,pewna,78,178,100
+meble-do-przechowywania/toaletki-i-konsole|Oświetlenie,/meble/meble-do-przechowywania/toaletki-i-konsole,Meble do przechowywania,Toaletki i konsole,kategoria,Oświetlenie,pewna,10,178,168
+meble-do-przechowywania/toaletki-i-konsole|Wyposażenie,/meble/meble-do-przechowywania/toaletki-i-konsole,Meble do przechowywania,Toaletki i konsole,kategoria,Wyposażenie,opcjonalna,2,178,176
+meble-do-przechowywania/kontenerki-biurowe|Liczba drzwi,/meble/meble-do-przechowywania/kontenerki-biurowe,Meble do przechowywania,Kontenerki biurowe,kategoria,Liczba drzwi,pewna,24,34,10
+meble-do-przechowywania/kontenerki-biurowe|Liczba szuflad,/meble/meble-do-przechowywania/kontenerki-biurowe,Meble do przechowywania,Kontenerki biurowe,kategoria,Liczba szuflad,pewna,32,34,2
+meble-do-przechowywania/kontenerki-biurowe|Liczba półek,/meble/meble-do-przechowywania/kontenerki-biurowe,Meble do przechowywania,Kontenerki biurowe,kategoria,Liczba półek,pewna,27,34,7
+meble-do-przechowywania/kontenerki-biurowe|Oświetlenie,/meble/meble-do-przechowywania/kontenerki-biurowe,Meble do przechowywania,Kontenerki biurowe,kategoria,Oświetlenie,pewna,3,34,31
+meble-do-przechowywania/szafki-na-buty|Liczba drzwi,/meble/meble-do-przechowywania/szafki-na-buty,Meble do przechowywania,Szafki na buty,kategoria,Liczba drzwi,pewna,147,157,10
+meble-do-przechowywania/szafki-na-buty|Liczba szuflad,/meble/meble-do-przechowywania/szafki-na-buty,Meble do przechowywania,Szafki na buty,kategoria,Liczba szuflad,pewna,111,157,46
+meble-do-przechowywania/szafki-na-buty|Liczba półek,/meble/meble-do-przechowywania/szafki-na-buty,Meble do przechowywania,Szafki na buty,kategoria,Liczba półek,pewna,136,157,21
+meble-do-przechowywania/szafki-na-buty|Na nóżkach,/meble/meble-do-przechowywania/szafki-na-buty,Meble do przechowywania,Szafki na buty,kategoria,Na nóżkach,pewna,52,157,105
+meble-do-przechowywania/szafki-na-buty|Oświetlenie,/meble/meble-do-przechowywania/szafki-na-buty,Meble do przechowywania,Szafki na buty,kategoria,Oświetlenie,pewna,5,157,152
+meble-do-przechowywania/szafki-na-buty|Wyposażenie,/meble/meble-do-przechowywania/szafki-na-buty,Meble do przechowywania,Szafki na buty,kategoria,Wyposażenie,opcjonalna,9,157,148
+meble-do-przechowywania/garderoby-do-przedpokoju|Liczba drzwi,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Liczba drzwi,pewna,66,129,63
+meble-do-przechowywania/garderoby-do-przedpokoju|Liczba szuflad,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Liczba szuflad,pewna,113,129,16
+meble-do-przechowywania/garderoby-do-przedpokoju|Liczba półek,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Liczba półek,pewna,106,129,23
+meble-do-przechowywania/garderoby-do-przedpokoju|Liczba drążków,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Liczba drążków,pewna,60,129,69
+meble-do-przechowywania/garderoby-do-przedpokoju|Na nóżkach,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Na nóżkach,pewna,42,129,87
+meble-do-przechowywania/garderoby-do-przedpokoju|Oświetlenie,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Oświetlenie,pewna,25,129,104
+meble-do-przechowywania/garderoby-do-przedpokoju|Wyposażenie,/meble/meble-do-przechowywania/garderoby-do-przedpokoju,Meble do przechowywania,Garderoby do przedpokoju,kategoria,Wyposażenie,opcjonalna,1,129,128
+meble-do-przechowywania/wieszaki-na-ubrania|Liczba półek,/meble/meble-do-przechowywania/wieszaki-na-ubrania,Meble do przechowywania,Wieszaki na ubrania,kategoria,Liczba półek,pewna,130,217,87
+meble-do-przechowywania/zestawy-mebli|Liczba drzwi,/meble/meble-do-przechowywania/zestawy-mebli,Meble do przechowywania,Zestawy mebli,kategoria,Liczba drzwi,pewna,274,642,368
+meble-do-przechowywania/zestawy-mebli|Liczba szuflad,/meble/meble-do-przechowywania/zestawy-mebli,Meble do przechowywania,Zestawy mebli,kategoria,Liczba szuflad,pewna,465,642,177
+meble-do-przechowywania/zestawy-mebli|Liczba półek,/meble/meble-do-przechowywania/zestawy-mebli,Meble do przechowywania,Zestawy mebli,kategoria,Liczba półek,pewna,349,642,293
+meble-do-przechowywania/zestawy-mebli|Liczba drążków,/meble/meble-do-przechowywania/zestawy-mebli,Meble do przechowywania,Zestawy mebli,kategoria,Liczba drążków,pewna,55,642,587
+meble-do-przechowywania/zestawy-mebli|Na nóżkach,/meble/meble-do-przechowywania/zestawy-mebli,Meble do przechowywania,Zestawy mebli,kategoria,Na nóżkach,pewna,22,642,620
+meble-do-przechowywania/zestawy-mebli|Oświetlenie,/meble/meble-do-przechowywania/zestawy-mebli,Meble do przechowywania,Zestawy mebli,kategoria,Oświetlenie,pewna,70,642,572
+meble-do-przechowywania/szafki-lazienkowe|Liczba drzwi,/meble/meble-do-przechowywania/szafki-lazienkowe,Meble do przechowywania,Szafki łazienkowe,kategoria,Liczba drzwi,pewna,245,458,213
+meble-do-przechowywania/szafki-lazienkowe|Liczba szuflad,/meble/meble-do-przechowywania/szafki-lazienkowe,Meble do przechowywania,Szafki łazienkowe,kategoria,Liczba szuflad,pewna,293,458,165
+meble-do-przechowywania/szafki-lazienkowe|Liczba półek,/meble/meble-do-przechowywania/szafki-lazienkowe,Meble do przechowywania,Szafki łazienkowe,kategoria,Liczba półek,pewna,254,458,204
+meble-do-przechowywania/szafki-lazienkowe|Na nóżkach,/meble/meble-do-przechowywania/szafki-lazienkowe,Meble do przechowywania,Szafki łazienkowe,kategoria,Na nóżkach,pewna,6,458,452
+meble-do-przechowywania/szafki-lazienkowe|Oświetlenie,/meble/meble-do-przechowywania/szafki-lazienkowe,Meble do przechowywania,Szafki łazienkowe,kategoria,Oświetlenie,pewna,99,458,359
+meble-do-przechowywania/komody/komody-z-szufladami|Liczba drzwi,/meble/meble-do-przechowywania/komody/komody-z-szufladami,Meble do przechowywania,Komody z szufladami,podkategoria,Liczba drzwi,pewna,1207,1275,68
+meble-do-przechowywania/komody/komody-z-szufladami|Liczba szuflad,/meble/meble-do-przechowywania/komody/komody-z-szufladami,Meble do przechowywania,Komody z szufladami,podkategoria,Liczba szuflad,pewna,1253,1275,22
+meble-do-przechowywania/komody/komody-z-szufladami|Liczba półek,/meble/meble-do-przechowywania/komody/komody-z-szufladami,Meble do przechowywania,Komody z szufladami,podkategoria,Liczba półek,pewna,1119,1275,156
+meble-do-przechowywania/komody/komody-z-szufladami|Na nóżkach,/meble/meble-do-przechowywania/komody/komody-z-szufladami,Meble do przechowywania,Komody z szufladami,podkategoria,Na nóżkach,pewna,477,1275,798
+meble-do-przechowywania/komody/komody-z-szufladami|Oświetlenie,/meble/meble-do-przechowywania/komody/komody-z-szufladami,Meble do przechowywania,Komody z szufladami,podkategoria,Oświetlenie,pewna,924,1275,351
+meble-do-przechowywania/komody/komody-z-szufladami|Wyposażenie,/meble/meble-do-przechowywania/komody/komody-z-szufladami,Meble do przechowywania,Komody z szufladami,podkategoria,Wyposażenie,opcjonalna,81,1275,1194
+meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami|Liczba drzwi,/meble/meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami,Meble do przechowywania,Komody z szufladami i drzwiczkami,podkategoria,Liczba drzwi,pewna,1072,1083,11
+meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami|Liczba szuflad,/meble/meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami,Meble do przechowywania,Komody z szufladami i drzwiczkami,podkategoria,Liczba szuflad,pewna,1073,1083,10
+meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami|Liczba półek,/meble/meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami,Meble do przechowywania,Komody z szufladami i drzwiczkami,podkategoria,Liczba półek,pewna,1007,1083,76
+meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami|Na nóżkach,/meble/meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami,Meble do przechowywania,Komody z szufladami i drzwiczkami,podkategoria,Na nóżkach,pewna,409,1083,674
+meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami|Oświetlenie,/meble/meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami,Meble do przechowywania,Komody z szufladami i drzwiczkami,podkategoria,Oświetlenie,pewna,782,1083,301
+meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami|Wyposażenie,/meble/meble-do-przechowywania/komody/komody-z-szufladami-i-drzwiczkami,Meble do przechowywania,Komody z szufladami i drzwiczkami,podkategoria,Wyposażenie,opcjonalna,91,1083,992
+meble-do-przechowywania/komody/komody-z-drzwiczkami|Liczba drzwi,/meble/meble-do-przechowywania/komody/komody-z-drzwiczkami,Meble do przechowywania,Komody z drzwiczkami,podkategoria,Liczba drzwi,pewna,1461,1474,13
+meble-do-przechowywania/komody/komody-z-drzwiczkami|Liczba szuflad,/meble/meble-do-przechowywania/komody/komody-z-drzwiczkami,Meble do przechowywania,Komody z drzwiczkami,podkategoria,Liczba szuflad,pewna,1358,1474,116
+meble-do-przechowywania/komody/komody-z-drzwiczkami|Liczba półek,/meble/meble-do-przechowywania/komody/komody-z-drzwiczkami,Meble do przechowywania,Komody z drzwiczkami,podkategoria,Liczba półek,pewna,1366,1474,108
+meble-do-przechowywania/komody/komody-z-drzwiczkami|Na nóżkach,/meble/meble-do-przechowywania/komody/komody-z-drzwiczkami,Meble do przechowywania,Komody z drzwiczkami,podkategoria,Na nóżkach,pewna,647,1474,827
+meble-do-przechowywania/komody/komody-z-drzwiczkami|Oświetlenie,/meble/meble-do-przechowywania/komody/komody-z-drzwiczkami,Meble do przechowywania,Komody z drzwiczkami,podkategoria,Oświetlenie,pewna,1056,1474,418
+meble-do-przechowywania/komody/komody-z-drzwiczkami|Wyposażenie,/meble/meble-do-przechowywania/komody/komody-z-drzwiczkami,Meble do przechowywania,Komody z drzwiczkami,podkategoria,Wyposażenie,opcjonalna,79,1474,1395
+meble-do-przechowywania/komody/komody-na-nozkach|Liczba drzwi,/meble/meble-do-przechowywania/komody/komody-na-nozkach,Meble do przechowywania,Komody na nóżkach,podkategoria,Liczba drzwi,pewna,753,811,58
+meble-do-przechowywania/komody/komody-na-nozkach|Liczba szuflad,/meble/meble-do-przechowywania/komody/komody-na-nozkach,Meble do przechowywania,Komody na nóżkach,podkategoria,Liczba szuflad,pewna,704,811,107
+meble-do-przechowywania/komody/komody-na-nozkach|Liczba półek,/meble/meble-do-przechowywania/komody/komody-na-nozkach,Meble do przechowywania,Komody na nóżkach,podkategoria,Liczba półek,pewna,701,811,110
+meble-do-przechowywania/komody/komody-na-nozkach|Na nóżkach,/meble/meble-do-przechowywania/komody/komody-na-nozkach,Meble do przechowywania,Komody na nóżkach,podkategoria,Na nóżkach,pewna,682,811,129
+meble-do-przechowywania/komody/komody-na-nozkach|Oświetlenie,/meble/meble-do-przechowywania/komody/komody-na-nozkach,Meble do przechowywania,Komody na nóżkach,podkategoria,Oświetlenie,pewna,480,811,331
+meble-do-przechowywania/komody/komody-na-nozkach|Wyposażenie,/meble/meble-do-przechowywania/komody/komody-na-nozkach,Meble do przechowywania,Komody na nóżkach,podkategoria,Wyposażenie,opcjonalna,33,811,778
+meble-wypoczynkowe/sofy-i-kanapy|Liczba miejsc,/meble/meble-wypoczynkowe/sofy-i-kanapy,Meble wypoczynkowe,Sofy i kanapy,kategoria,Liczba miejsc,pewna,643,727,84
+meble-wypoczynkowe/sofy-i-kanapy|Rodzaj obicia,/meble/meble-wypoczynkowe/sofy-i-kanapy,Meble wypoczynkowe,Sofy i kanapy,kategoria,Rodzaj obicia,obicie,81,727,646
+meble-wypoczynkowe/sofy-i-kanapy|Właściwości obicia,/meble/meble-wypoczynkowe/sofy-i-kanapy,Meble wypoczynkowe,Sofy i kanapy,kategoria,Właściwości obicia,obicie,124,727,603
+meble-wypoczynkowe/sofy-i-kanapy|Z pojemnikiem,/meble/meble-wypoczynkowe/sofy-i-kanapy,Meble wypoczynkowe,Sofy i kanapy,kategoria,Z pojemnikiem,pewna,646,727,81
+meble-wypoczynkowe/sofy-i-kanapy|Funkcje,/meble/meble-wypoczynkowe/sofy-i-kanapy,Meble wypoczynkowe,Sofy i kanapy,kategoria,Funkcje,opcjonalna,365,727,362
+meble-wypoczynkowe/sofy-i-kanapy|Na nóżkach,/meble/meble-wypoczynkowe/sofy-i-kanapy,Meble wypoczynkowe,Sofy i kanapy,kategoria,Na nóżkach,pewna,592,727,135
+meble-wypoczynkowe/narozniki|Liczba miejsc,/meble/meble-wypoczynkowe/narozniki,Meble wypoczynkowe,Narożniki,kategoria,Liczba miejsc,pewna,1147,1270,123
+meble-wypoczynkowe/narozniki|Rodzaj obicia,/meble/meble-wypoczynkowe/narozniki,Meble wypoczynkowe,Narożniki,kategoria,Rodzaj obicia,obicie,128,1270,1142
+meble-wypoczynkowe/narozniki|Właściwości obicia,/meble/meble-wypoczynkowe/narozniki,Meble wypoczynkowe,Narożniki,kategoria,Właściwości obicia,obicie,177,1270,1093
+meble-wypoczynkowe/narozniki|Z pojemnikiem,/meble/meble-wypoczynkowe/narozniki,Meble wypoczynkowe,Narożniki,kategoria,Z pojemnikiem,pewna,1108,1270,162
+meble-wypoczynkowe/narozniki|Funkcje,/meble/meble-wypoczynkowe/narozniki,Meble wypoczynkowe,Narożniki,kategoria,Funkcje,opcjonalna,935,1270,335
+meble-wypoczynkowe/narozniki|Na nóżkach,/meble/meble-wypoczynkowe/narozniki,Meble wypoczynkowe,Narożniki,kategoria,Na nóżkach,pewna,1102,1270,168
+meble-wypoczynkowe/fotele|Rodzaj obicia,/meble/meble-wypoczynkowe/fotele,Meble wypoczynkowe,Fotele,kategoria,Rodzaj obicia,obicie,104,593,489
+meble-wypoczynkowe/fotele|Właściwości obicia,/meble/meble-wypoczynkowe/fotele,Meble wypoczynkowe,Fotele,kategoria,Właściwości obicia,obicie,75,593,518
+meble-wypoczynkowe/fotele|Funkcje,/meble/meble-wypoczynkowe/fotele,Meble wypoczynkowe,Fotele,kategoria,Funkcje,opcjonalna,122,593,471
+meble-wypoczynkowe/fotele|Na nóżkach,/meble/meble-wypoczynkowe/fotele,Meble wypoczynkowe,Fotele,kategoria,Na nóżkach,pewna,497,593,96
+meble-wypoczynkowe/szezlongi-i-lezanki|Funkcje,/meble/meble-wypoczynkowe/szezlongi-i-lezanki,Meble wypoczynkowe,Szezlongi i leżanki,kategoria,Funkcje,opcjonalna,1,44,43
+meble-wypoczynkowe/szezlongi-i-lezanki|Na nóżkach,/meble/meble-wypoczynkowe/szezlongi-i-lezanki,Meble wypoczynkowe,Szezlongi i leżanki,kategoria,Na nóżkach,pewna,23,44,21
+meble-wypoczynkowe/pufy|Rodzaj obicia,/meble/meble-wypoczynkowe/pufy,Meble wypoczynkowe,Pufy,kategoria,Rodzaj obicia,obicie,5,251,246
+meble-wypoczynkowe/pufy|Właściwości obicia,/meble/meble-wypoczynkowe/pufy,Meble wypoczynkowe,Pufy,kategoria,Właściwości obicia,obicie,5,251,246
+meble-wypoczynkowe/pufy|Funkcje,/meble/meble-wypoczynkowe/pufy,Meble wypoczynkowe,Pufy,kategoria,Funkcje,opcjonalna,1,251,250
+meble-wypoczynkowe/pufy|Na nóżkach,/meble/meble-wypoczynkowe/pufy,Meble wypoczynkowe,Pufy,kategoria,Na nóżkach,pewna,177,251,74
+lozka-i-materace/lozka|Liczba miejsc,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Liczba miejsc,pewna,2006,2587,581
+lozka-i-materace/lozka|Rodzaj obicia,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Rodzaj obicia,obicie,127,2587,2460
+lozka-i-materace/lozka|Właściwości obicia,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Właściwości obicia,obicie,207,2587,2380
+lozka-i-materace/lozka|Materac w zestawie,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Materac w zestawie,pewna,2114,2587,473
+lozka-i-materace/lozka|Stelaż w zestawie,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Stelaż w zestawie,pewna,2114,2587,473
+lozka-i-materace/lozka|Z pojemnikiem,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Z pojemnikiem,pewna,2580,2587,7
+lozka-i-materace/lozka|Na nóżkach,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Na nóżkach,pewna,499,2587,2088
+lozka-i-materace/lozka|Oświetlenie,/meble/lozka-i-materace/lozka,Łóżka i materace,Łóżka,kategoria,Oświetlenie,pewna,272,2587,2315
+lozka-i-materace/materace|Liczba miejsc,/meble/lozka-i-materace/materace,Łóżka i materace,Materace,kategoria,Liczba miejsc,pewna,1162,1449,287
+lozka-i-materace/materace|Twardość materaca,/meble/lozka-i-materace/materace,Łóżka i materace,Materace,kategoria,Twardość materaca,pewna,1152,1449,297
+lozka-i-materace/stelaze-do-lozek|Liczba miejsc,/meble/lozka-i-materace/stelaze-do-lozek,Łóżka i materace,Stelaże do łóżek,kategoria,Liczba miejsc,pewna,9,181,172
+lozka-i-materace/stelaze-do-lozek|Regulacja,/meble/lozka-i-materace/stelaze-do-lozek,Łóżka i materace,Stelaże do łóżek,kategoria,Regulacja,opcjonalna,52,181,129
+krzesla-i-siedziska/krzesla|Rodzaj obicia,/meble/krzesla-i-siedziska/krzesla,Krzesła i siedziska,Krzesła,kategoria,Rodzaj obicia,obicie,254,1192,938
+krzesla-i-siedziska/krzesla|Właściwości obicia,/meble/krzesla-i-siedziska/krzesla,Krzesła i siedziska,Krzesła,kategoria,Właściwości obicia,obicie,166,1192,1026
+krzesla-i-siedziska/krzesla|Regulacja,/meble/krzesla-i-siedziska/krzesla,Krzesła i siedziska,Krzesła,kategoria,Regulacja,opcjonalna,498,1192,694
+krzesla-i-siedziska/hokery-i-krzesla-barowe|Rodzaj obicia,/meble/krzesla-i-siedziska/hokery-i-krzesla-barowe,Krzesła i siedziska,Hokery i krzesła barowe,kategoria,Rodzaj obicia,obicie,25,161,136
+krzesla-i-siedziska/hokery-i-krzesla-barowe|Właściwości obicia,/meble/krzesla-i-siedziska/hokery-i-krzesla-barowe,Krzesła i siedziska,Hokery i krzesła barowe,kategoria,Właściwości obicia,obicie,6,161,155
+krzesla-i-siedziska/lawki|Rodzaj obicia,/meble/krzesla-i-siedziska/lawki,Krzesła i siedziska,Ławki,kategoria,Rodzaj obicia,obicie,4,98,94
+krzesla-i-siedziska/lawki|Właściwości obicia,/meble/krzesla-i-siedziska/lawki,Krzesła i siedziska,Ławki,kategoria,Właściwości obicia,obicie,3,98,95
+stoly-i-stoliki/stoly-do-jadalni|Liczba miejsc,/meble/stoly-i-stoliki/stoly-do-jadalni,Stoły i stoliki,Stoły do jadalni,kategoria,Liczba miejsc,pewna,941,972,31
+stoly-i-stoliki/stoly-do-jadalni|Kształt blatu,/meble/stoly-i-stoliki/stoly-do-jadalni,Stoły i stoliki,Stoły do jadalni,kategoria,Kształt blatu,pewna,947,972,25
+stoly-i-stoliki/stoly-do-jadalni|Rozkładane,/meble/stoly-i-stoliki/stoly-do-jadalni,Stoły i stoliki,Stoły do jadalni,kategoria,Rozkładane,pewna,934,972,38
+stoly-i-stoliki/zestawy-stolow-i-krzesel|Liczba miejsc,/meble/stoly-i-stoliki/zestawy-stolow-i-krzesel,Stoły i stoliki,Zestawy stołów i krzeseł,kategoria,Liczba miejsc,pewna,64,68,4
+stoly-i-stoliki/zestawy-stolow-i-krzesel|Kształt blatu,/meble/stoly-i-stoliki/zestawy-stolow-i-krzesel,Stoły i stoliki,Zestawy stołów i krzeseł,kategoria,Kształt blatu,pewna,66,68,2
+stoly-i-stoliki/zestawy-stolow-i-krzesel|Rozkładane,/meble/stoly-i-stoliki/zestawy-stolow-i-krzesel,Stoły i stoliki,Zestawy stołów i krzeseł,kategoria,Rozkładane,pewna,45,68,23
+stoly-i-stoliki/lawy-i-stoliki-kawowe|Kształt blatu,/meble/stoly-i-stoliki/lawy-i-stoliki-kawowe,Stoły i stoliki,Ławy i stoliki kawowe,kategoria,Kształt blatu,pewna,1073,1113,40
+stoly-i-stoliki/lawostoly|Liczba miejsc,/meble/stoly-i-stoliki/lawostoly,Stoły i stoliki,Ławostoły,kategoria,Liczba miejsc,pewna,6,47,41
+stoly-i-stoliki/lawostoly|Kształt blatu,/meble/stoly-i-stoliki/lawostoly,Stoły i stoliki,Ławostoły,kategoria,Kształt blatu,pewna,47,47,0
+stoly-i-stoliki/lawostoly|Rozkładane,/meble/stoly-i-stoliki/lawostoly,Stoły i stoliki,Ławostoły,kategoria,Rozkładane,pewna,42,47,5
+stoly-i-stoliki/stoly-i-stoliki-ogrodowe|Liczba miejsc,/meble/stoly-i-stoliki/stoly-i-stoliki-ogrodowe,Stoły i stoliki,Stoły i stoliki ogrodowe,kategoria,Liczba miejsc,pewna,54,91,37
+stoly-i-stoliki/stoly-i-stoliki-ogrodowe|Kształt blatu,/meble/stoly-i-stoliki/stoly-i-stoliki-ogrodowe,Stoły i stoliki,Stoły i stoliki ogrodowe,kategoria,Kształt blatu,pewna,86,91,5
+stoly-i-stoliki/stoly-i-stoliki-ogrodowe|Rozkładane,/meble/stoly-i-stoliki/stoly-i-stoliki-ogrodowe,Stoły i stoliki,Stoły i stoliki ogrodowe,kategoria,Rozkładane,pewna,80,91,11
+biurka/biurka-dzieciece|Liczba drzwi,/meble/biurka/biurka-dzieciece,Biurka,Biurka dziecięce,kategoria,Liczba drzwi,pewna,115,145,30
+biurka/biurka-dzieciece|Liczba szuflad,/meble/biurka/biurka-dzieciece,Biurka,Biurka dziecięce,kategoria,Liczba szuflad,pewna,136,145,9
+biurka/biurka-dzieciece|Liczba półek,/meble/biurka/biurka-dzieciece,Biurka,Biurka dziecięce,kategoria,Liczba półek,pewna,117,145,28
+biurka/biurka-dzieciece|Regulacja,/meble/biurka/biurka-dzieciece,Biurka,Biurka dziecięce,kategoria,Regulacja,opcjonalna,2,145,143
+biurka/biurka-dzieciece|Wyposażenie,/meble/biurka/biurka-dzieciece,Biurka,Biurka dziecięce,kategoria,Wyposażenie,opcjonalna,4,145,141
+meble-do-przechowywania/szafy/szafy-przesuwne|Liczba drzwi,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Liczba drzwi,pewna,1617,1625,8
+meble-do-przechowywania/szafy/szafy-przesuwne|Liczba szuflad,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Liczba szuflad,pewna,902,1625,723
+meble-do-przechowywania/szafy/szafy-przesuwne|Liczba półek,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Liczba półek,pewna,1610,1625,15
+meble-do-przechowywania/szafy/szafy-przesuwne|Liczba drążków,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Liczba drążków,pewna,1134,1625,491
+meble-do-przechowywania/szafy/szafy-przesuwne|Na nóżkach,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Na nóżkach,pewna,1124,1625,501
+meble-do-przechowywania/szafy/szafy-przesuwne|Oświetlenie,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Oświetlenie,pewna,69,1625,1556
+meble-do-przechowywania/szafy/szafy-przesuwne|Wyposażenie,/meble/meble-do-przechowywania/szafy/szafy-przesuwne,Meble do przechowywania,Szafy przesuwne,podkategoria,Wyposażenie,opcjonalna,28,1625,1597
+meble-do-przechowywania/szafy/szafy-uchylne|Liczba drzwi,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Liczba drzwi,pewna,1012,1027,15
+meble-do-przechowywania/szafy/szafy-uchylne|Liczba szuflad,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Liczba szuflad,pewna,880,1027,147
+meble-do-przechowywania/szafy/szafy-uchylne|Liczba półek,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Liczba półek,pewna,956,1027,71
+meble-do-przechowywania/szafy/szafy-uchylne|Liczba drążków,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Liczba drążków,pewna,773,1027,254
+meble-do-przechowywania/szafy/szafy-uchylne|Na nóżkach,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Na nóżkach,pewna,394,1027,633
+meble-do-przechowywania/szafy/szafy-uchylne|Oświetlenie,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Oświetlenie,pewna,110,1027,917
+meble-do-przechowywania/szafy/szafy-uchylne|Wyposażenie,/meble/meble-do-przechowywania/szafy/szafy-uchylne,Meble do przechowywania,Szafy uchylne,podkategoria,Wyposażenie,opcjonalna,65,1027,962
+meble-do-przechowywania/szafy/szafy-narozne|Liczba drzwi,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Liczba drzwi,pewna,55,59,4
+meble-do-przechowywania/szafy/szafy-narozne|Liczba szuflad,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Liczba szuflad,pewna,45,59,14
+meble-do-przechowywania/szafy/szafy-narozne|Liczba półek,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Liczba półek,pewna,54,59,5
+meble-do-przechowywania/szafy/szafy-narozne|Liczba drążków,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Liczba drążków,pewna,48,59,11
+meble-do-przechowywania/szafy/szafy-narozne|Na nóżkach,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Na nóżkach,pewna,5,59,54
+meble-do-przechowywania/szafy/szafy-narozne|Oświetlenie,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Oświetlenie,pewna,3,59,56
+meble-do-przechowywania/szafy/szafy-narozne|Wyposażenie,/meble/meble-do-przechowywania/szafy/szafy-narozne,Meble do przechowywania,Szafy narożne,podkategoria,Wyposażenie,opcjonalna,3,59,56
+meble-do-przechowywania/wieszaki-na-ubrania/wieszaki-scienne|Liczba półek,/meble/meble-do-przechowywania/wieszaki-na-ubrania/wieszaki-scienne,Meble do przechowywania,Wieszaki ścienne,podkategoria,Liczba półek,pewna,82,114,32
+meble-do-przechowywania/wieszaki-na-ubrania/wieszaki-stojace|Liczba półek,/meble/meble-do-przechowywania/wieszaki-na-ubrania/wieszaki-stojace,Meble do przechowywania,Wieszaki stojące,podkategoria,Liczba półek,pewna,34,76,42
+meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych|Liczba drzwi,/meble/meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych,Meble do przechowywania,Zestawy mebli dziecięcych,podkategoria,Liczba drzwi,pewna,10,36,26
+meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych|Liczba szuflad,/meble/meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych,Meble do przechowywania,Zestawy mebli dziecięcych,podkategoria,Liczba szuflad,pewna,21,36,15
+meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych|Liczba półek,/meble/meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych,Meble do przechowywania,Zestawy mebli dziecięcych,podkategoria,Liczba półek,pewna,22,36,14
+meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych|Liczba drążków,/meble/meble-do-przechowywania/zestawy-mebli/zestawy-mebli-dzieciecych-i-mlodziezowych,Meble do przechowywania,Zestawy mebli dziecięcych,podkategoria,Liczba drążków,pewna,3,36,33
+meble-do-przechowywania/zestawy-mebli/zestawy|Oświetlenie,/meble/meble-do-przechowywania/zestawy-mebli/zestawy,Meble do przechowywania,Zestawy,podkategoria,Oświetlenie,pewna,53,390,337
+meble-do-przechowywania/zestawy-mebli/zestawy-mebli-ogrodowych|Na nóżkach,/meble/meble-do-przechowywania/zestawy-mebli/zestawy-mebli-ogrodowych,Meble do przechowywania,Zestawy mebli ogrodowych,podkategoria,Na nóżkach,pewna,4,40,36
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke|Liczba drzwi,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke,Meble do przechowywania,Szafki pod umywalkę,podkategoria,Liczba drzwi,pewna,131,326,195
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke|Liczba szuflad,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke,Meble do przechowywania,Szafki pod umywalkę,podkategoria,Liczba szuflad,pewna,248,326,78
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke|Liczba półek,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke,Meble do przechowywania,Szafki pod umywalkę,podkategoria,Liczba półek,pewna,141,326,185
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke|Na nóżkach,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke,Meble do przechowywania,Szafki pod umywalkę,podkategoria,Na nóżkach,pewna,2,326,324
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke|Oświetlenie,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke,Meble do przechowywania,Szafki pod umywalkę,podkategoria,Oświetlenie,pewna,50,326,276
+meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki|Liczba drzwi,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki,Meble do przechowywania,Szafki wiszące i półki (łaz.),podkategoria,Liczba drzwi,pewna,59,71,12
+meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki|Liczba szuflad,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki,Meble do przechowywania,Szafki wiszące i półki (łaz.),podkategoria,Liczba szuflad,pewna,14,71,57
+meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki|Liczba półek,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki,Meble do przechowywania,Szafki wiszące i półki (łaz.),podkategoria,Liczba półek,pewna,56,71,15
+meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki|Oświetlenie,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-wiszace-i-polki,Meble do przechowywania,Szafki wiszące i półki (łaz.),podkategoria,Oświetlenie,pewna,22,71,49
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane|Liczba miejsc,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane,Meble wypoczynkowe,Sofy rozkładane,podkategoria,Liczba miejsc,pewna,91,94,3
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane|Rodzaj obicia,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane,Meble wypoczynkowe,Sofy rozkładane,podkategoria,Rodzaj obicia,obicie,33,94,61
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane|Właściwości obicia,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane,Meble wypoczynkowe,Sofy rozkładane,podkategoria,Właściwości obicia,obicie,67,94,27
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane|Z pojemnikiem,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane,Meble wypoczynkowe,Sofy rozkładane,podkategoria,Z pojemnikiem,pewna,87,94,7
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane|Funkcje,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane,Meble wypoczynkowe,Sofy rozkładane,podkategoria,Funkcje,opcjonalna,82,94,12
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane|Na nóżkach,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-rozkladane,Meble wypoczynkowe,Sofy rozkładane,podkategoria,Na nóżkach,pewna,82,94,12
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe|Liczba miejsc,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe,Meble wypoczynkowe,Sofy modułowe,podkategoria,Liczba miejsc,pewna,32,33,1
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe|Z pojemnikiem,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe,Meble wypoczynkowe,Sofy modułowe,podkategoria,Z pojemnikiem,pewna,30,33,3
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe|Funkcje,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe,Meble wypoczynkowe,Sofy modułowe,podkategoria,Funkcje,opcjonalna,11,33,22
+meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe|Na nóżkach,/meble/meble-wypoczynkowe/sofy-i-kanapy/sofy-i-kanapy-modulowe,Meble wypoczynkowe,Sofy modułowe,podkategoria,Na nóżkach,pewna,28,33,5
+meble-wypoczynkowe/sofy-i-kanapy/wersalki|Liczba miejsc,/meble/meble-wypoczynkowe/sofy-i-kanapy/wersalki,Meble wypoczynkowe,Wersalki,podkategoria,Liczba miejsc,pewna,42,42,0
+meble-wypoczynkowe/sofy-i-kanapy/wersalki|Rodzaj obicia,/meble/meble-wypoczynkowe/sofy-i-kanapy/wersalki,Meble wypoczynkowe,Wersalki,podkategoria,Rodzaj obicia,obicie,16,42,26
+meble-wypoczynkowe/sofy-i-kanapy/wersalki|Właściwości obicia,/meble/meble-wypoczynkowe/sofy-i-kanapy/wersalki,Meble wypoczynkowe,Wersalki,podkategoria,Właściwości obicia,obicie,34,42,8
+meble-wypoczynkowe/sofy-i-kanapy/wersalki|Z pojemnikiem,/meble/meble-wypoczynkowe/sofy-i-kanapy/wersalki,Meble wypoczynkowe,Wersalki,podkategoria,Z pojemnikiem,pewna,42,42,0
+meble-wypoczynkowe/sofy-i-kanapy/wersalki|Funkcje,/meble/meble-wypoczynkowe/sofy-i-kanapy/wersalki,Meble wypoczynkowe,Wersalki,podkategoria,Funkcje,opcjonalna,6,42,36
+meble-wypoczynkowe/sofy-i-kanapy/wersalki|Na nóżkach,/meble/meble-wypoczynkowe/sofy-i-kanapy/wersalki,Meble wypoczynkowe,Wersalki,podkategoria,Na nóżkach,pewna,6,42,36
+meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania|Liczba miejsc,/meble/meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania,Meble wypoczynkowe,Narożniki z funkcją spania,podkategoria,Liczba miejsc,pewna,741,805,64
+meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania|Rodzaj obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania,Meble wypoczynkowe,Narożniki z funkcją spania,podkategoria,Rodzaj obicia,obicie,105,805,700
+meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania|Właściwości obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania,Meble wypoczynkowe,Narożniki z funkcją spania,podkategoria,Właściwości obicia,obicie,151,805,654
+meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania|Z pojemnikiem,/meble/meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania,Meble wypoczynkowe,Narożniki z funkcją spania,podkategoria,Z pojemnikiem,pewna,756,805,49
+meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania|Funkcje,/meble/meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania,Meble wypoczynkowe,Narożniki z funkcją spania,podkategoria,Funkcje,opcjonalna,752,805,53
+meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania|Na nóżkach,/meble/meble-wypoczynkowe/narozniki/narozniki-z-funkcja-spania,Meble wypoczynkowe,Narożniki z funkcją spania,podkategoria,Na nóżkach,pewna,732,805,73
+meble-wypoczynkowe/narozniki/narozniki-modulowe|Liczba miejsc,/meble/meble-wypoczynkowe/narozniki/narozniki-modulowe,Meble wypoczynkowe,Narożniki modułowe,podkategoria,Liczba miejsc,pewna,30,45,15
+meble-wypoczynkowe/narozniki/narozniki-modulowe|Rodzaj obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-modulowe,Meble wypoczynkowe,Narożniki modułowe,podkategoria,Rodzaj obicia,obicie,1,45,44
+meble-wypoczynkowe/narozniki/narozniki-modulowe|Właściwości obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-modulowe,Meble wypoczynkowe,Narożniki modułowe,podkategoria,Właściwości obicia,obicie,6,45,39
+meble-wypoczynkowe/narozniki/narozniki-modulowe|Z pojemnikiem,/meble/meble-wypoczynkowe/narozniki/narozniki-modulowe,Meble wypoczynkowe,Narożniki modułowe,podkategoria,Z pojemnikiem,pewna,8,45,37
+meble-wypoczynkowe/narozniki/narozniki-modulowe|Funkcje,/meble/meble-wypoczynkowe/narozniki/narozniki-modulowe,Meble wypoczynkowe,Narożniki modułowe,podkategoria,Funkcje,opcjonalna,2,45,43
+meble-wypoczynkowe/narozniki/narozniki-modulowe|Na nóżkach,/meble/meble-wypoczynkowe/narozniki/narozniki-modulowe,Meble wypoczynkowe,Narożniki modułowe,podkategoria,Na nóżkach,pewna,24,45,21
+meble-wypoczynkowe/narozniki/narozniki-l|Liczba miejsc,/meble/meble-wypoczynkowe/narozniki/narozniki-l,Meble wypoczynkowe,Narożniki L,podkategoria,Liczba miejsc,pewna,971,1057,86
+meble-wypoczynkowe/narozniki/narozniki-l|Rodzaj obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-l,Meble wypoczynkowe,Narożniki L,podkategoria,Rodzaj obicia,obicie,117,1057,940
+meble-wypoczynkowe/narozniki/narozniki-l|Właściwości obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-l,Meble wypoczynkowe,Narożniki L,podkategoria,Właściwości obicia,obicie,156,1057,901
+meble-wypoczynkowe/narozniki/narozniki-l|Z pojemnikiem,/meble/meble-wypoczynkowe/narozniki/narozniki-l,Meble wypoczynkowe,Narożniki L,podkategoria,Z pojemnikiem,pewna,927,1057,130
+meble-wypoczynkowe/narozniki/narozniki-l|Funkcje,/meble/meble-wypoczynkowe/narozniki/narozniki-l,Meble wypoczynkowe,Narożniki L,podkategoria,Funkcje,opcjonalna,763,1057,294
+meble-wypoczynkowe/narozniki/narozniki-l|Na nóżkach,/meble/meble-wypoczynkowe/narozniki/narozniki-l,Meble wypoczynkowe,Narożniki L,podkategoria,Na nóżkach,pewna,911,1057,146
+meble-wypoczynkowe/narozniki/narozniki-u|Liczba miejsc,/meble/meble-wypoczynkowe/narozniki/narozniki-u,Meble wypoczynkowe,Narożniki U,podkategoria,Liczba miejsc,pewna,174,189,15
+meble-wypoczynkowe/narozniki/narozniki-u|Rodzaj obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-u,Meble wypoczynkowe,Narożniki U,podkategoria,Rodzaj obicia,obicie,9,189,180
+meble-wypoczynkowe/narozniki/narozniki-u|Właściwości obicia,/meble/meble-wypoczynkowe/narozniki/narozniki-u,Meble wypoczynkowe,Narożniki U,podkategoria,Właściwości obicia,obicie,17,189,172
+meble-wypoczynkowe/narozniki/narozniki-u|Z pojemnikiem,/meble/meble-wypoczynkowe/narozniki/narozniki-u,Meble wypoczynkowe,Narożniki U,podkategoria,Z pojemnikiem,pewna,176,189,13
+meble-wypoczynkowe/narozniki/narozniki-u|Funkcje,/meble/meble-wypoczynkowe/narozniki/narozniki-u,Meble wypoczynkowe,Narożniki U,podkategoria,Funkcje,opcjonalna,168,189,21
+meble-wypoczynkowe/narozniki/narozniki-u|Na nóżkach,/meble/meble-wypoczynkowe/narozniki/narozniki-u,Meble wypoczynkowe,Narożniki U,podkategoria,Na nóżkach,pewna,173,189,16
+meble-wypoczynkowe/fotele/fotele-rozkladane|Rodzaj obicia,/meble/meble-wypoczynkowe/fotele/fotele-rozkladane,Meble wypoczynkowe,Fotele rozkładane,podkategoria,Rodzaj obicia,obicie,24,78,54
+meble-wypoczynkowe/fotele/fotele-rozkladane|Właściwości obicia,/meble/meble-wypoczynkowe/fotele/fotele-rozkladane,Meble wypoczynkowe,Fotele rozkładane,podkategoria,Właściwości obicia,obicie,31,78,47
+meble-wypoczynkowe/fotele/fotele-rozkladane|Funkcje,/meble/meble-wypoczynkowe/fotele/fotele-rozkladane,Meble wypoczynkowe,Fotele rozkładane,podkategoria,Funkcje,opcjonalna,63,78,15
+meble-wypoczynkowe/fotele/fotele-rozkladane|Na nóżkach,/meble/meble-wypoczynkowe/fotele/fotele-rozkladane,Meble wypoczynkowe,Fotele rozkładane,podkategoria,Na nóżkach,pewna,63,78,15
+meble-wypoczynkowe/fotele/fotele-relaksacyjne|Rodzaj obicia,/meble/meble-wypoczynkowe/fotele/fotele-relaksacyjne,Meble wypoczynkowe,Fotele relaksacyjne,podkategoria,Rodzaj obicia,obicie,25,57,32
+meble-wypoczynkowe/fotele/fotele-relaksacyjne|Właściwości obicia,/meble/meble-wypoczynkowe/fotele/fotele-relaksacyjne,Meble wypoczynkowe,Fotele relaksacyjne,podkategoria,Właściwości obicia,obicie,3,57,54
+meble-wypoczynkowe/fotele/fotele-relaksacyjne|Funkcje,/meble/meble-wypoczynkowe/fotele/fotele-relaksacyjne,Meble wypoczynkowe,Fotele relaksacyjne,podkategoria,Funkcje,opcjonalna,48,57,9
+meble-wypoczynkowe/fotele/fotele-relaksacyjne|Na nóżkach,/meble/meble-wypoczynkowe/fotele/fotele-relaksacyjne,Meble wypoczynkowe,Fotele relaksacyjne,podkategoria,Na nóżkach,pewna,49,57,8
+meble-wypoczynkowe/fotele/fotele-uszak|Rodzaj obicia,/meble/meble-wypoczynkowe/fotele/fotele-uszak,Meble wypoczynkowe,Fotele uszaki,podkategoria,Rodzaj obicia,obicie,8,48,40
+meble-wypoczynkowe/fotele/fotele-uszak|Właściwości obicia,/meble/meble-wypoczynkowe/fotele/fotele-uszak,Meble wypoczynkowe,Fotele uszaki,podkategoria,Właściwości obicia,obicie,7,48,41
+meble-wypoczynkowe/fotele/fotele-uszak|Funkcje,/meble/meble-wypoczynkowe/fotele/fotele-uszak,Meble wypoczynkowe,Fotele uszaki,podkategoria,Funkcje,opcjonalna,2,48,46
+meble-wypoczynkowe/fotele/fotele-uszak|Na nóżkach,/meble/meble-wypoczynkowe/fotele/fotele-uszak,Meble wypoczynkowe,Fotele uszaki,podkategoria,Na nóżkach,pewna,43,48,5
+meble-wypoczynkowe/fotele/fotele-i-lezaki-ogrodowe|Funkcje,/meble/meble-wypoczynkowe/fotele/fotele-i-lezaki-ogrodowe,Meble wypoczynkowe,Fotele i leżaki ogrodowe,podkategoria,Funkcje,opcjonalna,3,34,31
+meble-wypoczynkowe/fotele/fotele-i-lezaki-ogrodowe|Na nóżkach,/meble/meble-wypoczynkowe/fotele/fotele-i-lezaki-ogrodowe,Meble wypoczynkowe,Fotele i leżaki ogrodowe,podkategoria,Na nóżkach,pewna,23,34,11
+lozka-i-materace/lozka/lozka-kontynentalne|Liczba miejsc,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Liczba miejsc,pewna,314,398,84
+lozka-i-materace/lozka/lozka-kontynentalne|Rodzaj obicia,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Rodzaj obicia,obicie,10,398,388
+lozka-i-materace/lozka/lozka-kontynentalne|Właściwości obicia,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Właściwości obicia,obicie,18,398,380
+lozka-i-materace/lozka/lozka-kontynentalne|Materac w zestawie,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Materac w zestawie,pewna,352,398,46
+lozka-i-materace/lozka/lozka-kontynentalne|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Stelaż w zestawie,pewna,352,398,46
+lozka-i-materace/lozka/lozka-kontynentalne|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Z pojemnikiem,pewna,398,398,0
+lozka-i-materace/lozka/lozka-kontynentalne|Na nóżkach,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Na nóżkach,pewna,131,398,267
+lozka-i-materace/lozka/lozka-kontynentalne|Oświetlenie,/meble/lozka-i-materace/lozka/lozka-kontynentalne,Łóżka i materace,Łóżka kontynentalne,podkategoria,Oświetlenie,pewna,1,398,397
+lozka-i-materace/lozka/lozka-tapicerowane|Liczba miejsc,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Liczba miejsc,pewna,1049,1355,306
+lozka-i-materace/lozka/lozka-tapicerowane|Rodzaj obicia,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Rodzaj obicia,obicie,118,1355,1237
+lozka-i-materace/lozka/lozka-tapicerowane|Właściwości obicia,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Właściwości obicia,obicie,199,1355,1156
+lozka-i-materace/lozka/lozka-tapicerowane|Materac w zestawie,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Materac w zestawie,pewna,1146,1355,209
+lozka-i-materace/lozka/lozka-tapicerowane|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Stelaż w zestawie,pewna,1146,1355,209
+lozka-i-materace/lozka/lozka-tapicerowane|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Z pojemnikiem,pewna,1354,1355,1
+lozka-i-materace/lozka/lozka-tapicerowane|Na nóżkach,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Na nóżkach,pewna,268,1355,1087
+lozka-i-materace/lozka/lozka-tapicerowane|Oświetlenie,/meble/lozka-i-materace/lozka/lozka-tapicerowane,Łóżka i materace,Łóżka tapicerowane,podkategoria,Oświetlenie,pewna,30,1355,1325
+lozka-i-materace/lozka/lozka-drewniane|Liczba miejsc,/meble/lozka-i-materace/lozka/lozka-drewniane,Łóżka i materace,Łóżka drewniane,podkategoria,Liczba miejsc,pewna,117,262,145
+lozka-i-materace/lozka/lozka-drewniane|Materac w zestawie,/meble/lozka-i-materace/lozka/lozka-drewniane,Łóżka i materace,Łóżka drewniane,podkategoria,Materac w zestawie,pewna,117,262,145
+lozka-i-materace/lozka/lozka-drewniane|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozka-drewniane,Łóżka i materace,Łóżka drewniane,podkategoria,Stelaż w zestawie,pewna,117,262,145
+lozka-i-materace/lozka/lozka-drewniane|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozka-drewniane,Łóżka i materace,Łóżka drewniane,podkategoria,Z pojemnikiem,pewna,261,262,1
+lozka-i-materace/lozka/lozka-drewniane|Na nóżkach,/meble/lozka-i-materace/lozka/lozka-drewniane,Łóżka i materace,Łóżka drewniane,podkategoria,Na nóżkach,pewna,27,262,235
+lozka-i-materace/lozka/lozka-drewniane|Oświetlenie,/meble/lozka-i-materace/lozka/lozka-drewniane,Łóżka i materace,Łóżka drewniane,podkategoria,Oświetlenie,pewna,20,262,242
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Liczba miejsc,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Liczba miejsc,pewna,1165,1391,226
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Rodzaj obicia,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Rodzaj obicia,obicie,93,1391,1298
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Właściwości obicia,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Właściwości obicia,obicie,150,1391,1241
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Materac w zestawie,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Materac w zestawie,pewna,1232,1391,159
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Stelaż w zestawie,pewna,1232,1391,159
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Z pojemnikiem,pewna,1389,1391,2
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Na nóżkach,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Na nóżkach,pewna,363,1391,1028
+lozka-i-materace/lozka/lozka-z-pojemnikiem|Oświetlenie,/meble/lozka-i-materace/lozka/lozka-z-pojemnikiem,Łóżka i materace,Łóżka z pojemnikiem,podkategoria,Oświetlenie,pewna,203,1391,1188
+lozka-i-materace/lozka/lozka-pietrowe|Liczba miejsc,/meble/lozka-i-materace/lozka/lozka-pietrowe,Łóżka i materace,Łóżka piętrowe,podkategoria,Liczba miejsc,pewna,56,56,0
+lozka-i-materace/lozka/lozka-pietrowe|Materac w zestawie,/meble/lozka-i-materace/lozka/lozka-pietrowe,Łóżka i materace,Łóżka piętrowe,podkategoria,Materac w zestawie,pewna,56,56,0
+lozka-i-materace/lozka/lozka-pietrowe|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozka-pietrowe,Łóżka i materace,Łóżka piętrowe,podkategoria,Stelaż w zestawie,pewna,56,56,0
+lozka-i-materace/lozka/lozka-pietrowe|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozka-pietrowe,Łóżka i materace,Łóżka piętrowe,podkategoria,Z pojemnikiem,pewna,56,56,0
+lozka-i-materace/lozka/lozka-pietrowe|Na nóżkach,/meble/lozka-i-materace/lozka/lozka-pietrowe,Łóżka i materace,Łóżka piętrowe,podkategoria,Na nóżkach,pewna,9,56,47
+lozka-i-materace/lozka/lozka-pietrowe|Oświetlenie,/meble/lozka-i-materace/lozka/lozka-pietrowe,Łóżka i materace,Łóżka piętrowe,podkategoria,Oświetlenie,pewna,2,56,54
+lozka-i-materace/lozka/lozka-chowane-i-polkotapczany|Liczba miejsc,/meble/lozka-i-materace/lozka/lozka-chowane-i-polkotapczany,Łóżka i materace,Łóżka chowane i półkotapczany,podkategoria,Liczba miejsc,pewna,30,30,0
+lozka-i-materace/lozka/lozka-chowane-i-polkotapczany|Materac w zestawie,/meble/lozka-i-materace/lozka/lozka-chowane-i-polkotapczany,Łóżka i materace,Łóżka chowane i półkotapczany,podkategoria,Materac w zestawie,pewna,28,30,2
+lozka-i-materace/lozka/lozka-chowane-i-polkotapczany|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozka-chowane-i-polkotapczany,Łóżka i materace,Łóżka chowane i półkotapczany,podkategoria,Stelaż w zestawie,pewna,28,30,2
+lozka-i-materace/lozka/lozka-chowane-i-polkotapczany|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozka-chowane-i-polkotapczany,Łóżka i materace,Łóżka chowane i półkotapczany,podkategoria,Z pojemnikiem,pewna,28,30,2
+lozka-i-materace/lozka/lozka-chowane-i-polkotapczany|Na nóżkach,/meble/lozka-i-materace/lozka/lozka-chowane-i-polkotapczany,Łóżka i materace,Łóżka chowane i półkotapczany,podkategoria,Na nóżkach,pewna,8,30,22
+lozka-i-materace/lozka/lozka-chowane-i-polkotapczany|Oświetlenie,/meble/lozka-i-materace/lozka/lozka-chowane-i-polkotapczany,Łóżka i materace,Łóżka chowane i półkotapczany,podkategoria,Oświetlenie,pewna,11,30,19
+lozka-i-materace/lozka/lozeczka-dla-dzieci|Materac w zestawie,/meble/lozka-i-materace/lozka/lozeczka-dla-dzieci,Łóżka i materace,Łóżeczka dla dzieci,podkategoria,Materac w zestawie,pewna,199,199,0
+lozka-i-materace/lozka/lozeczka-dla-dzieci|Stelaż w zestawie,/meble/lozka-i-materace/lozka/lozeczka-dla-dzieci,Łóżka i materace,Łóżeczka dla dzieci,podkategoria,Stelaż w zestawie,pewna,199,199,0
+lozka-i-materace/lozka/lozeczka-dla-dzieci|Z pojemnikiem,/meble/lozka-i-materace/lozka/lozeczka-dla-dzieci,Łóżka i materace,Łóżeczka dla dzieci,podkategoria,Z pojemnikiem,pewna,199,199,0
+lozka-i-materace/lozka/lozeczka-dla-dzieci|Na nóżkach,/meble/lozka-i-materace/lozka/lozeczka-dla-dzieci,Łóżka i materace,Łóżeczka dla dzieci,podkategoria,Na nóżkach,pewna,162,199,37
+lozka-i-materace/lozka/lozeczka-dla-dzieci|Oświetlenie,/meble/lozka-i-materace/lozka/lozeczka-dla-dzieci,Łóżka i materace,Łóżeczka dla dzieci,podkategoria,Oświetlenie,pewna,161,199,38
+lozka-i-materace/materace/materace-sprezynowe|Liczba miejsc,/meble/lozka-i-materace/materace/materace-sprezynowe,Łóżka i materace,Materace sprężynowe,podkategoria,Liczba miejsc,pewna,289,317,28
+lozka-i-materace/materace/materace-sprezynowe|Twardość materaca,/meble/lozka-i-materace/materace/materace-sprezynowe,Łóżka i materace,Materace sprężynowe,podkategoria,Twardość materaca,pewna,266,317,51
+lozka-i-materace/materace/materace-piankowe|Liczba miejsc,/meble/lozka-i-materace/materace/materace-piankowe,Łóżka i materace,Materace piankowe,podkategoria,Liczba miejsc,pewna,355,373,18
+lozka-i-materace/materace/materace-piankowe|Twardość materaca,/meble/lozka-i-materace/materace/materace-piankowe,Łóżka i materace,Materace piankowe,podkategoria,Twardość materaca,pewna,346,373,27
+lozka-i-materace/materace/materace-hybrydowe|Liczba miejsc,/meble/lozka-i-materace/materace/materace-hybrydowe,Łóżka i materace,Materace hybrydowe,podkategoria,Liczba miejsc,pewna,303,305,2
+lozka-i-materace/materace/materace-lateksowe|Liczba miejsc,/meble/lozka-i-materace/materace/materace-lateksowe,Łóżka i materace,Materace lateksowe,podkategoria,Liczba miejsc,pewna,168,186,18
+lozka-i-materace/materace/materace-lateksowe|Twardość materaca,/meble/lozka-i-materace/materace/materace-lateksowe,Łóżka i materace,Materace lateksowe,podkategoria,Twardość materaca,pewna,186,186,0
+lozka-i-materace/materace/nakladki-na-materace|Liczba miejsc,/meble/lozka-i-materace/materace/nakladki-na-materace,Łóżka i materace,Nakładki na materace,podkategoria,Liczba miejsc,pewna,24,238,214
+krzesla-i-siedziska/krzesla/krzesla-tapicerowane|Rodzaj obicia,/meble/krzesla-i-siedziska/krzesla/krzesla-tapicerowane,Krzesła i siedziska,Krzesła tapicerowane,podkategoria,Rodzaj obicia,obicie,159,738,579
+krzesla-i-siedziska/krzesla/krzesla-tapicerowane|Właściwości obicia,/meble/krzesla-i-siedziska/krzesla/krzesla-tapicerowane,Krzesła i siedziska,Krzesła tapicerowane,podkategoria,Właściwości obicia,obicie,128,738,610
+krzesla-i-siedziska/krzesla/krzesla-tapicerowane|Regulacja,/meble/krzesla-i-siedziska/krzesla/krzesla-tapicerowane,Krzesła i siedziska,Krzesła tapicerowane,podkategoria,Regulacja,opcjonalna,3,738,735
+krzesla-i-siedziska/krzesla/krzesla-obrotowe|Rodzaj obicia,/meble/krzesla-i-siedziska/krzesla/krzesla-obrotowe,Krzesła i siedziska,Krzesła obrotowe,podkategoria,Rodzaj obicia,obicie,93,447,354
+krzesla-i-siedziska/krzesla/krzesla-obrotowe|Właściwości obicia,/meble/krzesla-i-siedziska/krzesla/krzesla-obrotowe,Krzesła i siedziska,Krzesła obrotowe,podkategoria,Właściwości obicia,obicie,18,447,429
+stoly-i-stoliki/stoly-do-jadalni/stoly-rozkladane|Liczba miejsc,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-rozkladane,Stoły i stoliki,Stoły rozkładane,podkategoria,Liczba miejsc,pewna,383,396,13
+stoly-i-stoliki/stoly-do-jadalni/stoly-rozkladane|Kształt blatu,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-rozkladane,Stoły i stoliki,Stoły rozkładane,podkategoria,Kształt blatu,pewna,384,396,12
+stoly-i-stoliki/stoly-do-jadalni/stoly-rozkladane|Rozkładane,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-rozkladane,Stoły i stoliki,Stoły rozkładane,podkategoria,Rozkładane,pewna,387,396,9
+stoly-i-stoliki/stoly-do-jadalni/stoly-okragle|Liczba miejsc,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-okragle,Stoły i stoliki,Stoły okrągłe,podkategoria,Liczba miejsc,pewna,256,266,10
+stoly-i-stoliki/stoly-do-jadalni/stoly-okragle|Kształt blatu,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-okragle,Stoły i stoliki,Stoły okrągłe,podkategoria,Kształt blatu,pewna,260,266,6
+stoly-i-stoliki/stoly-do-jadalni/stoly-okragle|Rozkładane,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-okragle,Stoły i stoliki,Stoły okrągłe,podkategoria,Rozkładane,pewna,262,266,4
+stoly-i-stoliki/stoly-do-jadalni/stoly-prostokatne|Liczba miejsc,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-prostokatne,Stoły i stoliki,Stoły prostokątne,podkategoria,Liczba miejsc,pewna,590,605,15
+stoly-i-stoliki/stoly-do-jadalni/stoly-prostokatne|Kształt blatu,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-prostokatne,Stoły i stoliki,Stoły prostokątne,podkategoria,Kształt blatu,pewna,593,605,12
+stoly-i-stoliki/stoly-do-jadalni/stoly-prostokatne|Rozkładane,/meble/stoly-i-stoliki/stoly-do-jadalni/stoly-prostokatne,Stoły i stoliki,Stoły prostokątne,podkategoria,Rozkładane,pewna,577,605,28
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace|Liczba drzwi,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace,Meble do przechowywania,Szafki pod umywalkę wiszące,podkategoria,Liczba drzwi,pewna,119,309,190
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace|Liczba szuflad,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace,Meble do przechowywania,Szafki pod umywalkę wiszące,podkategoria,Liczba szuflad,pewna,239,309,70
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace|Liczba półek,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace,Meble do przechowywania,Szafki pod umywalkę wiszące,podkategoria,Liczba półek,pewna,134,309,175
+meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace|Oświetlenie,/meble/meble-do-przechowywania/szafki-lazienkowe/szafki-pod-umywalke/szafki-pod-umywalke-wiszace,Meble do przechowywania,Szafki pod umywalkę wiszące,podkategoria,Oświetlenie,pewna,46,309,263
