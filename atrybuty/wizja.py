@@ -492,9 +492,12 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
 
         podsumowanie["zapytan"] += 1
         podsumowanie["werdykty"][odp.werdykt] = podsumowanie["werdykty"].get(odp.werdykt, 0) + 1
-        if i % 25 == 0 or i == len(pozycje):
-            echo(f"  [{i}/{len(pozycje)}] {odp.werdykt:10s} "
-                 f"koszt dotąd ${koszt_usd(model, podsumowanie['tok_we'], podsumowanie['tok_wy']):.3f}")
+        # Linia na każde zapytanie: co 25 dawało kilka minut ciszy w terminalu,
+        # która wyglądała jak zawieszenie (przy próbce 100 z --luki).
+        echo(f"  [{i}/{len(pozycje)}] {poz['produkt_id']} {poz['atrybut']}: {odp.werdykt}"
+             + (f" → {odp.wartosc_ze_zdjecia}" if odp.werdykt == "niezgodne" else "")
+             + (" (cache)" if odp.z_cache else "")
+             + f" · koszt dotąd ${koszt_usd(model, podsumowanie['tok_we'], podsumowanie['tok_wy']):.3f}")
 
     podsumowanie["koszt_usd"] = koszt_usd(model, podsumowanie["tok_we"],
                                           podsumowanie["tok_wy"])
