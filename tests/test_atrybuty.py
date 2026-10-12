@@ -3728,13 +3728,29 @@ def test_pusty_napis_to_brak_a_nie_wartosc(konfig_luk):
 
 
 def test_propozycja_z_nazwy_nie_jest_chowana_przez_brak(konfig_luk, monkeypatch):
-    """„Szafa 3-drzwiowa” ma już propozycję L2-NAZWA-UZUPELNIA; brak bez propozycji
+    """„Komoda 3-drzwiowa” ma propozycję L2-NAZWA-UZUPELNIA; brak bez propozycji
     dla tej samej komórki dzieliłby z nią klucz decyzji, więc odłożenie braku
     ukryłoby konkretną propozycję (inspekcja R03)."""
-    from atrybuty import detektory
+    import yaml
+    from atrybuty import config, detektory
+    (konfig_luk / "slowniki.yaml").write_text(yaml.safe_dump({"atrybuty": {"Liczba drzwi": {
+        "wartosci": ["2-drzwiowe", "3-drzwiowe"]}}}, allow_unicode=True), encoding="utf-8")
+    config.wyczysc_cache()
     p = _pl("1", nazwa="Komoda 3-drzwiowa", atrybuty={"Szerokość": "80", "Materiał": "płyta"})
     wynik = [f for f in detektory.uruchom([p]) if f.atrybut == "Liczba drzwi"]
     assert len(wynik) == 1 and wynik[0].regula_id == "L2-NAZWA-UZUPELNIA"
+    assert wynik[0].proponowana_wartosc == "3-drzwiowe"
+
+
+def test_dwa_zgloszenia_bez_propozycji_zostaje_brak_luki(konfig_luk):
+    """Gdy żadna strona nie ma wartości, zostaje brak luki — z jego grupą,
+    linkiem z /filtry i ochroną przed „do importu” — a tamten dowód dopisany
+    (inspekcja REVIEW-01)."""
+    from atrybuty import detektory
+    p = _pl("1", nazwa="Komoda 3-drzwiowa", atrybuty={"Szerokość": "80", "Materiał": "płyta"})
+    wynik = [f for f in detektory.uruchom([p]) if f.atrybut == "Liczba drzwi"]
+    assert len(wynik) == 1 and wynik[0].regula_id == "L1-LUKA-BRAK"
+    assert "Nazwa mówi o 3" in wynik[0].dowod
 
 
 def test_sprzeczne_propozycje_dla_tej_samej_komorki(konfig_luk):
@@ -3930,3 +3946,34 @@ def test_led_w_nazwie_tylko_gdy_oznacza_zestaw(konfig_luk, nazwa, oczekiwana):
     """„bez LED” i „LED opcjonalnie” dawały „Oświetlenie: w zestawie” (R18)."""
     f = _luki([_pl("1", nazwa=nazwa)])[("1", "Oświetlenie")]
     assert f.proponowana_wartosc == oczekiwana
+
+
+
+def test_propozycja_z_feedu_zastepuje_luke_tej_samej_komorki(konfig_luk, tmp_path, monkeypatch):
+    """L4 dopisuje się po uzgodnieniu luk; przy filtrze wymiarowym brak luki
+    i propozycja z feedu dzieliłyby klucz decyzji (REVIEW-02)."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import config, db, wizja, zrodla
+    config.zapisz_filtry({"komoda": ["Szerokość"]})
+    baza = tmp_path / "l4.db"
+    p = _pl("1", atrybuty={"Materiał": "płyta", "Wysokość": "80"})
+    con = db.polacz(baza); wizja.przygotuj_baze(con); zrodla.przygotuj_baze(con)
+    przebieg = db.zapisz_przebieg(con, "t.csv", [p], pipeline.wszystkie_findingi([p], []))
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE regula_id='L1-LUKA-BRAK'").fetchone()[0] == 1
+    monkeypatch.setattr(zrodla, "_porownaj", lambda con: ([{
+        "produkt_id": "1", "atrybut": "Szerokość", "regula_id": "L4-UZUPELNIA", "waga": "srednia",
+        "pewnosc": 0.8, "stara": None, "proponowana": "120", "dowod": "feed", "grupa": "g"}], []))
+    przed = con.execute("SELECT liczba_findingow FROM przebiegi WHERE id=?", (przebieg,)).fetchone()[0]
+    zrodla.dopisz_findingi_l4(con, przebieg)
+    reg = [r[0] for r in con.execute("SELECT regula_id FROM findingi WHERE atrybut='Szerokość'")]
+    po = con.execute("SELECT liczba_findingow FROM przebiegi WHERE id=?", (przebieg,)).fetchone()[0]
+    con.close()
+    assert reg == ["L4-UZUPELNIA"] and po == przed
+
+
+def test_csv_dla_dostawcy_bez_formul(konfig_luk):
+    """Nazwa „=HYPERLINK(...)” w arkuszu dostawcy byłaby formułą (REVIEW-03)."""
+    import atrybuty.app as app_mod
+    assert app_mod._komorka_csv('=HYPERLINK("x")') == """'=HYPERLINK("x")"""
+    assert app_mod._komorka_csv("-5") == "'-5"
+    assert app_mod._komorka_csv("Komoda") == "Komoda" and app_mod._komorka_csv(None) == ""

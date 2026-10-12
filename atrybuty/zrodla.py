@@ -1121,6 +1121,20 @@ def dopisz_findingi_l4(con: sqlite3.Connection, przebieg_id: int) -> int:
     con.commit()
     if not znalezione:
         return 0
+    # L4 dopisuje się po uzgodnieniu luk. Propozycja z feedu dla pustej komórki
+    # dzieliłaby klucz decyzji z luką (brakiem albo słabszą propozycją) —
+    # feed producenta jest mocniejszym źródłem, więc luka ustępuje (REVIEW-02).
+    usuniete = 0
+    for f in znalezione:
+        if f["stara"] is None or not str(f["stara"]).strip():
+            usuniete += con.execute(
+                "DELETE FROM findingi WHERE przebieg_id=? AND produkt_id=? AND atrybut=?"
+                " AND (regula_id='L1-LUKA-BRAK' OR regula_id LIKE 'L2-LUKA-%')"
+                " AND IFNULL(TRIM(stara_wartosc),'')=''",
+                (przebieg_id, f["produkt_id"], f["atrybut"])).rowcount
+    if usuniete:
+        con.execute("UPDATE przebiegi SET liczba_findingow = liczba_findingow - ? WHERE id=?",
+                    (usuniete, przebieg_id))
     con.executemany(
         "INSERT INTO findingi (przebieg_id,produkt_id,atrybut,regula_id,warstwa,waga,"
         "pewnosc,stara_wartosc,proponowana_wartosc,dowod,grupa,hasz_starej)"

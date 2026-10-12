@@ -856,6 +856,13 @@ def filtry(request: Request, kategoria: str = "", atrybut: str = "",
     })
 
 
+def _komorka_csv(x) -> str:
+    """Tekst bez mocy formuły. CSV trafia do dostawców; nazwa produktu
+    zaczynająca się od „=” stałaby się w arkuszu formułą (REVIEW-03)."""
+    s = "" if x is None else str(x)
+    return "'" + s if s[:1] in ("=", "+", "-", "@", "\t", "\r") else s
+
+
 @app.get("/filtry/braki.csv")
 def filtry_braki_csv(kategoria: str, atrybut: str, producent: str = ""):
     """Produkty bez wartości filtra — do wysłania dostawcy albo uzupełnienia ręcznie."""
@@ -869,10 +876,11 @@ def filtry_braki_csv(kategoria: str, atrybut: str, producent: str = ""):
     w.writerow(["id", "nazwa", "producent", "kolekcja", "filtr", "propozycja",
                 "prawdopodobienstwo", "link_panelu"])
     for r in wiersze:
-        w.writerow([r["id"], r["nazwa"], r["producent"], r["kolekcja"], atrybut,
+        w.writerow([_komorka_csv(x) for x in (
+                    r["id"], r["nazwa"], r["producent"], r["kolekcja"], atrybut,
                     r["propozycja"] or "",
                     f"{r['pewnosc']:.0%}" if r["propozycja"] is not None and r["pewnosc"] else "",
-                    config.link_produktu(r["id"])])
+                    config.link_produktu(r["id"]))])
     bufor.seek(0)
     # Nagłówek HTTP jest w Latin-1 — „narożnik” w nazwie pliku wywracał
     # pobieranie (inspekcja R12). Nazwa tylko z ASCII.

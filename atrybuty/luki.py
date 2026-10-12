@@ -314,9 +314,16 @@ def uzgodnij(istniejace: list[Finding], luki_: list[Finding]) -> list[Finding]:
         if not indeksy:
             wynik_luk.append(f)
             continue
-        if f.proponowana_wartosc is None:
-            continue                  # brak ustępuje: komórka jest już zgłoszona
         z_propozycja = [i for i in indeksy if istniejace[i].proponowana_wartosc is not None]
+        if f.proponowana_wartosc is None:
+            if z_propozycja:
+                continue              # brak ustępuje konkretnej propozycji
+            # Obie strony bez propozycji: zostaje brak luki — jego grupa, link
+            # z /filtry i ochrona przed „do importu” — z tamtym dowodem (REVIEW-01).
+            f.dowod += " · Także: " + "; ".join(istniejace[i].dowod for i in indeksy)
+            usun_ist.update(indeksy)
+            wynik_luk.append(f)
+            continue
         if not z_propozycja:
             # inne zgłoszenie tylko sygnalizuje brak — luka niesie wartość, więc
             # zostaje ona, z tamtym dowodem dopisanym dla kontekstu
