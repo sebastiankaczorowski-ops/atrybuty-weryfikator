@@ -3,6 +3,19 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-12 · „Na nóżkach” ma definicję; ponowny odczyt ze zdjęć
+
+- Po próbce 100 odczytów: model brał drobne stopki i regulatory poziomu za nóżki
+  (szafa Candy 2D, szafka RTV), a komodę stojącą na bokach korpusu (Calmo) też
+  mógł tak ocenić. Pytanie ma teraz definicję filtra: **tak** tylko przy
+  wyraźnych, osobnych nogach z prześwitem ok. 5 cm lub więcej; **nie** przy
+  bokach sięgających podłogi, cokole, płozach, kółkach, stopkach, regulatorach
+  i meblach wiszących.
+- Już odczytane, nierozstrzygnięte propozycje można przeczytać jeszcze raz
+  z nową definicją: `pipeline wizja --luki --powtorz --atrybut "Na nóżkach"`.
+  Liczy się najnowszy odczyt; jeśli teraz „nie widać”, propozycja wraca do braku.
+- Szacunek kosztu liczy się ze średniej z faktycznie zapłaconych zapytań.
+
 ## 2026-10-12 · Luki w filtrach: odczyt brakującej wartości ze zdjęcia
 
 - Gdy żadne źródło nie zna wartości filtra, można ją **odczytać ze zdjęcia**

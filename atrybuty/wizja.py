@@ -88,7 +88,20 @@ PYTANIA: dict[str, str] = {
     "Tapicerowane": "Czy ten mebel jest tapicerowany?",
     "Zagłówek": "Czy ten mebel ma zagłówek?",
     "Podłokietniki": "Czy ten mebel ma podłokietniki?",
-    "Na nóżkach": "Czy ten mebel stoi na widocznych nóżkach?",
+    # Definicja filtra, nie potoczne „ma coś pod spodem”: model brał drobne
+    # stopki i regulatory poziomu za nóżki (szafa Candy 2D, szafka RTV —
+    # uwagi z próbki 12.10.2026). Klient zaznaczający filtr szuka mebla
+    # uniesionego na nogach, z prześwitem.
+    # Komoda Calmo: prześwit pod szufladami, ale stoi na bokach korpusu
+    # sięgających podłogi — to nie są nóżki, choć „widać przerwę”.
+    "Na nóżkach": "Czy ten mebel stoi na nóżkach w rozumieniu filtra sklepu? "
+                  "TAK tylko wtedy, gdy korpus jest uniesiony nad podłogą na wyraźnych, "
+                  "osobnych nogach (cztery lub więcej, albo noga/rama pod spodem) i pod "
+                  "meblem widać prześwit (orientacyjnie 5 cm lub więcej). "
+                  "NIE, gdy mebel stoi na bokach korpusu sięgających podłogi (nawet jeśli "
+                  "pod szufladami jest przerwa), na cokole, pełnej płycie, płozach albo "
+                  "kółkach, na drobnych stopkach, ślizgaczach lub regulatorach poziomu "
+                  "(prześwit do ok. 2 cm), albo gdy jest wiszący.",
     "Rodzaj frontu": "Jakie są fronty tego mebla: pełne, ryflowane, przeszklone, z lustrem, ażurowe?",
     "Dekoracje": "Jakie zdobienia widać na tym meblu?",
     "Styl": "W jakim stylu utrzymany jest ten mebel?",
@@ -744,13 +757,18 @@ def _zparsuj_wymiary(surowe: dict) -> OdpowiedzWymiary:
 # --- luki w filtrach: odczyt brakującej wartości ze zdjęcia -----------------
 
 def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = None,
-                  atrybut: str = "", producent: str = "", losowo: bool = False) -> list[dict]:
+                  atrybut: str = "", producent: str = "", losowo: bool = False,
+                  powtorz: bool = False) -> list[dict]:
     """Braki bez propozycji (L1-LUKA-BRAK), które da się odczytać ze zdjęcia.
 
     Osobno od `kandydaci`: brak ma pewność 1,0 właśnie po to, żeby nie wpadał
     do zwykłej bramki — tu trafia tylko wtedy, gdy człowiek uruchomi odczyt.
     """
     obslugiwane = ",".join(f"'{a}'" for a in sorted(obslugiwane_atrybuty()))
+    # Powtórka (po zmianie pytania): także już odczytane, jeszcze nierozstrzygnięte.
+    # Ten sam hasz pytania wraca z cache za darmo — płaci się tylko za nowe pytanie.
+    warunek = ("f.regula_id IN ('L1-LUKA-BRAK', 'L2-LUKA-ZDJECIE')" if powtorz
+               else "f.regula_id = 'L1-LUKA-BRAK' AND w.werdykt IS NULL")
     q = f"""
       SELECT f.produkt_id, f.atrybut, f.stara_wartosc, f.regula_id, f.pewnosc,
              p.nazwa, p.producent, p.kategoria, p.zdjecie, p.zdjecia
@@ -758,8 +776,8 @@ def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = No
       LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
                          AND d.hasz_starej=f.hasz_starej
       LEFT JOIN werdykty_wizji w ON w.produkt_id = f.produkt_id AND w.atrybut = f.atrybut
-      WHERE f.przebieg_id = :przebieg AND f.regula_id = 'L1-LUKA-BRAK'
-        AND d.status IS NULL AND w.werdykt IS NULL
+      WHERE f.przebieg_id = :przebieg AND {warunek}
+        AND d.status IS NULL
         AND p.zdjecie <> '' AND f.atrybut IN ({obslugiwane})
     """
     par: dict = {"przebieg": przebieg}
@@ -767,6 +785,7 @@ def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = No
         q += " AND f.atrybut = :atrybut"; par["atrybut"] = atrybut
     if producent:
         q += " AND p.producent = :producent"; par["producent"] = producent
+    q += " GROUP BY f.produkt_id, f.atrybut"
     q += " ORDER BY RANDOM()" if losowo else " ORDER BY f.atrybut, p.producent, f.produkt_id"
     if limit:
         q += " LIMIT :limit"; par["limit"] = limit
@@ -777,13 +796,21 @@ def odczyty_luk(con: sqlite3.Connection) -> dict[tuple[str, str], dict]:
     """{(produkt, atrybut): odczyt} — wartości odczytane ze zdjęcia dla pustych pól.
 
     Trwałe między importami: kolejny import zamienia brak w propozycję bez
-    ponownego płacenia za to samo zdjęcie.
+    ponownego płacenia za to samo zdjęcie. Liczy się NAJNOWSZY odczyt — po
+    zmianie pytania (np. definicji „Na nóżkach”) stary zostaje w tabeli obok,
+    bo klucz obejmuje hasz pytania.
     """
     przygotuj_baze(con)
-    q = """SELECT produkt_id, atrybut, wartosc_ze_zdjecia, pewnosc, uzasadnienie, model
-           FROM werdykty_wizji
-           WHERE werdykt = 'niezgodne' AND TRIM(IFNULL(wartosc_w_bazie, '')) = ''
-             AND TRIM(IFNULL(wartosc_ze_zdjecia, '')) <> ''"""
+    q = """SELECT w.produkt_id, w.atrybut, w.wartosc_ze_zdjecia, w.pewnosc, w.uzasadnienie, w.model
+           FROM werdykty_wizji w
+           WHERE TRIM(IFNULL(w.wartosc_w_bazie, '')) = ''
+             -- rowid, nie utworzono: znacznik ma dokładność do sekundy i dwa
+             -- odczyty z tej samej sekundy remisowały; rowid rośnie z zapisem
+             AND w.rowid = (SELECT MAX(x.rowid) FROM werdykty_wizji x
+                                WHERE x.produkt_id = w.produkt_id AND x.atrybut = w.atrybut
+                                  AND TRIM(IFNULL(x.wartosc_w_bazie, '')) = ''
+                                  AND x.werdykt <> 'blad')
+             AND w.werdykt = 'niezgodne' AND TRIM(IFNULL(w.wartosc_ze_zdjecia, '')) <> ''"""
     return {(r[0], r[1]): {"wartosc": r[2], "pewnosc": float(r[3] or 0),
                            "uzasadnienie": r[4] or "", "model": r[5] or ""}
             for r in con.execute(q)}
@@ -811,14 +838,15 @@ def zamien_braki(con: sqlite3.Connection, przebieg: int, produkt_id: str = "",
     """
     from . import luki, panel_format
     odczyty = odczyty_luk(con)
-    if not odczyty:
-        return 0
     etykiety = panel_format.wczytaj_etykiety()
-    q = """SELECT f.id, f.produkt_id, f.atrybut, p.kategoria, p.producent
+    # Także otwarte propozycje ze zdjęcia: po powtórnym odczycie (nowa definicja)
+    # dostają nową wartość albo wracają do braku, gdy teraz „nie widać”.
+    q = """SELECT f.id, f.produkt_id, f.atrybut, p.kategoria, p.producent, f.regula_id
            FROM findingi f JOIN produkty p ON p.id = f.produkt_id
            LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
                               AND d.hasz_starej=f.hasz_starej
-           WHERE f.przebieg_id = ? AND f.regula_id = 'L1-LUKA-BRAK' AND d.status IS NULL"""
+           WHERE f.przebieg_id = ? AND f.regula_id IN ('L1-LUKA-BRAK', 'L2-LUKA-ZDJECIE')
+             AND d.status IS NULL"""
     par: list = [przebieg]
     if produkt_id:
         q += " AND f.produkt_id = ?"; par.append(produkt_id)
@@ -827,9 +855,13 @@ def zamien_braki(con: sqlite3.Connection, przebieg: int, produkt_id: str = "",
     zmiany = []
     for r in con.execute(q, par).fetchall():
         odczyt = odczyty.get((r[1], r[2]))
-        if not odczyt:
+        f = luki.propozycja_ze_zdjecia(r[1], r[2], r[3], r[4], odczyt, etykiety) if odczyt else None
+        if f is None and r[5] == "L2-LUKA-ZDJECIE":
+            zmiany.append((luki.REGULA_BRAKU, "L1", "info", luki.PEWNOSC_BRAK, None,
+                           f"„{r[2]}” to filtr w kategorii, wartości brak; ponowny odczyt "
+                           f"ze zdjęcia nie potwierdził wartości",
+                           f"{luki.REGULA_BRAKU}|{r[3]}|{r[2]}|{r[4]}", r[0]))
             continue
-        f = luki.propozycja_ze_zdjecia(r[1], r[2], r[3], r[4], odczyt, etykiety)
         if f:
             zmiany.append((f.regula_id, f.warstwa, f.waga, f.pewnosc, f.proponowana_wartosc,
                            f.dowod, f.grupa, r[0]))

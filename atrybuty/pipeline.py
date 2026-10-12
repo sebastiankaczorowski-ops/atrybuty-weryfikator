@@ -235,7 +235,8 @@ def _podsumowanie(produkty: list[Produkt], findingi: list[Finding]) -> None:
 
 
 def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
-                  na_sucho: bool, losowo: bool, wszystko: bool, luki_: bool = False) -> None:
+                  na_sucho: bool, losowo: bool, wszystko: bool, luki_: bool = False,
+                  powtorz: bool = False) -> None:
     """Warstwa L3 — Gemini na kandydatach przepuszczonych przez bramkę kosztową."""
     con = db.polacz(BAZA)
     wizja.przygotuj_baze(con)
@@ -246,7 +247,7 @@ def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
 
     if luki_:
         poz = wizja.kandydaci_luk(con, int(p["id"]), limit=limit, atrybut=atrybut,
-                                  producent=producent, losowo=losowo)
+                                  producent=producent, losowo=losowo, powtorz=powtorz)
     else:
         poz = wizja.kandydaci(con, int(p["id"]), limit=limit, atrybut=atrybut,
                               producent=producent, tylko_nowe=not wszystko, losowo=losowo)
@@ -277,8 +278,8 @@ def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
           f"→ ${w['koszt_usd']:.3f}")
     if luki_:
         n = wizja.zamien_braki(con, int(p["id"]))
-        print(f"Braki zamienione na propozycje ze zdjęcia (L2-LUKA-ZDJECIE): {n} — "
-              f"do akceptacji w kolejce")
+        print(f"Braki/propozycje zaktualizowane z odczytów ze zdjęcia: {n} — "
+              f"do akceptacji w kolejce (L2-LUKA-ZDJECIE)")
     con.close()
 
 
@@ -437,6 +438,9 @@ def main(argv: list[str] | None = None) -> int:
                    help="także te, które mają już werdykt")
     w.add_argument("--luki", action="store_true",
                    help="odczytaj ze zdjęć braki w filtrach bez propozycji (L1-LUKA-BRAK)")
+    w.add_argument("--powtorz", action="store_true",
+                   help="z --luki: odczytaj ponownie także już odczytane, nierozstrzygnięte "
+                        "(po zmianie pytania; to samo pytanie wraca z cache za darmo)")
 
     k = sub.add_parser("kalibracja", help="próbka do ręcznej oceny i raport trafności")
     k.add_argument("akcja", choices=["eksport", "raport"])
@@ -469,7 +473,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "wizja":
         model = wizja.MODEL_SPORNE if args.sporne else args.model
         komenda_wizja(args.limit, args.atrybut, args.producent, model,
-                      args.na_sucho, args.losowo, args.wszystko, args.luki)
+                      args.na_sucho, args.losowo, args.wszystko, args.luki, args.powtorz)
     elif args.cmd == "kalibracja":
         komenda_kalibracja(args.akcja, args.plik)
     elif args.cmd == "wyczysc":

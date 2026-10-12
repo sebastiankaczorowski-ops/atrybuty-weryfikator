@@ -4009,7 +4009,9 @@ def _baza_ze_zdjeciami(tmp_path, monkeypatch, odpowiedzi):
                                       "Liczba drzwi": "2-drzwiowe"}) for i in range(3)]
     con = db.polacz(baza); wizja.przygotuj_baze(con)
     przebieg = db.zapisz_przebieg(con, "t.csv", produkty, pipeline.wszystkie_findingi(produkty, []))
-    monkeypatch.setattr(wizja, "wybierz_zdjecie", lambda poz, atr: ("http://x/1.jpg", "packshot"))
+    # każdy produkt ma własne zdjęcie — wspólny adres mieszałby odpowiedzi w cache
+    monkeypatch.setattr(wizja, "wybierz_zdjecie",
+                        lambda poz, atr: (f"http://x/{poz['produkt_id']}.jpg", "packshot"))
     monkeypatch.setattr(wizja, "pobierz_zdjecie", lambda url, kat: b"jpg")
     pytania = []
 
@@ -4089,3 +4091,36 @@ def test_szacunek_kosztu_ze_sredniej_zaplaconych_zapytan(tmp_path):
     w = wizja.przetworz(con, poz, na_sucho=True)
     assert w["tok_we"] == 200000 and w["srednia_z_historii"]
     con.close()
+
+
+def test_powtorny_odczyt_po_zmianie_definicji(konfig_luk, tmp_path, monkeypatch):
+    """Po doprecyzowaniu „Na nóżkach” (stopki ≠ nóżki) stare odczyty trzeba
+    przeczytać jeszcze raz: nowa odpowiedź zmienia propozycję, a „nie widać”
+    cofa ją do braku. Liczy się najnowszy odczyt, nie pierwszy."""
+    from atrybuty import wizja
+    odp = {"Na nóżkach": ("niezgodne", "tak", 0.95)}
+    con, przebieg, _ = _baza_ze_zdjeciami(tmp_path, monkeypatch, odp)
+    wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    wizja.zamien_braki(con, przebieg)
+    assert wizja.kandydaci_luk(con, przebieg) == []
+    powtorka = wizja.kandydaci_luk(con, przebieg, powtorz=True)
+    assert len(powtorka) == 3
+    monkeypatch.setitem(wizja.PYTANIA, "Na nóżkach", "nowa definicja")
+    odp["Na nóżkach"] = ("nie_widac", "", 0.4)
+    wizja.przetworz(con, powtorka[:1], echo=lambda *_: None)
+    odp["Na nóżkach"] = ("niezgodne", "nie", 0.9)
+    wizja.przetworz(con, powtorka[1:2], echo=lambda *_: None)
+    wizja.zamien_braki(con, przebieg)
+    stan = dict(con.execute("SELECT produkt_id, regula_id || ':' || IFNULL(proponowana_wartosc,'') "
+                            "FROM findingi WHERE atrybut='Na nóżkach'").fetchall())
+    p0, p1, p2 = (powtorka[i]["produkt_id"] for i in range(3))
+    assert stan[p0] == "L1-LUKA-BRAK:"
+    assert stan[p1] == "L2-LUKA-ZDJECIE:nie"
+    assert stan[p2] == "L2-LUKA-ZDJECIE:tak"           # nieodczytany ponownie — bez zmian
+    con.close()
+
+
+def test_definicja_na_nozkach_wyklucza_stopki_i_boki(konfig_luk):
+    from atrybuty import wizja
+    q = wizja.PYTANIA["Na nóżkach"]
+    assert "stopkach" in q and "regulatorach poziomu" in q and "bokach korpusu" in q
