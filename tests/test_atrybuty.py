@@ -4297,3 +4297,36 @@ def test_wczytanie_macierzy_z_arkusza(konfig_luk, tmp_path):
     assert w[55]["filtry"] == ["Na nóżkach", "Szerokość powierzchni spania"]
     assert dane["definicje"] == {"Na nóżkach": "TAK: nóżki > 3 cm"}
     assert raport["niezmapowane_filtry"] == []
+
+
+def test_polki_i_drazki_tylko_ze_zdjecia_wnetrza():
+    """Z frontu albo aranżacji model zgadywał liczbę półek — bez zdjęcia wnętrza
+    nie pytamy wcale (decyzja 13.10.2026)."""
+    from atrybuty import zdjecia
+    Z = zdjecia.Zdjecie
+    galeria = [Z("Aranżacja", "a"), Z("Zamknięty - front", "f"), Z("Rysunek techniczny", "r")]
+    assert zdjecia.wybierz(galeria, "Liczba półek", "glowne") is None
+    assert zdjecia.wybierz([], "Liczba drążków", "glowne") is None
+    assert zdjecia.wybierz(galeria, "Liczba drzwi").url == "f"          # inne bez zmian
+    wnetrze = galeria + [Z("Wnętrze szafy – otwarte obie sekcje", "w")]
+    assert zdjecia.wybierz(wnetrze, "Liczba drążków").url == "w"
+    assert zdjecia.Zdjecie("Wnętrze szafy - z ubraniami", "x").rodzaj == "wnetrze"
+    assert zdjecia.Zdjecie("Otwarty z oświetleniem (st.prawa)", "x").rodzaj == "wnetrze"
+
+
+def test_kandydat_na_polki_tylko_z_otagowanym_wnetrzem(konfig_wezlow, tmp_path):
+    import json as _json
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja, zdjecia
+    Z = zdjecia.Zdjecie
+    a = _pl("1", wezel=55, atrybuty={"Szerokość": "80", "Materiał": "płyta"},
+            zdjecia=[Z("Zamknięty - front", "http://x/f.jpg")])
+    b = _pl("2", wezel=55, atrybuty={"Szerokość": "80", "Materiał": "płyta"},
+            zdjecia=[Z("Otwarty - front", "http://x/o.jpg")])
+    con = db.polacz(tmp_path / "p.db"); wizja.przygotuj_baze(con)
+    przebieg = db.zapisz_przebieg(con, "t.csv", [a, b], pipeline.wszystkie_findingi([a, b], []))
+    polki = [k["produkt_id"] for k in wizja.kandydaci_luk(con, przebieg, atrybut="Liczba półek")]
+    assert polki == ["2"]
+    poz = wizja.kandydaci_luk(con, przebieg, atrybut="Liczba półek")[0]
+    assert wizja.wybierz_zdjecie(poz, "Liczba półek")[0] == "http://x/o.jpg"
+    con.close()

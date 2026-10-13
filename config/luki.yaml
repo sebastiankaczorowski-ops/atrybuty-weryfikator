@@ -19,11 +19,13 @@
 # Filtry, których NIE odczytujemy ze zdjęć przy lukach (wizja --luki):
 #   Oświetlenie — zgaszony LED jest niewidoczny, a „w zestawie” vs „opcjonalne”
 #                 wynika z cennika, nie ze zdjęcia;
-#   Liczba półek — wolnej półki nie da się odróżnić od płyty konstrukcyjnej
-#                 (rozstrzyga rysunek techniczny). Uwagi Ewy, 13.10.2026.
+#   (Liczba półek i drążków — czytane WYŁĄCZNIE ze zdjęcia wnętrza, otagowanego
+#    „Otwarty…” / „Wnętrze szafy…”; bez takiego zdjęcia produkt nie jest
+#    kandydatem — zdjecia.TYLKO_WNETRZE. Decyzja Sebastiana, 13.10.2026.)
+#   Materiał — płyta laminowana w dekorze drewna wygląda na zdjęciu jak drewno.
 zdjecia_bez:
   - Oświetlenie
-  - Liczba półek
+  - Materiał
 
 cechy_opcjonalne:
   - Wyposażenie

@@ -3,6 +3,16 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-13 · Półki i drążki czytane tylko ze zdjęcia wnętrza
+
+- Liczbę półek i drążków odczytujemy ze zdjęć **wyłącznie** wtedy, gdy produkt
+  ma otagowane zdjęcie wnętrza („Otwarty…”, „Wnętrze szafy…” — także warianty
+  z ubraniami i rozsuniętymi drzwiami). Bez takiego zdjęcia produkt nie jest
+  kandydatem i nie płacimy za zgadywanie z frontu czy aranżacji.
+- Na eksporcie z 30.09: półki — 870 z 2 566 braków ma zdjęcie wnętrza,
+  drążki — 491 z 1 560.
+- Materiał wyłączony z odczytu ze zdjęć (laminat w dekorze drewna wygląda jak drewno).
+
 ## 2026-10-13 · Luki liczone według węzłów drzewa panelu (macierz Ewy)
 
 - Filtry nie są już przypisane do naszych typów (`komoda`, `wieszak`…), tylko do

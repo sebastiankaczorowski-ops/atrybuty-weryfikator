@@ -796,9 +796,18 @@ def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = No
         q += " AND p.producent = :producent"; par["producent"] = producent
     q += " GROUP BY f.produkt_id, f.atrybut"
     q += " ORDER BY RANDOM()" if losowo else " ORDER BY f.atrybut, p.producent, f.produkt_id"
-    if limit:
-        q += " LIMIT :limit"; par["limit"] = limit
-    return [dict(r) for r in con.execute(q, par)]
+    wynik = []
+    for r in con.execute(q, par):
+        r = dict(r)
+        # półki i drążki tylko ze zdjęcia wnętrza — bez niego nie ma kandydata
+        if r["atrybut"] in zdjecia_mod.TYLKO_WNETRZE:
+            galeria = [zdjecia_mod.Zdjecie(e, u) for e, u in json.loads(r["zdjecia"] or "[]")]
+            if not zdjecia_mod.ma_wnetrze(galeria):
+                continue
+        wynik.append(r)
+        if limit and len(wynik) >= limit:
+            break
+    return wynik
 
 
 def odczyty_luk(con: sqlite3.Connection) -> dict[tuple[str, str], dict]:

@@ -20,7 +20,9 @@ from .tekst import norm
 # Grupy ujęć. Kolejność w krotce to priorytet przy wyborze.
 UJECIA: dict[str, tuple[str, ...]] = {
     # wnętrze — do liczenia szuflad, półek, drążków
-    "wnetrze": ("otwarty - front", "wnetrze szafy - bez drzwi", "otwarty",
+    # „wnetrze” ogólnie: w danych są też „Wnętrze szafy – otwarte obie sekcje”,
+    # „– rozsunięte lewe drzwi”, „- z ubraniami” (półpauza, różne końcówki).
+    "wnetrze": ("otwarty - front", "wnetrze szafy - bez drzwi", "otwarty", "wnetrze",
                 "naroznik - prezentacja schowka", "przekroj", "schemat / przekroj mebla"),
     # rysunek techniczny — wymiary są na nim wypisane
     "rysunek": ("rysunek techniczny", "schemat/infografika", "schemat / przekroj mebla",
@@ -35,8 +37,8 @@ UJECIA: dict[str, tuple[str, ...]] = {
 # Który rodzaj ujęcia pasuje do którego pytania. Pierwszy trafiony wygrywa.
 UJECIE_DLA_ATRYBUTU: dict[str, tuple[str, ...]] = {
     "Liczba szuflad": ("wnetrze", "front", "rysunek"),
-    "Liczba półek": ("wnetrze", "rysunek", "front"),
-    "Liczba drążków": ("wnetrze", "rysunek"),
+    "Liczba półek": ("wnetrze",),
+    "Liczba drążków": ("wnetrze",),
     "Liczba szafek": ("front", "wnetrze", "rysunek"),
     "Liczba drzwi": ("front", "wnetrze"),
     "Rodzaj drzwi": ("front", "wnetrze"),
@@ -96,14 +98,21 @@ def parsuj(surowe: str) -> list[Zdjecie]:
     return out
 
 
+# Półki i drążki widać wyłącznie we wnętrzu. Z frontu albo aranżacji model
+# zgadywał; bez zdjęcia wnętrza nie pytamy wcale — i nie płacimy.
+TYLKO_WNETRZE = {"Liczba półek", "Liczba drążków"}
+
+
 def wybierz(zdjecia: list[Zdjecie], atrybut: str, zapasowe: str = "") -> Zdjecie | None:
     """Najlepsze ujęcie do pytania o ten atrybut.
 
     Gdy nie ma pasującego rodzaju, zwracamy pierwsze zdjęcie albo zapasowy
     URL (kolumna `zdjecie`) — lepiej zapytać o cokolwiek niż wcale.
+    Wyjątek: atrybuty z TYLKO_WNETRZE — bez zdjęcia wnętrza nic (None).
     """
+    tylko_wnetrze = atrybut in TYLKO_WNETRZE
     if not zdjecia:
-        return Zdjecie("", zapasowe) if zapasowe else None
+        return None if tylko_wnetrze else (Zdjecie("", zapasowe) if zapasowe else None)
 
     wg_rodzaju: dict[str, list[Zdjecie]] = {}
     for z in zdjecia:
@@ -118,7 +127,11 @@ def wybierz(zdjecia: list[Zdjecie], atrybut: str, zapasowe: str = "") -> Zdjecie
             (i for i, w in enumerate(wzorce) if w in norm(z.etykieta)), len(wzorce)))
         return kandydaci[0]
 
-    return zdjecia[0]
+    return None if tylko_wnetrze else zdjecia[0]
+
+
+def ma_wnetrze(zdjecia: list[Zdjecie]) -> bool:
+    return any(z.rodzaj == "wnetrze" for z in zdjecia)
 
 
 def ma_rysunek(zdjecia: list[Zdjecie]) -> bool:
