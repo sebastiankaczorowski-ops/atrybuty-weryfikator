@@ -63,7 +63,7 @@ Sebastian nie ma poświadczeń GitHuba w tej sesji — `git push` robi sam.
 ## Architektura
 
 Python 3.12 · FastAPI · Jinja2 · HTMX · SQLite. Bez frontendowego
-frameworka, bez ORM-a. 55 tras, 263 testy (`python3 -m pytest -q`).
+frameworka, bez ORM-a. 55 tras, 274 testy (`python3 -m pytest -q`).
 
 ### Warstwy wykrywania
 
@@ -91,6 +91,11 @@ frameworka, bez ORM-a. 55 tras, 263 testy (`python3 -m pytest -q`).
 - `rozpoznanie.py` — przejście całego arkusza RAW FILES: klucz, producent
   i pola wymiarów dobierane **pomiarem zgodności** z naszymi danymi, raport
   do zatwierdzenia w `/zrodla/rozpoznanie`.
+- `wezly.py` — filtry według węzłów drzewa panelu (`config/wezly.yaml`, z arkusza
+  Ewy „Macierz filtrów per kategoria”, komenda `filtry-z-macierzy`). Produkt →
+  węzeł po `typ`/`podtyp` z eksportu (aliasy w yaml); najgłębszy węzeł, nigdy
+  grupa. Gdy wczytane — jedyne źródło prawdy dla luk (stare `filtry.yaml` tylko
+  jako zapas). Definicje filtrów z arkusza idą do pytań dla Gemini.
 - `luki.py` — luki w filtrach: konfiguracja `config/filtry.yaml` (kategoria →
   atrybuty-filtry, zakładka `/filtry`), propozycje z podkategorii, nazwy
   i rodziny (`config/luki.yaml`) z prawdopodobieństwem, braki bez propozycji

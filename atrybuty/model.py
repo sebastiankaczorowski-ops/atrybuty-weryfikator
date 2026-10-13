@@ -35,6 +35,8 @@ class Produkt:
     liczby: dict[str, float] = field(default_factory=dict)      # atrybuty liczbowe
     zrodlo_kategorii: str = "nazwa"                             # nazwa | sklep
     podtyp: str = ""                               # podkategoria sklepu, do filtrowania
+    typ: str = ""                                  # typ sklepu z eksportu, surowy
+    wezel: int | None = None                       # węzeł drzewa panelu (wezly.py)
     kody: dict[str, str] = field(default_factory=dict)   # kod produktu/producenta/EAN
     zdjecia: list = field(default_factory=list)          # [(etykieta, url)]
     kompletnosc: str = "ok"                        # ok | bez_wymiarow | szczatkowy | pusty

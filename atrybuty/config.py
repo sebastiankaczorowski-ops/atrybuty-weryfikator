@@ -251,6 +251,8 @@ def wyczysc_cache_nazw() -> None:
     zmiany_nazw.cache_clear()
     filtry.cache_clear()
     luki.cache_clear()
+    from . import wezly           # leniwie: wezly importuje config
+    wezly.wyczysc_cache()
 
 
 def wyczysc_cache() -> None:
@@ -264,3 +266,5 @@ def wyczysc_cache() -> None:
     wielowartosciowe.cache_clear()
     filtry.cache_clear()
     luki.cache_clear()
+    from . import wezly
+    wezly.wyczysc_cache()

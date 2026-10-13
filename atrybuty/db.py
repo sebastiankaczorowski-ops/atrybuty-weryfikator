@@ -94,6 +94,8 @@ MIGRACJE: list[tuple[str, str, str]] = [
     ("produkty", "zdjecia", "TEXT DEFAULT '[]'"),
     ("produkty", "skladowe", "TEXT DEFAULT '{}'"),
     ("produkty", "skladowe_odciete", "INTEGER DEFAULT 0"),
+    ("produkty", "typ", "TEXT DEFAULT ''"),
+    ("produkty", "wezel", "INTEGER"),
     ("decyzje", "partia_id", "INTEGER"),
 ]
 
@@ -129,11 +131,11 @@ def zapisz_przebieg(con: sqlite3.Connection, plik: str, produkty: list[Produkt],
     con.execute("DELETE FROM produkty")
     con.executemany(
         "INSERT INTO produkty (id,nazwa,producent,kolekcja,zdjecie,styl,kategoria,"
-        "zrodlo_kategorii,kompletnosc,podtyp,kody,zdjecia,skladowe,skladowe_odciete,"
+        "zrodlo_kategorii,kompletnosc,podtyp,typ,wezel,kody,zdjecia,skladowe,skladowe_odciete,"
         "atrybuty,atrybuty_surowe,liczby)"
-        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         [(p.id, p.nazwa, p.producent, p.kolekcja, p.zdjecie, p.styl, p.kategoria,
-          p.zrodlo_kategorii, p.kompletnosc, p.podtyp,
+          p.zrodlo_kategorii, p.kompletnosc, p.podtyp, p.typ, p.wezel,
           json.dumps(p.kody, ensure_ascii=False),
           json.dumps([(z.etykieta, z.url) for z in p.zdjecia], ensure_ascii=False),
           json.dumps(p.skladowe, ensure_ascii=False), int(p.skladowe_odciete),

@@ -21,7 +21,7 @@ import logging
 import re
 from collections import Counter, defaultdict
 
-from . import config, panel_format
+from . import config, panel_format, wezly
 from .model import INFO, KRYTYCZNA, L1, L2, L3, SREDNIA, Finding, Produkt
 from .tekst import norm
 
@@ -51,6 +51,29 @@ REGULA_BRAKU = "L1-LUKA-BRAK"
 REGULY = REGULY_PROPOZYCJI + (REGULA_BRAKU,)
 
 KLUCZ_KODU_PRODUCENTA = "kod producenta"
+
+
+# --- które filtry obowiązują produkt -----------------------------------------
+
+def konfiguracja_aktywna() -> bool:
+    return wezly.aktywne() or bool(config.filtry())
+
+
+def filtry_produktu(p: Produkt) -> set[str]:
+    """Filtry z węzła drzewa panelu (wezly.py), gdy konfiguracja węzłów jest
+    wczytana — wtedy to jedyne źródło prawdy. Inaczej stara konfiguracja według
+    naszych typów (config/filtry.yaml). Produkt bez węzła: żadnych luk —
+    nie wiadomo, które filtry go dotyczą."""
+    if wezly.aktywne():
+        return set(wezly.filtry_wezla(p.wezel))
+    return set(config.filtry().get(p.kategoria, ()))
+
+
+def zakres_braku(p: Produkt) -> str:
+    """Część klucza grupy braków: węzeł drzewa (gdy jest) albo nasza kategoria."""
+    if wezly.aktywne() and p.wezel is not None:
+        return f"w{p.wezel}"
+    return p.kategoria
 
 
 # --- wartości --------------------------------------------------------------
@@ -188,13 +211,12 @@ def z_rodziny(produkty: list[Produkt], wartosci: dict[str, dict[str, str]],
     minimum = int(u.get("min_z_wartoscia", 3))
     prog = float(u.get("prog_zgodnosci", 0.9))
     wyposazenie = set(u.get("wyposazenie") or [])
-    filtry = config.filtry()
     f: list[Finding] = []
 
     for atr, rodzaj in (u.get("atrybuty") or {}).items():
         rodziny: dict[tuple, list[Produkt]] = defaultdict(list)
         for p in produkty:
-            if atr not in filtry.get(p.kategoria, ()):
+            if atr not in filtry_produktu(p):
                 continue
             klucz = _klucz_rodziny(p, rodzaj)
             if klucz:
@@ -264,8 +286,7 @@ def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None,
     prawdopodobieństwo — dwie propozycje dla jednej komórki to dwa kliknięcia
     i ten sam klucz decyzji.
     """
-    filtry = config.filtry()
-    if not filtry:
+    if not konfiguracja_aktywna():
         return []
     # Świeżo, raz na przebieg: słownik mógł się zmienić między importami
     # w tym samym procesie (recenzja LUKI-04).
@@ -274,7 +295,7 @@ def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None,
 
     kandydaci: list[Finding] = []
     for p in produkty:
-        filtry_p = set(filtry.get(p.kategoria, ()))
+        filtry_p = filtry_produktu(p)
         kandydaci += z_podtypu(p, wartosci[p.id], filtry_p, etykiety)
         kandydaci += z_nazwy(p, wartosci[p.id], filtry_p, etykiety)
         if odczyty_zdjec:
@@ -293,15 +314,16 @@ def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None,
 
     if REGULA_BRAKU in wylaczone:
         return list(najlepsze.values())
+    opcjonalne = set(config.luki().get("cechy_opcjonalne") or [])
     for p in produkty:
-        for atr in filtry.get(p.kategoria, ()):
+        for atr in sorted(filtry_produktu(p) - opcjonalne):
             if atr in wartosci[p.id] or (p.id, atr) in najlepsze:
                 continue
             najlepsze[(p.id, atr)] = Finding(
                 p.id, atr, REGULA_BRAKU, L1, INFO, PEWNOSC_BRAK, None, None,
                 f"„{atr}” to filtr w kategorii, wartości brak, a żadne źródło jej nie zna "
                 f"— produkt znika z wyników po zaznaczeniu filtra",
-                grupa=f"{REGULA_BRAKU}|{p.kategoria}|{atr}|{p.producent}")
+                grupa=f"{REGULA_BRAKU}|{zakres_braku(p)}|{atr}|{p.producent}")
     return list(najlepsze.values())
 
 

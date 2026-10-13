@@ -4120,7 +4120,180 @@ def test_powtorny_odczyt_po_zmianie_definicji(konfig_luk, tmp_path, monkeypatch)
     con.close()
 
 
-def test_definicja_na_nozkach_wyklucza_stopki_i_boki(konfig_luk):
+def test_pytanie_do_gemini_niesie_definicje_filtra_z_arkusza(konfig_wezlow):
+    """Bez definicji model brał stopki za nóżki (próbka 12.10). Definicja
+    z arkusza Ewy jest doklejana do pytania — i zmienia jego hasz."""
     from atrybuty import wizja
-    q = wizja.PYTANIA["Na nóżkach"]
-    assert "stopkach" in q and "regulatorach poziomu" in q and "bokach korpusu" in q
+    q = wizja.pytanie_dla("Na nóżkach")
+    assert q.startswith("Czy ten mebel stoi na nóżkach?")
+    assert "stopki i ślizgacze do ok. 3 cm" in q
+
+
+# --- filtry według węzłów drzewa (macierz Ewy) -------------------------------
+
+WEZLY_TEST = {
+    321: {"nazwa": "Meble do przechowywania", "poziom": 1, "rodzic": None, "ukryty": False,
+          "sciezka": "Meble > Meble do przechowywania",
+          "filtry": ["Liczba drzwi", "Liczba drążków", "Liczba szuflad", "Liczba półek",
+                     "Na nóżkach", "Oświetlenie", "Wyposażenie"]},
+    55: {"nazwa": "Komody", "poziom": 2, "rodzic": 321, "ukryty": False, "sciezka": "… > Komody",
+         "filtry": ["Liczba drzwi", "Liczba szuflad", "Liczba półek", "Na nóżkach", "Oświetlenie",
+                    "Wyposażenie"]},
+    56: {"nazwa": "Komody z szufladami", "poziom": 3, "rodzic": 55, "ukryty": False,
+         "sciezka": "… > Komody z szufladami",
+         "filtry": ["Liczba drzwi", "Liczba szuflad", "Na nóżkach"]},
+    57: {"nazwa": "Komody z szufladami i drzwiczkami", "poziom": 3, "rodzic": 55, "ukryty": False,
+         "sciezka": "…", "filtry": ["Liczba drzwi", "Liczba szuflad", "Na nóżkach"]},
+    235: {"nazwa": "Komody na nóżkach", "poziom": 3, "rodzic": 55, "ukryty": False,
+          "sciezka": "…", "filtry": ["Na nóżkach"]},
+    78: {"nazwa": "Wieszaki na ubrania", "poziom": 2, "rodzic": 321, "ukryty": False,
+         "sciezka": "… > Wieszaki na ubrania", "filtry": ["Liczba półek"]},
+    335: {"nazwa": "Szafki kuchenne", "poziom": 2, "rodzic": 321, "ukryty": False,
+          "sciezka": "…", "filtry": ["Liczba drzwi"]},
+    338: {"nazwa": "Szafki kuchenne górne", "poziom": 3, "rodzic": 335, "ukryty": False,
+          "sciezka": "…", "filtry": ["Liczba drzwi"]},
+    137: {"nazwa": "Nadstawki na szafy", "poziom": 1, "rodzic": None, "ukryty": True,
+          "sciezka": "…", "filtry": ["Liczba drzwi", "Na nóżkach"]},
+}
+
+
+@_pytest.fixture
+def konfig_wezlow(konfig_luk):
+    import yaml
+    from atrybuty import config
+    (konfig_luk / "wezly.yaml").write_text(yaml.safe_dump({
+        "meta": {"zrodlo": "test.xlsx"},
+        "aliasy_typow": {"Kuchnie": "Szafki kuchenne"},
+        "aliasy_par": {"Kuchnie / Akcesoria": None},
+        "definicje": {"Na nóżkach": "TAK: wyraźne nóżki. NIE: stopki i ślizgacze do ok. 3 cm."},
+        "wezly": WEZLY_TEST}, allow_unicode=True), encoding="utf-8")
+    config.wyczysc_cache()
+    yield konfig_luk
+
+
+def test_produkt_trafia_do_najglebszego_wezla(konfig_wezlow):
+    from atrybuty import wezly
+    assert wezly.przypisz("Komody", "") == (55, "typ")
+    assert wezly.przypisz("Komody", "Komody z szufladami") == (56, "podtyp")
+
+
+def test_stary_skrocony_podtyp_dopasowany_po_slowach(konfig_wezlow):
+    """Eksport ma „Z szufladami”, a drzewo „Komody z szufladami” — i nie wolno
+    trafić w „…z szufladami i drzwiczkami”, które też zawiera te słowa."""
+    from atrybuty import wezly
+    assert wezly.przypisz("Komody", "Z szufladami")[0] == 56
+    assert wezly.przypisz("Komody", "Komoda na nóżkach")[0] == 235
+    assert wezly.przypisz("Komody", "Ze szkłem") == (55, "typ")      # brak podkategorii → kategoria
+
+
+def test_aliasy_typow_par_i_wezly_ukryte(konfig_wezlow):
+    from atrybuty import wezly
+    assert wezly.przypisz("Kuchnie", "Szafki Górne") == (338, "podtyp")
+    assert wezly.przypisz("Kuchnie", "Akcesoria") == (None, "wykluczony")
+    assert wezly.przypisz("Nadstawki na szafy", "") == (None, "brak")   # ukryty: wszystkie filtry
+    assert wezly.przypisz("Lustra dziwne", "") == (None, "brak")
+
+
+def test_wieszak_nie_ma_luk_w_drzwiach_i_nozkach(konfig_wezlow):
+    """Typ „wieszak” sklejał wieszaki z garderobami — wieszakom liczyliśmy drzwi,
+    szuflady, drążki, nóżki i oświetlenie. Węzeł ma tylko Liczbę półek."""
+    p = _pl("1", "wieszak", "Wieszak stojący", typ="Wieszaki na ubrania", wezel=78)
+    assert {a for (_, a) in _luki([p])} == {"Liczba półek"}
+
+
+def test_grupa_nie_jest_zrodlem_filtrow(konfig_wezlow):
+    """Komoda nie może dostać „Liczby drążków” z grupy „Meble do przechowywania”."""
+    p = _pl("1", wezel=56)
+    assert {a for (_, a) in _luki([p])} == {"Liczba drzwi", "Liczba szuflad", "Na nóżkach"}
+
+
+def test_produkt_bez_wezla_nie_dostaje_luk(konfig_wezlow):
+    assert _luki([_pl("1", wezel=None)]) == {}
+
+
+def test_cecha_opcjonalna_bez_braku_ale_z_propozycja(konfig_wezlow):
+    """Słownik Wyposażenia nie ma wartości „nie ma” — komoda bez cichego domyku
+    nie ma czego wpisać, więc pusty filtr nie jest brakiem do kolejki."""
+    w = _luki([_pl("1", wezel=55)])
+    assert ("1", "Wyposażenie") not in w and ("1", "Oświetlenie") in w
+
+
+def test_import_zapisuje_typ_i_wezel(konfig_wezlow, tmp_path):
+    from atrybuty import pipeline
+    plik = tmp_path / "p.csv"
+    plik.write_text("id;nazwa;producent;kolekcja;typ;podtyp;atrybuty\n"
+                    "1;Komoda Alfa;BRW;Alfa;Komody;Z szufladami;Szerokość: 80\n"
+                    "2;Uchwyt;BRW;;Kuchnie;Akcesoria;Szerokość: 10\n", encoding="utf-8")
+    produkty, _ = pipeline.wczytaj_csv(plik)
+    assert [(p.typ, p.wezel) for p in produkty] == [("Komody", 56), ("Kuchnie", None)]
+
+
+def test_odczyt_ze_zdjec_pomija_oswietlenie_i_polki(konfig_wezlow, tmp_path, monkeypatch):
+    """Zdjęcie nie rozstrzyga oświetlenia ani wolnych półek (uwagi Ewy) — takie
+    braki nie mogą trafić do płatnego odczytu."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    baza = tmp_path / "z.db"
+    p = _pl("1", wezel=55, atrybuty={"Szerokość": "80", "Materiał": "płyta"})
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    przebieg = db.zapisz_przebieg(con, "t.csv", [p], pipeline.wszystkie_findingi([p], []))
+    atr = {k["atrybut"] for k in wizja.kandydaci_luk(con, przebieg)}
+    con.close()
+    assert "Oświetlenie" not in atr and "Liczba półek" not in atr and "Na nóżkach" in atr
+
+
+def test_zakladka_wg_wezlow_i_kolejka_zawezona_do_wezla(konfig_wezlow, tmp_path, monkeypatch):
+    import atrybuty.app as app_mod
+    import atrybuty.pipeline as pipeline
+    from fastapi.testclient import TestClient
+    from atrybuty import db, wizja
+    baza = tmp_path / "w.db"
+    monkeypatch.setattr(pipeline, "BAZA", baza); monkeypatch.setattr(app_mod, "BAZA", baza)
+    produkty = [_pl("1", wezel=56, atrybuty={"Szerokość": "80", "Materiał": "płyta"}),
+                _pl("2", "wieszak", "Wieszak", wezel=78, atrybuty={"Szerokość": "40", "Materiał": "metal"}),
+                _pl("3", wezel=None, atrybuty={"Szerokość": "40", "Materiał": "metal"})]
+    con = db.polacz(baza); wizja.przygotuj_baze(con)
+    db.zapisz_przebieg(con, "t.csv", produkty, pipeline.wszystkie_findingi(produkty, []))
+    con.close()
+    k = TestClient(app_mod.app)
+    html = k.get("/filtry").text
+    assert "Komody z szufladami" in html and "Wieszaki na ubrania" in html
+    assert "wezel=56" in html and "Produkty bez węzła" in html
+    odp = k.get("/anomalie", params={"wezel": "78", "regula": "L1-LUKA-BRAK", "grupuj": ""}).text
+    assert "Liczba półek" in odp and 'name="wezel" value="78"' in odp
+    zm = k.post("/filtry/konfiguracja", data={"akcja": "usun", "kategoria": "komoda",
+                                              "atrybut": "Na nóżkach"}, follow_redirects=False)
+    assert zm.status_code == 303 and "macierzy" in zm.headers["location"]
+
+
+def test_wczytanie_macierzy_z_arkusza(konfig_luk, tmp_path):
+    """Arkusz → węzły z rodzicami, filtry po naszych nazwach, bez systemowych
+    i wspólnych spoza danych, definicje do pytań."""
+    import openpyxl
+    from atrybuty import wezly
+    wb = openpyxl.Workbook(); m = wb.active; m.title = "Macierz"
+    for _ in range(4):
+        m.append([None])
+    m.append([321, 1, "Meble do przechowywania", "Meble > Meble do przechowywania", ""])
+    m.append([55, 2, "    Komody", "Meble > … > Komody", ""])
+    m.append([137, 1, "Nadstawki na szafy [ukryty]", "Meble > Nadstawki", "tak"])
+    d = wb.create_sheet("Dane do importu")
+    d.append(["id_wezla", "sciezka", "klucz_filtra", "nazwa_filtra", "attr_id", "grupa",
+              "ukryty_na_froncie", "wezel_ukryty"])
+    d.append([55, "", "na-nozkach", "Na nóżkach", 322, "Atrybuty kategorii — weryfikacja luk", "nie", "nie"])
+    d.append([55, "", "price", "Cena", None, "Systemowe (nie z atrybutów produktu)", "nie", "nie"])
+    d.append([55, "", "Kolor", "Kolor", None, "Wspólne atrybuty", "nie", "nie"])
+    d.append([55, "", "szerokosc-powierzchni-spania", "Szerokość pow. spania", 118,
+              "Atrybuty kategorii — weryfikacja luk", "nie", "nie"])
+    r = wb.create_sheet("Reguły filtrów")
+    r.append(["klucz_filtra", "attr_id", "nazwa_filtra", "grupa", "ukryty_na_froncie", "x", "y",
+              "definicja", "uwagi", "status"])
+    r.append(["na-nozkach", 322, "Na nóżkach", "", "nie", "", "", "TAK: nóżki > 3 cm", "", ""])
+    plik = tmp_path / "m.xlsx"; wb.save(plik)
+    dane, raport = wezly.z_arkusza(plik, {"Na nóżkach", "Szerokość powierzchni spania"})
+    w = dane["wezly"]
+    assert w[55]["rodzic"] == 321 and w[55]["nazwa"] == "Komody"
+    assert w[137]["ukryty"] and w[137]["nazwa"] == "Nadstawki na szafy"
+    assert w[55]["filtry"] == ["Na nóżkach", "Szerokość powierzchni spania"]
+    assert dane["definicje"] == {"Na nóżkach": "TAK: nóżki > 3 cm"}
+    assert raport["niezmapowane_filtry"] == []

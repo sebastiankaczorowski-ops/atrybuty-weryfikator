@@ -1,0 +1,2142 @@
+# Filtry według węzłów drzewa kategorii panelu. Generowany komendą
+# `pipeline filtry-z-macierzy <xlsx>` — nie edytuj ręcznie węzłów;
+# zmieniaj arkusz i wczytaj ponownie. `aliasy_typow` wolno edytować.
+meta:
+  zrodlo: macierz.xlsx
+  wczytano: '2026-10-13'
+  opis: arkusz Macierz filtrów per kategoria (Ewa Swebocka)
+aliasy_typow:
+  Kuchnie: Szafki kuchenne
+  Stelaże: Stelaże do łóżek
+aliasy_par:
+  Kuchnie / Blaty: Blaty kuchenne
+  Kuchnie / Akcesoria: null
+  Kuchnie / Uchwyty: null
+  Kuchnie / Fronty Do Zabudowy Podblatowej: null
+  Szafki łazienkowe / Zestawy mebli łazienkowych: Zestawy mebli łazienkowych
+definicje:
+  Na nóżkach: 'TAK: korpus stoi nad podłogą na wyraźnych nóżkach wyższych niż ok. 3 cm, które są osobnym elementem
+    (dokręcone/doklejone do korpusu, zwykle z innego materiału niż korpus, np. metal, drewno lite) – pod meblem
+    widać wyraźny prześwit. Kształt nóżek nie ma znaczenia: pojedyncze nóżki, płozy, ramki w kształcie U lub prostokąta
+    pod korpusem – wszystkie to TAK. TAK także: mebel na stelażu/ramie (np. metalowa rama, w którą wstawiony jest
+    korpus lub półki) – pionowe elementy stelaża to nóżki. NIE: stopki i ślizgacze do ok. 3 cm (nóżka nie jest wyraźnie
+    wyższa niż grubość blatu/wieńca); „nóżki” będące przedłużeniem boków korpusu z tej samej płyty (boki schodzą
+    do podłogi, nawet jeśli pod dnem jest prześwit); łóżko, którego wezgłowie i/lub zanóżek schodzą do podłogi i
+    na nich opiera się rama – płyta wezgłowia/zanóżka to nie nóżki, także gdy pod nią są małe stopki, a pod ramą
+    widać prześwit; cokół lub korpus do samej podłogi; mebel wiszący; kółka. Wysokość do ziemi ≤3 cm = NIE (większa
+    wartość sama nie przesądza o TAK – prześwit dają też przedłużone boki, wezgłowia i zanóżki). NIE WIDAĆ: zdjęcie
+    ucina dół mebla, widać tylko detal albo nie da się ocenić, czym jest podparcie.'
+  Kształt blatu: 'Kształt blatu widzianego z góry: prostokątny, kwadratowy, okrągły, owalny albo inny (np. nieregularny,
+    organiczny). Kwadratowy = boki równe lub prawie równe; owalny = wydłużony z zaokrąglonymi końcami. Ścięte lub
+    lekko zaokrąglone narożniki nie zmieniają kształtu (prostokąt z zaokrąglonymi rogami = prostokątny). Przy stole
+    rozkładanym oceniamy blat złożony. Gdy jest kilka blatów (np. zestaw stolików) – kształt blatu głównego. NIE
+    WIDAĆ: zdjęcie pod kątem, na którym nie da się odróżnić okrągłego od owalnego albo kwadratu od prostokąta.'
+  Oświetlenie: 'Czy mebel ma oświetlenie zamontowane w meblu (LED w witrynie, listwy, podświetlenie półek, wnętrza
+    szafy, wezgłowia, lampki do czytania w wezgłowiu, podświetlenie lustra). Wartości: „w zestawie” – oświetlenie
+    jest w komplecie i w cenie; „opcjonalne” – można je dokupić osobno (niezależnie od tego, czy jest pokazane na
+    zdjęciu); „brak” – mebel nie ma i nie przewiduje oświetlenia. NIE jest oświetleniem: lampa lub światło w aranżacji
+    obok mebla, odbicia i refleksy, lustro bez podświetlenia, gniazdka, porty USB, ładowarki indukcyjne. O „w zestawie”
+    vs „opcjonalne” rozstrzyga opis / cennik, nie zdjęcie. Dla zdjęcia (Gemini): widoczne zapalone światło, diody
+    lub listwy LED w meblu = mebel ma oświetlenie (w zestawie albo opcjonalne – do potwierdzenia w opisie); brak
+    widocznego oświetlenia nie oznacza „brak” (zgaszone LED pod wieńcem zwykle nie są widoczne). NIE WIDAĆ: zdjęcie
+    bez zapalonego światła, na którym nie widać listew, diod ani przewodów.'
+  Liczba drzwi: 'Liczba skrzydeł drzwiowych w meblu: drzwi uchylne, przesuwne, szklane, lustrzane oraz klapy (uchylne
+    w górę lub w dół) – każda klapa liczy się jako drzwi. Wartości: „bez drzwi” (brak drzwi i klap), „1-drzwiowe”,
+    „2-drzwiowe”, „3-drzwiowe”, „wielodrzwiowe” (4 i więcej). Liczymy skrzydła otwierane jako całość = 1: front
+    podzielony frezem lub złożony z dwóch paneli z jednym uchwytem = 1; drzwi łamane w szafce narożnej (dwa panele
+    na zawiasie, otwierane razem) = 1; drzwi harmonijkowe (składane) na jednym mocowaniu = 1. Nie liczymy szuflad,
+    otwartych wnęk ani maskownic. W zestawie sprzedawanym jako jeden produkt (jedno ID) sumujemy drzwi wszystkich
+    elementów. Wskazówka do zdjęcia: szuflada ma zwykle szczelinę i prowadnice, klapa – zawiasy u dołu lub u góry
+    frontu; gdy nie da się odróżnić klapy od frontu szuflady – nie zgadujemy. NIE WIDAĆ: część frontu jest zasłonięta,
+    ucięta, zdjęcie pokazuje tylko detal albo nie da się odróżnić klapy od szuflady.'
+  Liczba szuflad: 'Liczba szuflad w meblu = liczba wysunięć: szuflady zewnętrzne (widoczne z frontu) oraz wewnętrzne
+    (za drzwiami, np. w szafie) – pod warunkiem, że są w zestawie i w cenie, a nie dokupowane osobno. Wartości:
+    „bez szuflad”, „1-szuflada”, „2-szuflady”, „3-szuflady”, „4 i więcej”. W zestawie sprzedawanym jako jeden produkt
+    (jedno ID) sumujemy szuflady wszystkich elementów – także szufladę pod łóżkiem, jeśli łóżko jest częścią zestawu
+    mebli. Decyduje liczba wysunięć, nie frontów: front udający dwie szuflady (jeden uchwyt, jedno wysunięcie) =
+    1; szuflada podwójna (dwa fronty, jedno wysunięcie) = 1. Nie liczymy klap ani drzwi. Szuflady pod łóżkami i
+    kanapami sprzedawanymi osobno nie są liczone (filtr nie jest przypisany do Łóżek i materacy ani mebli wypoczynkowych;
+    pojemnik na pościel to filtr Z pojemnikiem). NIE WIDAĆ: mebel ma zamknięte drzwi i nie widać jego wnętrza (mogą
+    tam być szuflady wewnętrzne).'
+  Liczba półek: 'Liczba półek w meblu. Półka to luźny element montowany na końcu – wkładany do gotowego korpusu
+    (zwykle na kołkach, podpórkach lub prowadnicach, często przestawny), z płyty, szkła lub metalu, na którym można
+    coś postawić. Liczymy półki wewnętrzne (za drzwiami) i otwarte – tylko te w zestawie i w cenie, nie dokupowane
+    osobno. Zestaw sprzedawany jako jeden produkt (jedno ID) – sumujemy półki wszystkich elementów. NIE liczymy
+    elementów konstrukcji korpusu, ramy ani frontu: blatu wierzchniego, górnego wieńca, dna korpusu (także gdy jest
+    dnem otwartej wnęki), stałych przegród poziomych łączących boki, przegród pionowych, dna szuflad, półek i półeczek
+    na wewnętrznej stronie drzwi; w meblu na stelażu, ramie lub nogach – blatu, wierzchu korpusu/skrzynki szuflady
+    ani dna korpusu wstawionego w ramę (otwarta przestrzeń między blatem a korpusem to nie półka). Źródło rozstrzygające:
+    instrukcja montażu / rysunek techniczny producenta (półki to wolne płyty montowane na końcu, np. na kołkach;
+    elementy konstrukcji są skręcane z bokami i trzymają korpus). Po samym zdjęciu często nie da się tego odróżnić
+    – wolna półka i płyta konstrukcyjna wyglądają tak samo. Przykłady „bez półek”: szafka RTV z otwartymi wnękami
+    nad szufladami/drzwiami rozdzielonymi przegrodami pionowymi; szafka RTV na metalowej ramie ze szklanym blatem
+    i korpusem z wnękami; szafka nocna na drewnianej ramie z blatem i szufladą pod nim. Przykład „4” (wg rysunku
+    technicznego): wysoki regał z wnękami i przegrodami pionowymi u góry i szafką z drzwiami na dole – 4 poziome
+    płyty między wieńcem a dnem są wolnymi półkami (na rysunku elementy 6–9), więc 4; przegrody pionowe się nie
+    liczą. Porównaj: w szafce RTV płyta między wnękami a szufladami jest częścią konstrukcji, więc się nie liczy.
+    Brak półek = wartość „bez półek”. NIE WIDAĆ: wnętrze jest zamknięte drzwiami lub zasłonięte albo nie da się
+    odróżnić półki luźnej od stałej przegrody.'
+  Liczba drążków: 'Liczba drążków na wieszaki (ubrania) w szafie lub garderobie (także garderobie do przedpokoju,
+    która może mieć szafę) – tylko te, które są w zestawie i w cenie, a nie dokupowane osobno. Zestaw sprzedawany
+    jako jeden produkt (jedno ID) – sumujemy drążki wszystkich elementów. Wysuwany drążek i pantograf liczą się
+    jako drążek. Nie liczymy relingów, haczyków ani wieszaków na ręczniki. Wartości: „brak drążków”, „1 drążek”,
+    „2 drążki”, „3 drążki”, „4 i więcej drążków”. Filtr nie dotyczy wieszaków na ubrania (ściennych, stojących,
+    na kółkach) – poprzeczka wieszaka to nie drążek w rozumieniu filtra. NIE WIDAĆ: szafa jest zamknięta i nie widać
+    wnętrza.'
+wezly:
+  321:
+    nazwa: Meble do przechowywania
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Meble do przechowywania
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  55:
+    nazwa: Komody
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Komody
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  235:
+    nazwa: Komody na nóżkach
+    poziom: 3
+    rodzic: 55
+    sciezka: Meble > Meble do przechowywania > Komody > Komody na nóżkach
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  56:
+    nazwa: Komody z szufladami
+    poziom: 3
+    rodzic: 55
+    sciezka: Meble > Meble do przechowywania > Komody > Komody z szufladami
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  58:
+    nazwa: Komody z drzwiczkami
+    poziom: 3
+    rodzic: 55
+    sciezka: Meble > Meble do przechowywania > Komody > Komody z drzwiczkami
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  57:
+    nazwa: Komody z szufladami i drzwiczkami
+    poziom: 3
+    rodzic: 55
+    sciezka: Meble > Meble do przechowywania > Komody > Komody z szufladami i drzwiczkami
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  197:
+    nazwa: Komody narożne
+    poziom: 3
+    rodzic: 55
+    sciezka: Meble > Meble do przechowywania > Komody > Komody narożne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  80:
+    nazwa: Szafy
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Szafy
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  85:
+    nazwa: Szafy uchylne
+    poziom: 3
+    rodzic: 80
+    sciezka: Meble > Meble do przechowywania > Szafy > Szafy uchylne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  81:
+    nazwa: Szafy przesuwne
+    poziom: 3
+    rodzic: 80
+    sciezka: Meble > Meble do przechowywania > Szafy > Szafy przesuwne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  136:
+    nazwa: Szafy narożne
+    poziom: 3
+    rodzic: 80
+    sciezka: Meble > Meble do przechowywania > Szafy > Szafy narożne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  64:
+    nazwa: Szafki RTV
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Szafki RTV
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  98:
+    nazwa: Witryny
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Witryny
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  139:
+    nazwa: Regały
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Regały
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  60:
+    nazwa: Meblościanki
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Meblościanki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  119:
+    nazwa: Półki i szafki wiszące
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Półki i szafki wiszące
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  122:
+    nazwa: Szafki nocne
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Szafki nocne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  135:
+    nazwa: Toaletki i konsole
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Toaletki i konsole
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  120:
+    nazwa: Kontenerki biurowe
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Kontenerki biurowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  322:
+    nazwa: Kontenerki na kluczyk
+    poziom: 3
+    rodzic: 120
+    sciezka: Meble > Meble do przechowywania > Kontenerki biurowe > Kontenerki na kluczyk
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  323:
+    nazwa: Kontenerki na kółkach
+    poziom: 3
+    rodzic: 120
+    sciezka: Meble > Meble do przechowywania > Kontenerki biurowe > Kontenerki na kółkach
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  77:
+    nazwa: Szafki na buty
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Szafki na buty
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  79:
+    nazwa: Garderoby do przedpokoju
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Garderoby do przedpokoju
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  78:
+    nazwa: Wieszaki na ubrania
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Wieszaki na ubrania
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba półek
+    - Materiał
+    - Szerokość
+    - Wysokość
+  324:
+    nazwa: Wieszaki ścienne
+    poziom: 3
+    rodzic: 78
+    sciezka: Meble > Meble do przechowywania > Wieszaki na ubrania > Wieszaki ścienne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba półek
+    - Materiał
+    - Szerokość
+    - Wysokość
+  325:
+    nazwa: Wieszaki stojące
+    poziom: 3
+    rodzic: 78
+    sciezka: Meble > Meble do przechowywania > Wieszaki na ubrania > Wieszaki stojące
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba półek
+    - Materiał
+    - Szerokość
+    - Wysokość
+  326:
+    nazwa: Wieszaki na kółkach
+    poziom: 3
+    rodzic: 78
+    sciezka: Meble > Meble do przechowywania > Wieszaki na ubrania > Wieszaki na kółkach
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba półek
+    - Materiał
+    - Szerokość
+    - Wysokość
+  203:
+    nazwa: Skrzynie i schowki
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Skrzynie i schowki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  199:
+    nazwa: Zestawy mebli
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Zestawy mebli
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  327:
+    nazwa: Zestawy mebli dziecięcych i młodzieżowych
+    poziom: 3
+    rodzic: 199
+    sciezka: Meble > Meble do przechowywania > Zestawy mebli > Zestawy mebli dziecięcych i młodzieżowych
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  151:
+    nazwa: Zestawy mebli kuchennych
+    poziom: 3
+    rodzic: 199
+    sciezka: Meble > Meble do przechowywania > Zestawy mebli > Zestawy mebli kuchennych
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  293:
+    nazwa: Zestawy mebli łazienkowych
+    poziom: 3
+    rodzic: 199
+    sciezka: Meble > Meble do przechowywania > Zestawy mebli > Zestawy mebli łazienkowych
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  299:
+    nazwa: Zestawy mebli ogrodowych
+    poziom: 3
+    rodzic: 199
+    sciezka: Meble > Meble do przechowywania > Zestawy mebli > Zestawy mebli ogrodowych
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Szerokość
+    - Wysokość
+  292:
+    nazwa: Szafki łazienkowe
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  294:
+    nazwa: Szafki pod umywalkę
+    poziom: 3
+    rodzic: 292
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Szafki pod umywalkę
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  329:
+    nazwa: Szafki pod umywalkę wiszące
+    poziom: 4
+    rodzic: 294
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Szafki pod umywalkę > Szafki pod umywalkę wiszące
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  330:
+    nazwa: Szafki pod umywalkę stojące
+    poziom: 4
+    rodzic: 294
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Szafki pod umywalkę > Szafki pod umywalkę stojące
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  332:
+    nazwa: Szafki z koszem na ubranie
+    poziom: 4
+    rodzic: 294
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Szafki pod umywalkę > Szafki z koszem na ubranie
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  333:
+    nazwa: Słupki
+    poziom: 3
+    rodzic: 292
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Słupki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  298:
+    nazwa: Szafki wiszące i półki
+    poziom: 3
+    rodzic: 292
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Szafki wiszące i półki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  334:
+    nazwa: Szafki łazienkowe stojące
+    poziom: 3
+    rodzic: 292
+    sciezka: Meble > Meble do przechowywania > Szafki łazienkowe > Szafki łazienkowe stojące
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  335:
+    nazwa: Szafki kuchenne
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Szafki kuchenne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  338:
+    nazwa: Szafki kuchenne górne
+    poziom: 3
+    rodzic: 335
+    sciezka: Meble > Meble do przechowywania > Szafki kuchenne > Szafki kuchenne górne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  339:
+    nazwa: Szafki kuchenne dolne
+    poziom: 3
+    rodzic: 335
+    sciezka: Meble > Meble do przechowywania > Szafki kuchenne > Szafki kuchenne dolne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  340:
+    nazwa: Słupki kuchenne
+    poziom: 3
+    rodzic: 335
+    sciezka: Meble > Meble do przechowywania > Szafki kuchenne > Słupki kuchenne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  341:
+    nazwa: Wyspy kuchenne
+    poziom: 3
+    rodzic: 335
+    sciezka: Meble > Meble do przechowywania > Szafki kuchenne > Wyspy kuchenne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  336:
+    nazwa: Blaty
+    poziom: 2
+    rodzic: 321
+    sciezka: Meble > Meble do przechowywania > Blaty
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Szerokość
+    - Wysokość
+  297:
+    nazwa: Blaty łazienkowe
+    poziom: 3
+    rodzic: 336
+    sciezka: Meble > Meble do przechowywania > Blaty > Blaty łazienkowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Szerokość
+    - Wysokość
+  337:
+    nazwa: Blaty kuchenne
+    poziom: 3
+    rodzic: 336
+    sciezka: Meble > Meble do przechowywania > Blaty > Blaty kuchenne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Szerokość
+    - Wysokość
+  342:
+    nazwa: Meble wypoczynkowe
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Meble wypoczynkowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  46:
+    nazwa: Sofy i kanapy
+    poziom: 2
+    rodzic: 342
+    sciezka: Meble > Meble wypoczynkowe > Sofy i kanapy
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  177:
+    nazwa: Sofy i kanapy rozkładane
+    poziom: 3
+    rodzic: 46
+    sciezka: Meble > Meble wypoczynkowe > Sofy i kanapy > Sofy i kanapy rozkładane
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  176:
+    nazwa: Sofy i kanapy modułowe
+    poziom: 3
+    rodzic: 46
+    sciezka: Meble > Meble wypoczynkowe > Sofy i kanapy > Sofy i kanapy modułowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  49:
+    nazwa: Wersalki
+    poziom: 3
+    rodzic: 46
+    sciezka: Meble > Meble wypoczynkowe > Sofy i kanapy > Wersalki
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  306:
+    nazwa: Sofy ogrodowe
+    poziom: 3
+    rodzic: 46
+    sciezka: Meble > Meble wypoczynkowe > Sofy i kanapy > Sofy ogrodowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  47:
+    nazwa: Narożniki
+    poziom: 2
+    rodzic: 342
+    sciezka: Meble > Meble wypoczynkowe > Narożniki
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  174:
+    nazwa: Narożniki z funkcją spania
+    poziom: 3
+    rodzic: 47
+    sciezka: Meble > Meble wypoczynkowe > Narożniki > Narożniki z funkcją spania
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  173:
+    nazwa: Narożniki modułowe
+    poziom: 3
+    rodzic: 47
+    sciezka: Meble > Meble wypoczynkowe > Narożniki > Narożniki modułowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  172:
+    nazwa: Narożniki L
+    poziom: 3
+    rodzic: 47
+    sciezka: Meble > Meble wypoczynkowe > Narożniki > Narożniki L
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  171:
+    nazwa: Narożniki U
+    poziom: 3
+    rodzic: 47
+    sciezka: Meble > Meble wypoczynkowe > Narożniki > Narożniki U
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  343:
+    nazwa: Narożniki ogrodowe
+    poziom: 3
+    rodzic: 47
+    sciezka: Meble > Meble wypoczynkowe > Narożniki > Narożniki ogrodowe [brak produktów]
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  48:
+    nazwa: Fotele
+    poziom: 2
+    rodzic: 342
+    sciezka: Meble > Meble wypoczynkowe > Fotele
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  344:
+    nazwa: Fotele rozkładane
+    poziom: 3
+    rodzic: 48
+    sciezka: Meble > Meble wypoczynkowe > Fotele > Fotele rozkładane
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  345:
+    nazwa: Fotele relaksacyjne
+    poziom: 3
+    rodzic: 48
+    sciezka: Meble > Meble wypoczynkowe > Fotele > Fotele relaksacyjne
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  180:
+    nazwa: Fotele bujane
+    poziom: 3
+    rodzic: 48
+    sciezka: Meble > Meble wypoczynkowe > Fotele > Fotele bujane
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  179:
+    nazwa: Fotele uszak
+    poziom: 3
+    rodzic: 48
+    sciezka: Meble > Meble wypoczynkowe > Fotele > Fotele uszak
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  303:
+    nazwa: Fotele i leżaki ogrodowe
+    poziom: 3
+    rodzic: 48
+    sciezka: Meble > Meble wypoczynkowe > Fotele > Fotele i leżaki ogrodowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+  178:
+    nazwa: Szezlongi i leżanki
+    poziom: 2
+    rodzic: 342
+    sciezka: Meble > Meble wypoczynkowe > Szezlongi i leżanki
+    ukryty: false
+    filtry:
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  50:
+    nazwa: Pufy
+    poziom: 2
+    rodzic: 342
+    sciezka: Meble > Meble wypoczynkowe > Pufy
+    ukryty: false
+    filtry:
+    - Funkcje
+    - Głębokość
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  346:
+    nazwa: Komplety wypoczynkowe
+    poziom: 2
+    rodzic: 342
+    sciezka: Meble > Meble wypoczynkowe > Komplety wypoczynkowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Na nóżkach
+    - Rodzaj obicia
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  205:
+    nazwa: Nadstawki na witryny
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Nadstawki na witryny [ukryty]
+    ukryty: true
+    filtry:
+    - Cechy materaca
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Kształt blatu
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba miejsc
+    - Liczba półek
+    - Liczba szuflad
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Regulacja
+    - Rodzaj obicia
+    - Rozkładane
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Szerokość powierzchni spania
+    - Twardość materaca
+    - Wyposażenie
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  137:
+    nazwa: Nadstawki na szafy
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Nadstawki na szafy [ukryty]
+    ukryty: true
+    filtry:
+    - Cechy materaca
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Kształt blatu
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba miejsc
+    - Liczba półek
+    - Liczba szuflad
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Regulacja
+    - Rodzaj obicia
+    - Rozkładane
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Szerokość powierzchni spania
+    - Twardość materaca
+    - Wyposażenie
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  202:
+    nazwa: Parawany
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Parawany [ukryty]
+    ukryty: true
+    filtry:
+    - Cechy materaca
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Kształt blatu
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba miejsc
+    - Liczba półek
+    - Liczba szuflad
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Regulacja
+    - Rodzaj obicia
+    - Rozkładane
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Szerokość powierzchni spania
+    - Twardość materaca
+    - Wyposażenie
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  204:
+    nazwa: Podnóżki
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Podnóżki [ukryty]
+    ukryty: true
+    filtry:
+    - Cechy materaca
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Kształt blatu
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba miejsc
+    - Liczba półek
+    - Liczba szuflad
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Regulacja
+    - Rodzaj obicia
+    - Rozkładane
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Szerokość powierzchni spania
+    - Twardość materaca
+    - Wyposażenie
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  201:
+    nazwa: Przewijaki
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Przewijaki [ukryty]
+    ukryty: true
+    filtry:
+    - Cechy materaca
+    - Długość powierzchni spania
+    - Funkcje
+    - Głębokość
+    - Kształt blatu
+    - Liczba drzwi
+    - Liczba drążków
+    - Liczba miejsc
+    - Liczba półek
+    - Liczba szuflad
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Regulacja
+    - Rodzaj obicia
+    - Rozkładane
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Szerokość powierzchni spania
+    - Twardość materaca
+    - Wyposażenie
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  143:
+    nazwa: Biurka
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Biurka
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  290:
+    nazwa: Biurka z regulacją
+    poziom: 2
+    rodzic: 143
+    sciezka: Meble > Biurka > Biurka z regulacją
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  153:
+    nazwa: Biurka narożne
+    poziom: 2
+    rodzic: 143
+    sciezka: Meble > Biurka > Biurka narożne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  291:
+    nazwa: Biurka gamingowe
+    poziom: 2
+    rodzic: 143
+    sciezka: Meble > Biurka > Biurka gamingowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  40:
+    nazwa: Biurka dziecięce
+    poziom: 2
+    rodzic: 143
+    sciezka: Meble > Biurka > Biurka dziecięce
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  155:
+    nazwa: Stoliki na laptopy
+    poziom: 2
+    rodzic: 143
+    sciezka: Meble > Biurka > Stoliki na laptopy
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba drzwi
+    - Liczba półek
+    - Liczba szuflad
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wyposażenie
+    - Wysokość
+  348:
+    nazwa: Stoły i stoliki
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Stoły i stoliki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  140:
+    nazwa: Stoły do jadalni
+    poziom: 2
+    rodzic: 348
+    sciezka: Meble > Stoły i stoliki > Stoły do jadalni
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  115:
+    nazwa: Stoły rozkładane
+    poziom: 3
+    rodzic: 140
+    sciezka: Meble > Stoły i stoliki > Stoły do jadalni > Stoły rozkładane
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  349:
+    nazwa: Stoły okrągłe
+    poziom: 3
+    rodzic: 140
+    sciezka: Meble > Stoły i stoliki > Stoły do jadalni > Stoły okrągłe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  350:
+    nazwa: Stoły prostokątne
+    poziom: 3
+    rodzic: 140
+    sciezka: Meble > Stoły i stoliki > Stoły do jadalni > Stoły prostokątne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  157:
+    nazwa: Zestawy stołów i krzeseł
+    poziom: 2
+    rodzic: 348
+    sciezka: Meble > Stoły i stoliki > Zestawy stołów i krzeseł
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Wysokość
+  158:
+    nazwa: Ławy i stoliki kawowe
+    poziom: 2
+    rodzic: 348
+    sciezka: Meble > Stoły i stoliki > Ławy i stoliki kawowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Materiał
+    - Szerokość
+    - Wysokość
+  236:
+    nazwa: Ławostoły
+    poziom: 2
+    rodzic: 348
+    sciezka: Meble > Stoły i stoliki > Ławostoły
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  351:
+    nazwa: Stoliki pomocnicze
+    poziom: 2
+    rodzic: 348
+    sciezka: Meble > Stoły i stoliki > Stoliki pomocnicze
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Materiał
+    - Szerokość
+    - Wysokość
+  300:
+    nazwa: Stoły i stoliki ogrodowe
+    poziom: 2
+    rodzic: 348
+    sciezka: Meble > Stoły i stoliki > Stoły i stoliki ogrodowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Kształt blatu
+    - Liczba miejsc
+    - Materiał
+    - Rozkładane
+    - Szerokość
+    - Szerokość po rozłożeniu
+    - Wysokość
+  352:
+    nazwa: Krzesła i siedziska
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Krzesła i siedziska
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Regulacja
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  67:
+    nazwa: Krzesła
+    poziom: 2
+    rodzic: 352
+    sciezka: Meble > Krzesła i siedziska > Krzesła
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Regulacja
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  187:
+    nazwa: Krzesła tapicerowane
+    poziom: 3
+    rodzic: 67
+    sciezka: Meble > Krzesła i siedziska > Krzesła > Krzesła tapicerowane
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Regulacja
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  73:
+    nazwa: Krzesła obrotowe
+    poziom: 3
+    rodzic: 67
+    sciezka: Meble > Krzesła i siedziska > Krzesła > Krzesła obrotowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Regulacja
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  353:
+    nazwa: Krzesła składane
+    poziom: 3
+    rodzic: 67
+    sciezka: Meble > Krzesła i siedziska > Krzesła > Krzesła składane
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Regulacja
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  74:
+    nazwa: Hokery i krzesła barowe
+    poziom: 2
+    rodzic: 352
+    sciezka: Meble > Krzesła i siedziska > Hokery i krzesła barowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  188:
+    nazwa: Ławki
+    poziom: 2
+    rodzic: 352
+    sciezka: Meble > Krzesła i siedziska > Ławki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  75:
+    nazwa: Taborety i stołki
+    poziom: 2
+    rodzic: 352
+    sciezka: Meble > Krzesła i siedziska > Taborety i stołki
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  301:
+    nazwa: Krzesła ogrodowe
+    poziom: 2
+    rodzic: 352
+    sciezka: Meble > Krzesła i siedziska > Krzesła ogrodowe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  311:
+    nazwa: Łóżka i materace
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Łóżka i materace
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Regulacja
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Twardość materaca
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  89:
+    nazwa: Łóżka
+    poziom: 2
+    rodzic: 311
+    sciezka: Meble > Łóżka i materace > Łóżka
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  160:
+    nazwa: Łóżka kontynentalne
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżka kontynentalne
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  92:
+    nazwa: Łóżka tapicerowane
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżka tapicerowane
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  315:
+    nazwa: Łóżka drewniane
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżka drewniane
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  316:
+    nazwa: Łóżka z pojemnikiem
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżka z pojemnikiem
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  132:
+    nazwa: Łóżka piętrowe
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżka piętrowe
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  134:
+    nazwa: Łóżka chowane i półkotapczany
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżka chowane i półkotapczany
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Liczba miejsc
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  133:
+    nazwa: Łóżeczka dla dzieci
+    poziom: 3
+    rodzic: 89
+    sciezka: Meble > Łóżka i materace > Łóżka > Łóżeczka dla dzieci
+    ukryty: false
+    filtry:
+    - Długość powierzchni spania
+    - Głębokość
+    - Materac w zestawie
+    - Materiał
+    - Na nóżkach
+    - Oświetlenie
+    - Rodzaj obicia
+    - Stelaż w zestawie
+    - Szerokość
+    - Szerokość powierzchni spania
+    - Wysokość
+    - Właściwości obicia
+    - Z pojemnikiem
+  142:
+    nazwa: Materace
+    poziom: 2
+    rodzic: 311
+    sciezka: Meble > Łóżka i materace > Materace
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Głębokość
+    - Liczba miejsc
+    - Szerokość
+    - Twardość materaca
+    - Wysokość
+  317:
+    nazwa: Materace sprężynowe
+    poziom: 3
+    rodzic: 142
+    sciezka: Meble > Łóżka i materace > Materace > Materace sprężynowe
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Głębokość
+    - Liczba miejsc
+    - Szerokość
+    - Twardość materaca
+    - Wysokość
+  318:
+    nazwa: Materace piankowe
+    poziom: 3
+    rodzic: 142
+    sciezka: Meble > Łóżka i materace > Materace > Materace piankowe
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Głębokość
+    - Liczba miejsc
+    - Szerokość
+    - Twardość materaca
+    - Wysokość
+  319:
+    nazwa: Materace hybrydowe
+    poziom: 3
+    rodzic: 142
+    sciezka: Meble > Łóżka i materace > Materace > Materace hybrydowe
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Głębokość
+    - Liczba miejsc
+    - Szerokość
+    - Twardość materaca
+    - Wysokość
+  320:
+    nazwa: Materace lateksowe
+    poziom: 3
+    rodzic: 142
+    sciezka: Meble > Łóżka i materace > Materace > Materace lateksowe
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Głębokość
+    - Liczba miejsc
+    - Szerokość
+    - Twardość materaca
+    - Wysokość
+  111:
+    nazwa: Materace dla dzieci i niemowląt
+    poziom: 3
+    rodzic: 142
+    sciezka: Meble > Łóżka i materace > Materace > Materace dla dzieci i niemowląt
+    ukryty: false
+    filtry:
+    - Cechy materaca
+    - Głębokość
+    - Szerokość
+    - Twardość materaca
+    - Wysokość
+  262:
+    nazwa: Nakładki na materace
+    poziom: 3
+    rodzic: 142
+    sciezka: Meble > Łóżka i materace > Materace > Nakładki na materace
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba miejsc
+    - Szerokość
+    - Wysokość
+  121:
+    nazwa: Stelaże do łóżek
+    poziom: 2
+    rodzic: 311
+    sciezka: Meble > Łóżka i materace > Stelaże do łóżek
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Liczba miejsc
+    - Materiał
+    - Regulacja
+    - Szerokość
+    - Wysokość
+  312:
+    nazwa: Akcesoria do łóżek
+    poziom: 2
+    rodzic: 311
+    sciezka: Meble > Łóżka i materace > Akcesoria do łóżek
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  313:
+    nazwa: Zagłówki do łóżek
+    poziom: 3
+    rodzic: 312
+    sciezka: Meble > Łóżka i materace > Akcesoria do łóżek > Zagłówki do łóżek
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  314:
+    nazwa: Pojemniki pod łóżko
+    poziom: 3
+    rodzic: 312
+    sciezka: Meble > Łóżka i materace > Akcesoria do łóżek > Pojemniki pod łóżko
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Rodzaj obicia
+    - Szerokość
+    - Wysokość
+    - Właściwości obicia
+  123:
+    nazwa: Lustra
+    poziom: 1
+    rodzic: null
+    sciezka: Meble > Lustra
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wysokość
+  308:
+    nazwa: Lustra prostokątne
+    poziom: 2
+    rodzic: 123
+    sciezka: Meble > Lustra > Lustra prostokątne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wysokość
+  309:
+    nazwa: Lustra okrągłe
+    poziom: 2
+    rodzic: 123
+    sciezka: Meble > Lustra > Lustra okrągłe
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wysokość
+  310:
+    nazwa: Lustra nieregularne
+    poziom: 2
+    rodzic: 123
+    sciezka: Meble > Lustra > Lustra nieregularne
+    ukryty: false
+    filtry:
+    - Głębokość
+    - Materiał
+    - Oświetlenie
+    - Szerokość
+    - Wysokość

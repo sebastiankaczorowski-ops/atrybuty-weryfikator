@@ -349,7 +349,6 @@ def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = 
     # produkcie, który nie ma ŻADNEGO atrybutu, to nie finding do poprawy
     # tylko brak danych u źródła. Lądują na osobnej liście (/braki).
     do_analizy = [p for p in produkty if not p.do_zrodla]
-    kategoria_produktu = {p.id: p.kategoria for p in produkty}
     bez_danych = {p.id for p in produkty if p.do_zrodla}
 
     out: list[Finding] = [f for f in findingi_normalizacji if f.produkt_id not in bez_danych]
@@ -365,11 +364,11 @@ def uruchom(produkty: list[Produkt], findingi_normalizacji: Iterable[Finding] = 
     # Luki w filtrach. Brak atrybutu-filtra to jedno zgłoszenie z luk —
     # L1-BRAK-WYMAGANEGO dla tej samej komórki byłby drugim kliknięciem
     # z tym samym kluczem decyzji, więc go zdejmujemy.
-    filtry = config.filtry()
-    if filtry:
+    if luki.konfiguracja_aktywna():
+        filtry_p = {p.id: luki.filtry_produktu(p) for p in do_analizy}
         out = [f for f in out if not (
             f.regula_id == "L1-BRAK-WYMAGANEGO"
-            and f.atrybut in filtry.get(kategoria_produktu.get(f.produkt_id, ""), ()))]
+            and f.atrybut in filtry_p.get(f.produkt_id, ()))]
         # Wyłączone reguły odpadają PRZED uzgadnianiem: wyłączona reguła nie może
         # zabrać komórki włączonemu źródłu ani zdjąć braku (inspekcja R09).
         wyl = config.wylaczone()

@@ -15,7 +15,7 @@ from collections import Counter
 from pathlib import Path
 
 from . import (config, db, detektory, kategorie, luki, normalizacja, schema_gen,
-               skladowe, weryfikacja, wizja, zdjecia as zdjecia_mod, zrodla)
+               skladowe, wezly, weryfikacja, wizja, zdjecia as zdjecia_mod, zrodla)
 from .model import Finding, Produkt, oszacuj_kompletnosc
 
 csv.field_size_limit(10_000_000)
@@ -118,6 +118,8 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
                         if kol_skladowe else {})
             odciete = (wiersz.get(kol_odciecie) or "").strip() in ("1", "true", "True")
 
+            typ_sklepu = ze_sklepu or ""
+            wezel = wezly.przypisz(typ_sklepu, podtyp)[0] if wezly.aktywne() else None
             produkty.append(Produkt(
                 id=pid,
                 nazwa=(wiersz.get("nazwa") or "").strip(),
@@ -126,6 +128,7 @@ def wczytaj_csv(sciezka: str | Path, plik_kategorii: str | Path | None = None
                 zdjecie=(wiersz.get("zdjecie") or "").strip(),
                 styl=(wiersz.get("style") or "").strip(),
                 kategoria=kat, zrodlo_kategorii=zrodlo, podtyp=podtyp,
+                typ=typ_sklepu, wezel=wezel,
                 kody=kody, zdjecia=galeria,
                 skladowe=skladowe, skladowe_odciete=odciete,
                 atrybuty=znorm, atrybuty_surowe=surowe, liczby=liczby,
@@ -457,6 +460,10 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("--potwierdzam", default="", metavar="TAK",
                    help="bez tego nic się nie kasuje")
 
+    fm = sub.add_parser("filtry-z-macierzy",
+                        help="wczytaj filtry według węzłów drzewa z arkusza „Macierz filtrów”")
+    fm.add_argument("plik", help="xlsx z zakładkami „Macierz” i „Dane do importu”")
+
     fz = sub.add_parser("filtry-z-diagnozy",
                         help="zasiej config/filtry.yaml z pomiarów filtrów strony")
     fz.add_argument("plik", nargs="?", default="docs/diagnoza-filtrow-2026-10-10.csv")
@@ -479,6 +486,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "wyczysc":
         komenda_wyczysc(args.zakres, args.z_wizja, args.pliki_partii,
                         args.potwierdzam)
+    elif args.cmd == "filtry-z-macierzy":
+        komenda_filtry_z_macierzy(args.plik)
     elif args.cmd == "filtry-z-diagnozy":
         komenda_filtry_z_diagnozy(args.plik)
     elif args.cmd == "rozpoznaj-arkusz":
@@ -486,6 +495,27 @@ def main(argv: list[str] | None = None) -> int:
     else:
         komenda_raport()
     return 0
+
+
+# Atrybuty liczbowe — nie mają słownika wartości, więc nie ma ich w etykietach panelu.
+ATRYBUTY_LICZBOWE = ("Szerokość", "Wysokość", "Głębokość", "Szerokość powierzchni spania",
+                     "Długość powierzchni spania", "Szerokość po rozłożeniu")
+
+
+def komenda_filtry_z_macierzy(plik: str) -> None:
+    from datetime import date
+    from . import panel_format
+    znane = (set(panel_format.wczytaj_etykiety()) | set(ATRYBUTY_LICZBOWE)
+             | set((config.slowniki().get("atrybuty") or {})))
+    dane, raport = wezly.z_arkusza(plik, znane)
+    sciezka = wezly.zapisz(dane, {"zrodlo": Path(plik).name, "wczytano": date.today().isoformat(),
+                                  "opis": "arkusz Macierz filtrów per kategoria (Ewa Swebocka)"})
+    print(f"Zapisano {sciezka}: {raport['wezlow']} węzłów ({raport['ukrytych']} ukrytych), "
+          f"{raport['par']} par węzeł–filtr")
+    if raport["niezmapowane_filtry"]:
+        print("Filtry bez odpowiednika w naszych atrybutach (pominięte): "
+              + ", ".join(raport["niezmapowane_filtry"]))
+    print("Od teraz luki liczą się według węzłów; przelicz import.")
 
 
 def komenda_filtry_z_diagnozy(plik: str) -> None:

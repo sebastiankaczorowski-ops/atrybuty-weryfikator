@@ -11,6 +11,7 @@ from .model import PROG_DO_WIZJI, WIDOCZNE_NA_ZDJECIU
 @dataclass
 class Filtr:
     kategoria: str = ""
+    wezel: str = ""                # węzeł drzewa panelu (link z /filtry)
     producent: str = ""
     regula: str = ""
     warstwa: str = ""
@@ -102,6 +103,8 @@ def _warunki(fl: Filtr) -> tuple[str, dict]:
     sql, par = "", {}
     if fl.kategoria:
         sql += " AND p.kategoria = :kategoria"; par["kategoria"] = fl.kategoria
+    if fl.wezel.isdigit():
+        sql += " AND p.wezel = :wezel"; par["wezel"] = int(fl.wezel)
     if fl.producent:
         sql += " AND p.producent = :producent"; par["producent"] = fl.producent
     if fl.regula.endswith("*"):
@@ -773,15 +776,30 @@ def _efektywne(atrybuty: str | None, skladowe: str | None, odciete: int) -> dict
     return {**s, **a}
 
 
+def zakres_wezla(zakres: str) -> int | None:
+    """„w55” → 55 (węzeł drzewa); nasza kategoria („komoda”) → None."""
+    if zakres and zakres[0] == "w" and zakres[1:].isdigit():
+        return int(zakres[1:])
+    return None
+
+
+def _warunek_zakresu(zakres: str, alias: str = "") -> tuple[str, list]:
+    if not zakres:
+        return "", []
+    wid = zakres_wezla(zakres)
+    if wid is not None:
+        return f" AND {alias}wezel = ?", [wid]
+    return f" AND {alias}kategoria = ?", [zakres]
+
+
 def _produkty_filtrow(con: sqlite3.Connection, kategoria: str = "") -> list[sqlite3.Row]:
     # Produkty bez danych (pusty/szczątkowy) są na /braki i nie dostają luk —
     # liczymy pokrycie na tym samym zbiorze, na którym powstają findingi.
-    q = ("SELECT id, nazwa, producent, kolekcja, kategoria, atrybuty, skladowe, "
+    # `kategoria` to zakres: „w55” = węzeł drzewa, inaczej nasza kategoria.
+    q = ("SELECT id, nazwa, producent, kolekcja, kategoria, wezel, atrybuty, skladowe, "
          "skladowe_odciete FROM produkty WHERE kompletnosc NOT IN ('pusty','szczatkowy')")
-    par: tuple = ()
-    if kategoria:
-        q += " AND kategoria = ?"; par = (kategoria,)
-    return con.execute(q, par).fetchall()
+    w, par = _warunek_zakresu(kategoria)
+    return con.execute(q + w, par).fetchall()
 
 
 def _otwarte_luki(con: sqlite3.Connection, przebieg: int, kategoria: str = "",
@@ -800,8 +818,8 @@ def _otwarte_luki(con: sqlite3.Connection, przebieg: int, kategoria: str = "",
              AND (f.regula_id LIKE 'L2-LUKA-%' OR f.regula_id = 'L1-LUKA-BRAK'
                   OR f.stara_wartosc IS NULL)"""
     par: list = [przebieg]
-    if kategoria:
-        q += " AND p.kategoria = ?"; par.append(kategoria)
+    w, pz = _warunek_zakresu(kategoria, "p.")
+    q += w; par += pz
     if atrybut:
         q += " AND f.atrybut = ?"; par.append(atrybut)
     return {(r[0], r[1]): {"regula": r[2], "propozycja": r[3], "pewnosc": r[4]}
@@ -809,17 +827,30 @@ def _otwarte_luki(con: sqlite3.Connection, przebieg: int, kategoria: str = "",
 
 
 def pokrycie_filtrow(con: sqlite3.Connection, przebieg: int | None) -> list[dict]:
-    """Kategoria × filtr z config/filtry.yaml: pokrycie i otwarte luki."""
-    from . import config
-    filtry = config.filtry()
+    """Zakres × filtr: pokrycie i otwarte luki.
+
+    Zakres to węzeł drzewa panelu („w55”), gdy wczytano macierz Ewy
+    (config/wezly.yaml) — wtedy tylko on jest źródłem prawdy; inaczej nasza
+    kategoria z config/filtry.yaml. Węzły w kolejności drzewa.
+    """
+    from . import config, wezly
     otwarte = _otwarte_luki(con, przebieg) if przebieg else {}
-    wg_kat: dict[str, list] = {}
+    wg_zak: dict[str, list] = {}
     for r in _produkty_filtrow(con):
-        wg_kat.setdefault(r["kategoria"], []).append(
-            (r["id"], _efektywne(r["atrybuty"], r["skladowe"], r["skladowe_odciete"])))
+        zak = (f"w{r['wezel']}" if r["wezel"] is not None else "") if wezly.aktywne() \
+            else r["kategoria"]
+        if zak:
+            wg_zak.setdefault(zak, []).append(
+                (r["id"], _efektywne(r["atrybuty"], r["skladowe"], r["skladowe_odciete"])))
+    if wezly.aktywne():
+        zakresy = [(f"w{wid}", w["filtry"]) for wid, w in wezly.wezly().items()
+                   if not w.get("ukryty") and f"w{wid}" in wg_zak]
+    else:
+        zakresy = sorted(config.filtry().items())
+    opcjonalne = set(config.luki().get("cechy_opcjonalne") or [])
     out = []
-    for kat, atrybuty in sorted(filtry.items()):
-        lista = wg_kat.get(kat, [])
+    for kat, atrybuty in zakresy:
+        lista = wg_zak.get(kat, [])
         for atr in atrybuty:
             z = brak = sprzecznych = 0
             zrodla = {"podtyp": 0, "nazwa": 0, "rodzina": 0, "zdjecie": 0, "inne": 0}
@@ -844,7 +875,8 @@ def pokrycie_filtrow(con: sqlite3.Connection, przebieg: int | None) -> list[dict
                         "z_wartoscia": z, "bez_wartosci": len(lista) - z,
                         "pokrycie": (z / len(lista)) if lista else None,
                         "propozycji": sum(zrodla.values()), "zrodla": zrodla,
-                        "brakow": brak, "sprzecznych": sprzecznych})
+                        "brakow": brak, "sprzecznych": sprzecznych,
+                        "opcjonalna": atr in opcjonalne})
     return out
 
 

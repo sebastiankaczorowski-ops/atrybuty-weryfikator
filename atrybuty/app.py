@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from . import (config, db, eksport, eksport_panelu, importer, kategorie,
-               panel_format, reguly as reguly_mod, weryfikacja as weryfikacja_mod,
+               panel_format, reguly as reguly_mod, wezly, weryfikacja as weryfikacja_mod,
                wizja, zapytania, zdjecia as zdjecia_mod, zrodla as zrodla_mod, rozpoznanie)
 from .model import MIN_ATRYBUTOW, PROG_DO_WIZJI
 from .tekst import norm
@@ -73,7 +73,7 @@ def anomalie(request: Request,
              warstwa: str = "", waga: str = "", atrybut: str = "",
              status: str = "otwarte", routing: str = "", ma_zdjecie: str = "",
              werdykt: str = "", szukaj: str = "", grupuj: str = "1", strona: int = 1,
-             widok: str = "findingi"):
+             widok: str = "findingi", wezel: str = ""):
     con = _con()
     przebieg = _przebieg(con)
     if not przebieg:
@@ -82,7 +82,7 @@ def anomalie(request: Request,
 
     fl = zapytania.Filtr(
         kategoria=kategoria, producent=producent, regula=regula, warstwa=warstwa,
-        waga=waga, atrybut=atrybut, status=status, routing=routing,
+        waga=waga, atrybut=atrybut, status=status, routing=routing, wezel=wezel,
         ma_zdjecie=ma_zdjecie, werdykt=werdykt, szukaj=szukaj, grupuj=(grupuj == "1"),
         limit=50, offset=(max(1, strona) - 1) * 50)
 
@@ -854,16 +854,51 @@ def filtry(request: Request, kategoria: str = "", atrybut: str = "",
     wg_atr_zdjec: dict[str, int] = {}
     for k in do_zdjec:
         wg_atr_zdjec[k["atrybut"]] = wg_atr_zdjec.get(k["atrybut"], 0) + 1
+    bez_wezla = []
+    if wezly.aktywne():
+        bez_wezla = [dict(r) for r in con.execute(
+            "SELECT typ, podtyp, COUNT(*) n FROM produkty WHERE wezel IS NULL "
+            "AND kompletnosc NOT IN ('pusty','szczatkowy') GROUP BY 1,2 ORDER BY n DESC")]
     con.close()
     razem = {k: sum(w[k] for w in wiersze)
              for k in ("bez_wartosci", "propozycji", "brakow", "sprzecznych")}
+    # Nazwy zakresów i linki do kolejki — węzeł („w55”) albo nasza kategoria.
+    nazwy = dict(kategorie.nazwy_kategorii())
+    sciezki = {}
+    for wid, w in wezly.wezly().items():
+        nazwy[f"w{wid}"] = w["nazwa"]
+        sciezki[f"w{wid}"] = w["sciezka"]
+
+    def zawezenie(zak: str) -> dict:
+        wid = zapytania.zakres_wezla(zak)
+        return {"wezel": str(wid)} if wid is not None else {"kategoria": zak}
+
+    for w in wiersze:
+        z = zawezenie(w["kategoria"])
+        w["link_propozycje"] = "/anomalie?" + urlencode({**z, "atrybut": w["atrybut"], "regula": "L2-LUKA-*"})
+        w["link_braki"] = "/anomalie?" + urlencode({**z, "atrybut": w["atrybut"], "regula": "L1-LUKA-BRAK"})
+        w["link_inne"] = "/anomalie?" + urlencode({**z, "atrybut": w["atrybut"]})
+        w["link_szczegoly"] = "/filtry?" + urlencode({"kategoria": w["kategoria"], "atrybut": w["atrybut"]})
+    # Kolejność drzewa (pokrycie_filtrow ją zachowuje) — groupby w szablonie
+    # sortowałby „w55” alfabetycznie i rozrzucał gałęzie.
+    grupy: list[tuple[str, list]] = []
+    for w in wiersze:
+        if not grupy or grupy[-1][0] != w["kategoria"]:
+            grupy.append((w["kategoria"], []))
+        grupy[-1][1].append(w)
+    if szczegoly:
+        z = zawezenie(szczegoly["kategoria"])
+        szczegoly["link_propozycje"] = "/anomalie?" + urlencode({**z, "atrybut": szczegoly["atrybut"], "regula": "L2-LUKA-*"})
+        szczegoly["link_braki"] = "/anomalie?" + urlencode({**z, "atrybut": szczegoly["atrybut"], "regula": "L1-LUKA-BRAK"})
     return szablony.TemplateResponse(request, "filtry.html", {
-        "request": request, "wiersze": wiersze, "razem": razem, "szczegoly": szczegoly,
+        "request": request, "wiersze": wiersze, "grupy": grupy, "razem": razem,
+        "szczegoly": szczegoly, "wezly_aktywne": wezly.aktywne(), "meta_wezlow": wezly.meta(), "bez_wezla": bez_wezla,
+        "sciezki": sciezki,
         "konfiguracja": config.filtry(), "kategorie_db": kategorie_db,
         "do_zdjec": len(do_zdjec), "szac_zdjec": szac,
         "wg_atr_zdjec": sorted(wg_atr_zdjec.items(), key=lambda x: -x[1]),
         "atrybuty_panelu": sorted(panel_format.wczytaj_etykiety()),
-        "nazwy_kat": kategorie.nazwy_kategorii(),
+        "nazwy_kat": nazwy,
         "komunikat": komunikat, "blad": bool(blad),
     })
 
@@ -907,6 +942,12 @@ def filtry_braki_csv(kategoria: str, atrybut: str, producent: str = ""):
 def filtry_konfiguracja(akcja: str = Form(...), kategoria: str = Form(...),
                         atrybut: str = Form(...)):
     """Dodaje albo zdejmuje filtr w kategorii. Luki przeliczą się przy imporcie."""
+    if wezly.aktywne():
+        # Źródłem prawdy jest macierz węzłów z panelu — edycja według naszych
+        # typów rozjeżdżałaby się z panelem (prośba Ewy, 13.10.2026).
+        q = urlencode({"komunikat": "Filtry pochodzą teraz z macierzy węzłów (arkusz Ewy). "
+                                    "Zmień arkusz i wczytaj go ponownie.", "blad": "1"})
+        return RedirectResponse(f"/filtry?{q}", status_code=303)
     kategoria, atrybut = kategoria.strip(), atrybut.strip()
     konf = {k: list(v) for k, v in config.filtry().items()}
     if not kategoria or not atrybut:

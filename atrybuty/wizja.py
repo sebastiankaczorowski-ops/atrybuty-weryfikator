@@ -88,20 +88,9 @@ PYTANIA: dict[str, str] = {
     "Tapicerowane": "Czy ten mebel jest tapicerowany?",
     "Zagłówek": "Czy ten mebel ma zagłówek?",
     "Podłokietniki": "Czy ten mebel ma podłokietniki?",
-    # Definicja filtra, nie potoczne „ma coś pod spodem”: model brał drobne
-    # stopki i regulatory poziomu za nóżki (szafa Candy 2D, szafka RTV —
-    # uwagi z próbki 12.10.2026). Klient zaznaczający filtr szuka mebla
-    # uniesionego na nogach, z prześwitem.
-    # Komoda Calmo: prześwit pod szufladami, ale stoi na bokach korpusu
-    # sięgających podłogi — to nie są nóżki, choć „widać przerwę”.
-    "Na nóżkach": "Czy ten mebel stoi na nóżkach w rozumieniu filtra sklepu? "
-                  "TAK tylko wtedy, gdy korpus jest uniesiony nad podłogą na wyraźnych, "
-                  "osobnych nogach (cztery lub więcej, albo noga/rama pod spodem) i pod "
-                  "meblem widać prześwit (orientacyjnie 5 cm lub więcej). "
-                  "NIE, gdy mebel stoi na bokach korpusu sięgających podłogi (nawet jeśli "
-                  "pod szufladami jest przerwa), na cokole, pełnej płycie, płozach albo "
-                  "kółkach, na drobnych stopkach, ślizgaczach lub regulatorach poziomu "
-                  "(prześwit do ok. 2 cm), albo gdy jest wiszący.",
+    # Definicję filtra (stopki ≠ nóżki, boki do podłogi ≠ nóżki…) dokleja
+    # `pytanie_dla` z arkusza Ewy — tu tylko samo pytanie.
+    "Na nóżkach": "Czy ten mebel stoi na nóżkach?",
     "Rodzaj frontu": "Jakie są fronty tego mebla: pełne, ryflowane, przeszklone, z lustrem, ażurowe?",
     "Dekoracje": "Jakie zdobienia widać na tym meblu?",
     "Styl": "W jakim stylu utrzymany jest ten mebel?",
@@ -117,7 +106,22 @@ PYTANIA: dict[str, str] = {
 
 
 def pytanie_dla(atrybut: str) -> str | None:
-    return PYTANIA.get(atrybut)
+    """Pytanie + definicja filtra ze sklepu (arkusz „Macierz filtrów”, Ewa).
+
+    Bez definicji model ocenia potocznie: stopki i regulatory poziomu brał za
+    nóżki (próbka 12.10.2026). Definicja wchodzi do haszu pytania, więc jej
+    zmiana unieważnia cache tylko dla tego atrybutu.
+    """
+    pytanie = PYTANIA.get(atrybut)
+    if not pytanie:
+        return None
+    from . import wezly
+    definicja = wezly.definicja(atrybut)
+    if definicja:
+        pytanie += ("\nDefinicja filtra w sklepie (rozstrzyga w razie wątpliwości; gdy "
+                    "wymienia wartość spoza listy dozwolonych, wybierz najbliższą z listy): "
+                    + definicja)
+    return pytanie
 
 
 def obslugiwane_atrybuty() -> set[str]:
@@ -764,7 +768,12 @@ def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = No
     Osobno od `kandydaci`: brak ma pewność 1,0 właśnie po to, żeby nie wpadał
     do zwykłej bramki — tu trafia tylko wtedy, gdy człowiek uruchomi odczyt.
     """
-    obslugiwane = ",".join(f"'{a}'" for a in sorted(obslugiwane_atrybuty()))
+    # Bez filtrów, których zdjęcie nie rozstrzyga (luki.yaml: zdjecia_bez) —
+    # np. oświetlenie: zgaszonego LED-a nie widać, a „w zestawie” vs
+    # „opcjonalne” to cennik, nie zdjęcie (uwagi Ewy, 13.10.2026).
+    from . import config as _config
+    bez = set(_config.luki().get("zdjecia_bez") or [])
+    obslugiwane = ",".join(f"'{a}'" for a in sorted(obslugiwane_atrybuty() - bez))
     # Powtórka (po zmianie pytania): także już odczytane, jeszcze nierozstrzygnięte.
     # Ten sam hasz pytania wraca z cache za darmo — płaci się tylko za nowe pytanie.
     warunek = ("f.regula_id IN ('L1-LUKA-BRAK', 'L2-LUKA-ZDJECIE')" if powtorz

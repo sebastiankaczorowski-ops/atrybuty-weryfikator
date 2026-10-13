@@ -87,10 +87,11 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
 {% if szczegoly %}
 <section class="szczegoly" id="szczegoly">
   <h2>{{ nazwy_kat.get(szczegoly.kategoria, szczegoly.kategoria) }} · {{ szczegoly.atrybut }} — kto ma braki</h2>
+  {% if sciezki.get(szczegoly.kategoria) %}<p class="legenda">{{ sciezki[szczegoly.kategoria] }}</p>{% endif %}
   <p class="legenda">
     <a href="/filtry/braki.csv?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut}|urlencode }}">Pobierz CSV wszystkich produktów bez wartości</a>
-    · <a href="/anomalie?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut, 'regula': 'L2-LUKA-*'}|urlencode }}">propozycje w kolejce</a>
-    · <a href="/anomalie?{{ {'kategoria': szczegoly.kategoria, 'atrybut': szczegoly.atrybut, 'regula': 'L1-LUKA-BRAK'}|urlencode }}">braki w kolejce</a>
+    · <a href="{{ szczegoly.link_propozycje }}">propozycje w kolejce</a>
+    · <a href="{{ szczegoly.link_braki }}">braki w kolejce</a>
   </p>
   <table class="pk" style="width:auto;min-width:520px">
     <thead><tr><th class="l">Producent</th><th>Bez wartości</th><th>Jego produktów</th><th>Z propozycją</th><th class="l">CSV</th></tr></thead>
@@ -108,15 +109,17 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
 
 <table class="pk">
   <thead><tr>
-    <th class="l">Kategoria · filtr</th><th>Produktów</th><th>Z wartością</th><th class="l">Pokrycie</th>
+    <th class="l">{{ 'Węzeł drzewa' if wezly_aktywne else 'Kategoria' }} · filtr</th><th>Produktów</th><th>Z wartością</th><th class="l">Pokrycie</th>
     <th>Bez wartości</th><th>Z propozycją</th><th>Bez propozycji</th><th>Sprzeczne</th><th class="l">Do kolejki</th>
   </tr></thead>
   <tbody>
-  {% for kat, grupa in wiersze|groupby('kategoria') %}
-    <tr class="kat"><td colspan="9">{{ nazwy_kat.get(kat, kat) }} <span class="zrodlo">· {{ grupa[0].produktow }} produktów</span></td></tr>
+  {% for kat, grupa in grupy %}
+    <tr class="kat"><td colspan="9">{{ nazwy_kat.get(kat, kat) }} <span class="zrodlo">· {{ grupa[0].produktow }} produktów
+      {%- if sciezki.get(kat) %} · {{ sciezki[kat] }}{% endif %}</span></td></tr>
     {% for w in grupa|sort(attribute='bez_wartosci', reverse=True) %}
     <tr>
-      <td class="l"><a href="/filtry?{{ {'kategoria': kat, 'atrybut': w.atrybut}|urlencode }}#szczegoly">{{ w.atrybut }}</a></td>
+      <td class="l"><a href="{{ w.link_szczegoly }}#szczegoly">{{ w.atrybut }}</a>
+        {%- if w.opcjonalna %} <span class="zrodlo" title="Słownik nie ma wartości „nie ma” — pusty filtr bywa prawdą, więc nie robimy z niego braku">cecha opcjonalna</span>{% endif %}</td>
       <td>{{ w.produktow }}</td><td>{{ w.z_wartoscia }}</td>
       <td class="l">{% if w.pokrycie is not none %}{{ '%.0f'|format(w.pokrycie * 100) }}%
         <span class="pasek {{ 'zle' if w.pokrycie < 0.8 }}"><b style="width:{{ '%.0f'|format(w.pokrycie * 100) }}%"></b></span>{% else %}—{% endif %}</td>
@@ -129,9 +132,9 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
         {%- if z.inne %}{% if z.podtyp or z.nazwa or z.rodzina or z.zdjecie %} · {% endif %}inne reguły {{ z.inne }}{% endif %}</div>{% endif %}</td>
       <td>{{ w.brakow }}</td><td>{{ w.sprzecznych or '' }}</td>
       <td class="l">
-        {% if w.propozycji or w.sprzecznych %}<a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut, 'regula': 'L2-LUKA-*'}|urlencode }}">propozycje</a>{% endif %}
-        {% if w.brakow %}{% if w.propozycji %} · {% endif %}<a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut, 'regula': 'L1-LUKA-BRAK'}|urlencode }}">braki</a>{% endif %}
-        {% if w.zrodla.inne %} · <a href="/anomalie?{{ {'kategoria': kat, 'atrybut': w.atrybut}|urlencode }}" title="Propozycje innych reguł dla pustych komórek — kolejka bez zawężenia do reguły">inne</a>{% endif %}
+        {% if w.propozycji or w.sprzecznych %}<a href="{{ w.link_propozycje }}">propozycje</a>{% endif %}
+        {% if w.brakow %}{% if w.propozycji %} · {% endif %}<a href="{{ w.link_braki }}">braki</a>{% endif %}
+        {% if w.zrodla.inne %} · <a href="{{ w.link_inne }}" title="Propozycje innych reguł dla pustych komórek — kolejka bez zawężenia do reguły">inne</a>{% endif %}
       </td>
     </tr>
     {% endfor %}
@@ -142,6 +145,25 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
   </tbody>
 </table>
 
+{% if wezly_aktywne %}
+<details class="konf">
+  <summary>Konfiguracja filtrów: węzły drzewa panelu ({{ meta_wezlow.zrodlo or 'arkusz' }}, wczytano {{ meta_wezlow.wczytano or '—' }})</summary>
+  <div class="tresc">
+    <p class="legenda">Filtry pochodzą z arkusza „Macierz filtrów per kategoria” (Ewa) — to źródło prawdy,
+      zgodne z panelem. Produkt dostaje filtry węzła, w którym jest (podkategoria, a gdy jej nie da się
+      dopasować — kategoria). Zmiany robi się w arkuszu i wczytuje komendą
+      <code>python -m atrybuty.pipeline filtry-z-macierzy plik.xlsx</code>.</p>
+    {% if bez_wezla %}
+    <p class="legenda"><b>Produkty bez węzła — nie dostają luk</b> (typ z eksportu nie ma odpowiednika
+      w drzewie albo para jest celowo wykluczona w <code>config/wezly.yaml</code>):</p>
+    <table class="pk" style="width:auto;min-width:420px">
+      <thead><tr><th class="l">Typ</th><th class="l">Podtyp</th><th>Produktów</th></tr></thead>
+      <tbody>{% for b in bez_wezla %}<tr><td class="l">{{ b.typ or '(pusty)' }}</td><td class="l">{{ b.podtyp or '' }}</td><td>{{ b.n }}</td></tr>{% endfor %}</tbody>
+    </table>
+    {% endif %}
+  </div>
+</details>
+{% else %}
 <details class="konf">
   <summary>Konfiguracja filtrów ({{ konfiguracja|length }} kategorii)</summary>
   <div class="tresc">
@@ -169,6 +191,7 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
     </form>
   </div>
 </details>
+{% endif %}
 </main>
 </body>
 </html>

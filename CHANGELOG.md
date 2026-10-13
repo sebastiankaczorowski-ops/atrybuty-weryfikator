@@ -3,6 +3,28 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-13 · Luki liczone według węzłów drzewa panelu (macierz Ewy)
+
+- Filtry nie są już przypisane do naszych typów (`komoda`, `wieszak`…), tylko do
+  **węzłów drzewa kategorii panelu** — z arkusza „Macierz filtrów per kategoria”.
+  Typy sklejały kategorie o różnych filtrach i dawały fałszywe luki: wieszakom
+  liczyliśmy drzwi i drążki, zestawom kuchennym szuflady, szafkom wiszącym nóżki.
+- Produkt trafia do węzła po `typ` i `podtyp` z eksportu, także przy starych,
+  skróconych nazwach („Z szufladami” → „Komody z szufladami”). Bierzemy
+  najgłębszy węzeł — nigdy grupę, która ma filtry wszystkich dzieci.
+- `/filtry` pokazuje pokrycie per węzeł ze ścieżką w drzewie; link do kolejki
+  zawęża ją do węzła. Edycja filtrów według typów jest wyłączona — zmiany robi
+  się w arkuszu i wczytuje komendą `pipeline filtry-z-macierzy plik.xlsx`.
+- **Cechy opcjonalne** (Wyposażenie, Funkcje, Regulacja, Cechy materaca,
+  Właściwości obicia) nie dają braków — słownik nie ma dla nich wartości
+  „nie ma”, więc pusty filtr bywa prawdą. Propozycje dalej powstają.
+- Odczyt ze zdjęć używa **definicji filtrów Ewy** i pomija Oświetlenie oraz
+  Liczbę półek (zdjęcie ich nie rozstrzyga).
+- Na eksporcie z 30.09: znikają fałszywe luki (drążki −641, drzwi −420,
+  szuflady −237, Właściwości obicia −8,7 tys.); dochodzą filtry dotąd
+  niesprawdzane (wymiary spania, Materiał, wymiary). Bez węzła: 1 368 produktów
+  (akcesoria, pusty typ, nadstawki) — lista w `/filtry`.
+
 ## 2026-10-12 · „Na nóżkach” ma definicję; ponowny odczyt ze zdjęć
 
 - Po próbce 100 odczytów: model brał drobne stopki i regulatory poziomu za nóżki

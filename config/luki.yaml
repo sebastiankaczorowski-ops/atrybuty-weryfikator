@@ -8,8 +8,29 @@
 # Kontekst: diagnoza filtrów z 10.10.2026 — np. „Na nóżkach” ma wartość
 # u 19% łóżek na stronie, rodzaj obicia u 9% łóżek tapicerowanych.
 
-# Które atrybuty są filtrami w której kategorii — w config/filtry.yaml
-# (zakładka /filtry).
+# Które atrybuty są filtrami w której kategorii — w config/wezly.yaml
+# (węzły drzewa panelu, z arkusza Ewy), dawniej config/filtry.yaml.
+
+# Cechy opcjonalne: słownik panelu nie ma dla nich wartości „nie ma”
+# (np. Wyposażenie: cichy domyk / pełen wysuw / push to open). Mebel bez
+# cichego domyku nie ma czego wpisać, więc pusty filtr NIE jest brakiem
+# do kolejki — tylko źródła z konkretną wartością (nazwa, rodzina, zdjęcie)
+# mogą tu coś zaproponować.
+# Filtry, których NIE odczytujemy ze zdjęć przy lukach (wizja --luki):
+#   Oświetlenie — zgaszony LED jest niewidoczny, a „w zestawie” vs „opcjonalne”
+#                 wynika z cennika, nie ze zdjęcia;
+#   Liczba półek — wolnej półki nie da się odróżnić od płyty konstrukcyjnej
+#                 (rozstrzyga rysunek techniczny). Uwagi Ewy, 13.10.2026.
+zdjecia_bez:
+  - Oświetlenie
+  - Liczba półek
+
+cechy_opcjonalne:
+  - Wyposażenie
+  - Funkcje
+  - Regulacja
+  - Cechy materaca
+  - Właściwości obicia
 
 # Podkategoria sklepu sama mówi, jaka powinna być wartość. Najpewniejsze
 # źródło: puste pole dostaje propozycję, sprzeczne — zgłoszenie z poprawką.

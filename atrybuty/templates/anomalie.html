@@ -203,6 +203,9 @@ tr.htmx-request .szkielet{display:flex}
 
 <main>
 <form class="filtry" method="get" action="/anomalie">
+  {# Zawężenie do węzła drzewa przychodzi z /filtry; bez tego pola zmiana
+     innego filtra zdejmowałaby je po cichu. #}
+  {% if fl.wezel %}<input type="hidden" name="wezel" value="{{ fl.wezel }}">{% endif %}
   <select name="kategoria">
     <option value="">— kategoria —</option>
     {% for k, n in slowniki.kategorie %}
