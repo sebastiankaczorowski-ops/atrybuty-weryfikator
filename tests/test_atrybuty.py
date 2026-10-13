@@ -4043,6 +4043,18 @@ def test_odczyt_ze_zdjecia_zamienia_brak_w_propozycje(konfig_luk, tmp_path, monk
     con.close()
 
 
+def test_zamien_braki_liczy_tylko_faktyczne_zmiany(konfig_luk, tmp_path, monkeypatch):
+    """Błąd: po próbce 30 zdjęć CLI zgłaszało „zaktualizowane: 77”, bo liczyło też
+    propozycje odtworzone bez zmian z wcześniejszych odczytów. Licznik = zasięg akcji."""
+    from atrybuty import wizja
+    con, przebieg, _ = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "Tak", 0.97)})
+    wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    assert wizja.zamien_braki(con, przebieg) == 3
+    assert wizja.zamien_braki(con, przebieg) == 0
+    con.close()
+
+
 def test_nie_widac_i_wartosc_spoza_slownika_zostaja_brakiem(konfig_luk, tmp_path, monkeypatch):
     from atrybuty import wizja
     con, przebieg, _ = _baza_ze_zdjeciami(

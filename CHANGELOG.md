@@ -3,6 +3,12 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-13 · Licznik „zaktualizowane z odczytów” liczy tylko zmiany
+
+- Po odczycie ze zdjęć komunikat podaje, ile komórek w kolejce **faktycznie**
+  się zmieniło. Wcześniej doliczał propozycje odtworzone bez zmian z poprzednich
+  odczytów (np. 77 przy próbce 30 zdjęć).
+
 ## 2026-10-13 · Półki i drążki czytane tylko ze zdjęcia wnętrza
 
 - Liczbę półek i drążków odczytujemy ze zdjęć **wyłącznie** wtedy, gdy produkt

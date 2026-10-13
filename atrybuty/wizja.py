@@ -859,7 +859,8 @@ def zamien_braki(con: sqlite3.Connection, przebieg: int, produkt_id: str = "",
     etykiety = panel_format.wczytaj_etykiety()
     # Także otwarte propozycje ze zdjęcia: po powtórnym odczycie (nowa definicja)
     # dostają nową wartość albo wracają do braku, gdy teraz „nie widać”.
-    q = """SELECT f.id, f.produkt_id, f.atrybut, p.kategoria, p.producent, f.regula_id
+    q = """SELECT f.id, f.produkt_id, f.atrybut, p.kategoria, p.producent, f.regula_id,
+                  f.pewnosc, f.proponowana_wartosc, f.dowod
            FROM findingi f JOIN produkty p ON p.id = f.produkt_id
            LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
                               AND d.hasz_starej=f.hasz_starej
@@ -880,7 +881,9 @@ def zamien_braki(con: sqlite3.Connection, przebieg: int, produkt_id: str = "",
                            f"ze zdjęcia nie potwierdził wartości",
                            f"{luki.REGULA_BRAKU}|{r[3]}|{r[2]}|{r[4]}", r[0]))
             continue
-        if f:
+        # Licznik ma mówić, ile komórek się zmieniło — propozycja odtworzona
+        # z tego samego odczytu (wcześniejszy przebieg wizji) nie jest zmianą.
+        if f and (f.regula_id, f.pewnosc, f.proponowana_wartosc, f.dowod) != tuple(r[5:9]):
             zmiany.append((f.regula_id, f.warstwa, f.waga, f.pewnosc, f.proponowana_wartosc,
                            f.dowod, f.grupa, r[0]))
     con.executemany("UPDATE findingi SET regula_id=?, warstwa=?, waga=?, pewnosc=?,"
