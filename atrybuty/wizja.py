@@ -445,7 +445,7 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
     katalog_zdjec = katalog_zdjec or (Path(__file__).resolve().parent.parent
                                       / "dane" / "zdjecia")
     podsumowanie = {"zapytan": 0, "z_cache": 0, "bledow": 0, "tok_we": 0, "tok_wy": 0,
-                    "werdykty": {}, "pominietych": 0}
+                    "werdykty": {}, "pominietych": 0, "niedostepne_zdjecia": []}
     pozycje = list(pozycje)
 
     if na_sucho:
@@ -487,6 +487,25 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
         else:
             try:
                 zdjecie = pobierz_zdjecie(url, katalog_zdjec)
+            except Exception as e:                       # noqa: BLE001
+                # Zdjęcie nie zeszło z naszego CDN — do Gemini nic nie poszło.
+                # Osobny komunikat, bo „HTTP 500” wyglądało jak awaria Gemini,
+                # a to uszkodzony plik po stronie sklepu (ASM, 14.10.2026).
+                podsumowanie["bledow"] += 1
+                podsumowanie["niedostepne_zdjecia"].append((poz["produkt_id"], url, str(e)))
+                echo(f"  [{i}/{len(pozycje)}] BRAK ZDJĘCIA {poz['produkt_id']} "
+                     f"{poz['atrybut']}: CDN sklepu zwrócił {e}")
+                con.execute(
+                    "INSERT OR REPLACE INTO werdykty_wizji (produkt_id,atrybut,hasz_pytania,"
+                    "model,werdykt,wartosc_ze_zdjecia,pewnosc,uzasadnienie,wartosc_w_bazie,"
+                    "tokenow_wejscia,tokenow_wyjscia,utworzono)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (poz["produkt_id"], poz["atrybut"], h, model, "blad", "", 0.0,
+                     f"zdjęcie niedostępne: {e} · {url}"[:300], poz["stara_wartosc"],
+                     0, 0, _teraz()))
+                con.commit()
+                continue
+            try:
                 odp = zapytaj(zdjecie, pytanie, poz["atrybut"],
                               poz["stara_wartosc"] or "", _dozwolone(poz["atrybut"]),
                               model=model, ujecie=ujecie)

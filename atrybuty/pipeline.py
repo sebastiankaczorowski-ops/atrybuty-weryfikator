@@ -275,6 +275,12 @@ def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
 
     w = wizja.przetworz(con, poz, model=model)
     print(f"\nZapytań: {w['zapytan']} (z cache: {w['z_cache']}, błędów: {w['bledow']})")
+    if w.get("niedostepne_zdjecia"):
+        # Do zgłoszenia zespołowi sklepu — tych zdjęć nie wydaje nasz CDN.
+        print(f"Zdjęcia niedostępne na CDN sklepu (bez kosztu Gemini): "
+              f"{len(w['niedostepne_zdjecia'])}")
+        for pid, url, blad in w["niedostepne_zdjecia"]:
+            print(f"  {pid}  {blad}  {url}")
     for k, n in sorted(w["werdykty"].items(), key=lambda x: -x[1]):
         print(f"  {n:5d}  {k}")
     print(f"Tokeny: {w['tok_we']:,} wejścia / {w['tok_wy']:,} wyjścia "

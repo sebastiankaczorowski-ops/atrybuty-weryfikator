@@ -4063,6 +4063,27 @@ def test_blad_gemini_wraca_jako_kandydat_luki(konfig_luk, tmp_path, monkeypatch)
     assert wizja.kandydaci_luk(con, przebieg) == []
     con.close()
 
+def test_niedostepne_zdjecie_to_nie_blad_gemini(konfig_luk, tmp_path, monkeypatch):
+    """Błąd: HTTP 500 z CDN sklepu (uszkodzone zdjęcia ASM) wyglądał jak awaria
+    Gemini. Teraz brak zdjęcia jest osobno nazwany, z adresem do zgłoszenia,
+    Gemini nie jest wołany, a produkt wraca przy kolejnym odczycie."""
+    import urllib.error
+    from atrybuty import wizja
+    con, przebieg, pytania = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "Tak", 0.97)})
+
+    def cdn_500(url, kat):
+        raise urllib.error.HTTPError(url, 500, "Internal Server Error", {}, None)
+    monkeypatch.setattr(wizja, "pobierz_zdjecie", cdn_500)
+    komunikaty = []
+    w = wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=komunikaty.append)
+    assert pytania == []
+    assert w["bledow"] == 3 and len(w["niedostepne_zdjecia"]) == 3
+    assert w["niedostepne_zdjecia"][0][1].startswith("http://x/")
+    assert all("BRAK ZDJĘCIA" in k for k in komunikaty if "[" in k)
+    assert len(wizja.kandydaci_luk(con, przebieg)) == 3
+    con.close()
+
 def test_zamien_braki_liczy_tylko_faktyczne_zmiany(konfig_luk, tmp_path, monkeypatch):
     """Błąd: po próbce 30 zdjęć CLI zgłaszało „zaktualizowane: 77”, bo liczyło też
     propozycje odtworzone bez zmian z wcześniejszych odczytów. Licznik = zasięg akcji."""

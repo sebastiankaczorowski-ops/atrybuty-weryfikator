@@ -3,6 +3,13 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-14 · Niedostępne zdjęcia nazwane po imieniu
+
+- Gdy zdjęcie nie schodzi z CDN sklepu (np. HTTP 500 na części zdjęć ASM),
+  odczyt pisze „BRAK ZDJĘCIA”, a nie błąd Gemini. Na końcu wypisuje listę
+  produktów z adresami zdjęć do zgłoszenia zespołowi sklepu. Za takie pozycje
+  nic nie płacimy, a po naprawie zdjęcia wracają przy kolejnym odczycie.
+
 ## 2026-10-14 · Błędy Gemini wracają do ponownego odczytu
 
 - Zdjęcia, przy których Gemini zwrócił błąd (np. 503 — przeciążony serwis), nie
