@@ -4043,6 +4043,26 @@ def test_odczyt_ze_zdjecia_zamienia_brak_w_propozycje(konfig_luk, tmp_path, monk
     con.close()
 
 
+def test_blad_gemini_wraca_jako_kandydat_luki(konfig_luk, tmp_path, monkeypatch):
+    """Błąd: odpowiedź 503 Gemini zapisana jako werdykt „blad” liczyła się jako
+    odczyt — ponowny przebieg pokazywał 0 kandydatów i 18 produktów zostawało
+    nieodczytanych na zawsze."""
+    from atrybuty import wizja
+    con, przebieg, _ = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "Tak", 0.97)})
+
+    def awaria(*a, **k):
+        raise RuntimeError("HTTP Error 503: Service Unavailable")
+    prawdziwe = wizja.zapytaj
+    monkeypatch.setattr(wizja, "zapytaj", awaria)
+    w = wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    assert w["bledow"] == 3
+    assert len(wizja.kandydaci_luk(con, przebieg)) == 3
+    monkeypatch.setattr(wizja, "zapytaj", prawdziwe)
+    wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    assert wizja.kandydaci_luk(con, przebieg) == []
+    con.close()
+
 def test_zamien_braki_liczy_tylko_faktyczne_zmiany(konfig_luk, tmp_path, monkeypatch):
     """Błąd: po próbce 30 zdjęć CLI zgłaszało „zaktualizowane: 77”, bo liczyło też
     propozycje odtworzone bez zmian z wcześniejszych odczytów. Licznik = zasięg akcji."""

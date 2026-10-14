@@ -3,6 +3,12 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-14 · Błędy Gemini wracają do ponownego odczytu
+
+- Zdjęcia, przy których Gemini zwrócił błąd (np. 503 — przeciążony serwis), nie
+  liczą się już jako odczytane. Ponowne uruchomienie odczytu bierze je jeszcze raz,
+  a za udane odczyty nie płacimy drugi raz.
+
 ## 2026-10-13 · Licznik „zaktualizowane z odczytów” liczy tylko zmiany
 
 - Po odczycie ze zdjęć komunikat podaje, ile komórek w kolejce **faktycznie**

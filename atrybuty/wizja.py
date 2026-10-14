@@ -370,6 +370,7 @@ def kandydaci(con: sqlite3.Connection, przebieg: int, limit: int | None = None,
       FROM findingi f JOIN produkty p ON p.id = f.produkt_id
       LEFT JOIN werdykty_wizji w
              ON w.produkt_id = f.produkt_id AND w.atrybut = f.atrybut
+            AND w.werdykt <> 'blad'
       WHERE f.przebieg_id = :przebieg
         AND f.pewnosc < :prog
         AND p.zdjecie <> ''
@@ -784,7 +785,9 @@ def kandydaci_luk(con: sqlite3.Connection, przebieg: int, limit: int | None = No
       FROM findingi f JOIN produkty p ON p.id = f.produkt_id
       LEFT JOIN decyzje d ON d.produkt_id=f.produkt_id AND d.atrybut=f.atrybut
                          AND d.hasz_starej=f.hasz_starej
+      -- błąd (np. 503 Gemini) to nie odczyt — taki produkt wraca jako kandydat
       LEFT JOIN werdykty_wizji w ON w.produkt_id = f.produkt_id AND w.atrybut = f.atrybut
+                                AND w.werdykt <> 'blad'
       WHERE f.przebieg_id = :przebieg AND {warunek}
         AND d.status IS NULL
         AND p.zdjecie <> '' AND f.atrybut IN ({obslugiwane})
