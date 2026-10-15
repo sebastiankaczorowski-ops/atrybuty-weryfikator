@@ -43,12 +43,20 @@ SUFIT_WYPOSAZENIE = 0.80
 PEWNOSC_BRAK = 1.0
 
 REGULY_PROPOZYCJI = ("L2-LUKA-PODTYP", "L2-LUKA-PODTYP-SPRZECZNE",
-                     "L2-LUKA-NAZWA", "L2-LUKA-RODZINA", "L2-LUKA-ZDJECIE")
+                     "L2-LUKA-NAZWA", "L2-LUKA-RODZINA", "L2-LUKA-ZDJECIE",
+                     "L2-LUKA-ROZMIAR", "L2-LUKA-FUNKCJA-SPANIA")
+# Rozmiar łóżka to zapis tych samych dwóch liczb co powierzchnia spania —
+# przepisanie jest prawie pewne; człowiek i tak akceptuje (Ewa, 14.10.2026).
+PEWNOSC_ROZMIAR = 0.95
+# Funkcja spania: pole eksportu wprost o spaniu > typ mechanizmu > podkategoria > nazwa.
+PEWNOSC_SPANIE_POLE = 0.92
+PEWNOSC_SPANIE_TYP = 0.90
+REGULA_ROZMIAR_SPRZECZNY = "L2-LUKA-ROZMIAR-SPRZECZNE"
 # Odczyt ze zdjęcia (Gemini) — najwyżej tyle, czyli zawsze pod progiem automatu:
 # model bywa pewny siebie także wtedy, gdy nóżki zasłania narzuta.
 SUFIT_ZDJECIE = 0.80
 REGULA_BRAKU = "L1-LUKA-BRAK"
-REGULY = REGULY_PROPOZYCJI + (REGULA_BRAKU,)
+REGULY = REGULY_PROPOZYCJI + (REGULA_BRAKU, REGULA_ROZMIAR_SPRZECZNY)
 
 KLUCZ_KODU_PRODUCENTA = "kod producenta"
 
@@ -65,8 +73,34 @@ def filtry_produktu(p: Produkt) -> set[str]:
     naszych typów (config/filtry.yaml). Produkt bez węzła: żadnych luk —
     nie wiadomo, które filtry go dotyczą."""
     if wezly.aktywne():
-        return set(wezly.filtry_wezla(p.wezel))
-    return set(config.filtry().get(p.kategoria, ()))
+        filtry = set(wezly.filtry_wezla(p.wezel))
+    else:
+        filtry = set(config.filtry().get(p.kategoria, ()))
+    if bez_funkcji_spania(filtry, wartosci_efektywne(p)):
+        filtry -= set(_konf_spania().get("zalezne") or [])
+    return filtry
+
+
+def _konf_spania() -> dict:
+    return config.luki().get("funkcja_spania") or {}
+
+
+def _czesci(wartosc: str | None) -> list[str]:
+    """„funkcja relax, port usb” → dwie wartości (Funkcje są wielowartościowe)."""
+    return [x.strip() for x in re.split(r"[,;|]", wartosc or "") if x.strip()]
+
+
+def bez_funkcji_spania(filtry: set[str], wartosci: dict[str, str]) -> bool:
+    """Mebel wypoczynkowy (węzeł z filtrem Funkcje) bez funkcji spania w Funkcjach.
+
+    Wtedy powierzchnia spania nie jest luką — najpierw Funkcje, potem wymiary,
+    inaczej kolejka zapełnia się fałszywymi lukami sof bez spania (Ewa, 14.10.2026).
+    Łóżka nie mają filtra Funkcje, więc ich to nie dotyczy.
+    """
+    u = _konf_spania()
+    if not u or u.get("atrybut") not in filtry:
+        return False
+    return norm(u["wartosc"]) not in {norm(x) for x in _czesci(wartosci.get(u["atrybut"]))}
 
 
 def zakres_braku(p: Produkt) -> str:
@@ -185,6 +219,107 @@ def z_nazwy(p: Produkt, wartosci: dict[str, str], filtry: set[str],
     return f
 
 
+def _liczba(tekst: str | None) -> float | None:
+    m = re.fullmatch(r"\s*(\d+(?:[.,]\d+)?)\s*(?:cm)?\s*", tekst or "", re.I)
+    return float(m.group(1).replace(",", ".")) if m else None
+
+
+def _zapis(x: float) -> str:
+    return str(int(x)) if x == int(x) else str(x)
+
+
+def wymiary_z_rozmiaru(rozmiar: str) -> tuple[float, float] | None:
+    """„180x200” → (180, 200): krótszy to szerokość, dłuższy długość.
+
+    „90x200, 90x200” (łóżko piętrowe) to jeden materac. Różne rozmiary albo
+    zapis, którego nie umiemy przeczytać — None: do ręcznej weryfikacji.
+    """
+    pary = set()
+    for czesc in _czesci(rozmiar):
+        m = re.fullmatch(r"(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(?:cm)?", czesc, re.I)
+        if not m:
+            return None
+        a, b = (float(g.replace(",", ".")) for g in m.groups())
+        pary.add((min(a, b), max(a, b)))
+    return pary.pop() if len(pary) == 1 else None
+
+
+def z_rozmiaru(p: Produkt, wartosci: dict[str, str], filtry: set[str]) -> list[Finding]:
+    """Łóżka: Rozmiar → szerokość i długość powierzchni spania (Ewa, 14.10.2026)."""
+    u = config.luki().get("rozmiar_spania") or {}
+    if not u or p.wezel is None or not wezly.aktywne():
+        return []
+    if u.get("wezly", "") not in (wezly.wezly().get(p.wezel) or {}).get("sciezka", ""):
+        return []
+    rozmiar = wartosci.get(u["zrodlo"])
+    wymiary = wymiary_z_rozmiaru(rozmiar) if rozmiar else None
+    if not wymiary:
+        return []
+    f: list[Finding] = []
+    for atr, wartosc in ((u["szerokosc"], wymiary[0]), (u["dlugosc"], wymiary[1])):
+        if atr not in filtry:
+            continue
+        obecna = wartosci.get(atr)
+        if obecna is None:
+            f.append(Finding(
+                p.id, atr, "L2-LUKA-ROZMIAR", L2, SREDNIA, PEWNOSC_ROZMIAR, None, _zapis(wartosc),
+                f"Rozmiar „{rozmiar}” → {atr.lower()}: {_zapis(wartosc)}",
+                grupa=f"L2-LUKA-ROZMIAR|{atr}|{_zapis(wartosc)}"))
+            continue
+        liczba = _liczba(obecna)
+        if liczba is None or abs(liczba - wartosc) > 0.5:
+            # Nie nadpisujemy wpisanej wartości — zgłoszenie bez propozycji,
+            # rozstrzyga człowiek: błędny może być Rozmiar albo powierzchnia.
+            # Pewność 1,0 trzyma je z dala od płatnej bramki Gemini.
+            f.append(Finding(
+                p.id, atr, REGULA_ROZMIAR_SPRZECZNY, L2, KRYTYCZNA, PEWNOSC_BRAK, obecna, None,
+                f"Rozmiar „{rozmiar}” mówi {_zapis(wartosc)}, a {atr.lower()} to „{obecna}” "
+                f"— do sprawdzenia, nie nadpisujemy",
+                grupa=f"{REGULA_ROZMIAR_SPRZECZNY}|{atr}"))
+    return f
+
+
+def z_funkcji_spania(p: Produkt, wartosci: dict[str, str], filtry: set[str],
+                     etykiety: dict) -> list[Finding]:
+    """Mebel wypoczynkowy bez funkcji spania, a coś na nią wskazuje → propozycja
+    dopisania jej do Funkcji. Po akceptacji i nowym eksporcie pojawią się luki
+    w powierzchni spania. „bez funkcji spania” w eksporcie = sprawdzone, nie ma."""
+    u = _konf_spania()
+    atr = u.get("atrybut")
+    if not u or not bez_funkcji_spania(filtry, wartosci):
+        return []
+    dawne = wartosci.get(u.get("pole_dawne", ""), "")
+    if norm(dawne).startswith("bez"):
+        return []
+    dowody: list[tuple[float, str, str]] = []
+    if norm(dawne).startswith("z funkcj"):
+        dowody.append((PEWNOSC_SPANIE_POLE, "pole", f"pole „{u['pole_dawne']}”: „{dawne}”"))
+    if wartosci.get(u.get("pole_typu", "")):
+        dowody.append((PEWNOSC_SPANIE_TYP, "typ",
+                       f"„{u['pole_typu']}”: „{wartosci[u['pole_typu']]}”"))
+    nazwa_wezla = (wezly.wezly().get(p.wezel) or {}).get("nazwa", "") if p.wezel is not None else ""
+    if nazwa_wezla and re.search(u.get("wezel") or "$^", norm(nazwa_wezla)):
+        dowody.append((PEWNOSC_PODTYP, "podtyp", f"podkategoria „{nazwa_wezla}”"))
+    nazwa = norm(p.nazwa)
+    if (re.search(u.get("nazwa") or "$^", nazwa)
+            and not re.search(u.get("nazwa_wyklucz") or "$^", nazwa)):
+        dowody.append((PEWNOSC_NAZWA, "nazwa", f"nazwa „{p.nazwa}”"))
+    if not dowody:
+        return []
+    dodaj = kanoniczna(atr, u["wartosc"], etykiety)
+    if dodaj is None:
+        log.warning("luki.yaml: %r spoza słownika %r — funkcja spania pominięta", u["wartosc"], atr)
+        return []
+    stara = wartosci.get(atr)
+    nowa = ", ".join(_czesci(stara) + [dodaj])
+    pewnosc, zrodlo, _ = max(dowody)
+    return [Finding(
+        p.id, atr, "L2-LUKA-FUNKCJA-SPANIA", L2, SREDNIA, pewnosc, stara, nowa,
+        "Funkcja spania: " + "; ".join(d[2] for d in dowody)
+        + " — po akceptacji wejdą luki w powierzchni spania",
+        grupa=f"L2-LUKA-FUNKCJA-SPANIA|{zrodlo}|{zakres_braku(p)}")]
+
+
 def _klucz_rodziny(p: Produkt, rodzaj: str) -> tuple | None:
     """Kto jest „tą samą rodziną” — konserwatywnie (recenzja LUKI-02, LUKI-06).
 
@@ -298,6 +433,8 @@ def uruchom(produkty: list[Produkt], wylaczone: set[str] | None = None,
         filtry_p = filtry_produktu(p)
         kandydaci += z_podtypu(p, wartosci[p.id], filtry_p, etykiety)
         kandydaci += z_nazwy(p, wartosci[p.id], filtry_p, etykiety)
+        kandydaci += z_rozmiaru(p, wartosci[p.id], filtry_p)
+        kandydaci += z_funkcji_spania(p, wartosci[p.id], filtry_p, etykiety)
         if odczyty_zdjec:
             kandydaci += ze_zdjec(p, wartosci[p.id], filtry_p, odczyty_zdjec, etykiety)
     kandydaci += z_rodziny(produkty, wartosci, etykiety)

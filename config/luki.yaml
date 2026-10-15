@@ -34,6 +34,33 @@ cechy_opcjonalne:
   - Cechy materaca
   - Właściwości obicia
 
+# Łóżka: powierzchnia spania z Rozmiaru (Ewa, 14.10.2026). „180x200” →
+# krótszy wymiar to szerokość, dłuższy długość. Kilka takich samych rozmiarów
+# („90x200, 90x200” — łóżko piętrowe) to jeden materac; różne rozmiary
+# zostają do ręcznej weryfikacji. Wpisana wartość niezgodna z Rozmiarem nie
+# dostaje propozycji nadpisania — tylko zgłoszenie sprzeczności.
+rozmiar_spania:
+  zrodlo: Rozmiar
+  szerokosc: Szerokość powierzchni spania
+  dlugosc: Długość powierzchni spania
+  wezly: 'Łóżka i materace > Łóżka'     # fragment ścieżki węzła
+
+# Meble wypoczynkowe: najpierw funkcja spania, potem powierzchnia spania
+# (Ewa, 14.10.2026). Gdy węzeł ma filtr Funkcje, a produkt nie ma w nich
+# funkcji spania, luki w powierzchni spania NIE powstają — sofa bez spania
+# nie ma czego wpisać. Zamiast nich propozycja dodania funkcji spania, gdy
+# coś na nią wskazuje; po akceptacji i nowym eksporcie wrócą luki w wymiarach.
+funkcja_spania:
+  atrybut: Funkcje
+  wartosc: funkcja spania
+  zalezne: [Szerokość powierzchni spania, Długość powierzchni spania]
+  # dowody, od najmocniejszego: stare pola eksportu, podkategoria, nazwa
+  pole_dawne: Funkcja spania          # „z funkcją spania” / „bez funkcji spania”
+  pole_typu: Typ funkcji spania       # delfin, DL, click-clack… = jest spanie
+  wezel: 'rozkladan|z funkcja spania|wersalk'
+  nazwa: '\brozkladan|z funkcja spania|\bwersalk|\bdo spania\b'
+  nazwa_wyklucz: 'bez funkcji spania|nierozkladan'
+
 # Podkategoria sklepu sama mówi, jaka powinna być wartość. Najpewniejsze
 # źródło: puste pole dostaje propozycję, sprzeczne — zgłoszenie z poprawką.
 podtyp:

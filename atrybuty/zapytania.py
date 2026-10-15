@@ -776,6 +776,14 @@ def _efektywne(atrybuty: str | None, skladowe: str | None, odciete: int) -> dict
     return {**s, **a}
 
 
+def _nie_dotyczy(atrybut: str, filtry_zakresu, wartosci: dict) -> bool:
+    """Powierzchnia spania sofy bez funkcji spania nie jest luką (Ewa, 14.10.2026)
+    — ta sama bramka co przy tworzeniu luk, żeby /filtry liczyło to samo."""
+    from . import luki
+    zalezne = luki._konf_spania().get("zalezne") or []
+    return atrybut in zalezne and luki.bez_funkcji_spania(set(filtry_zakresu), wartosci)
+
+
 def zakres_wezla(zakres: str) -> int | None:
     """„w55” → 55 (węzeł drzewa); nasza kategoria („komoda”) → None."""
     if zakres and zakres[0] == "w" and zakres[1:].isdigit():
@@ -850,8 +858,9 @@ def pokrycie_filtrow(con: sqlite3.Connection, przebieg: int | None) -> list[dict
     opcjonalne = set(config.luki().get("cechy_opcjonalne") or [])
     out = []
     for kat, atrybuty in zakresy:
-        lista = wg_zak.get(kat, [])
+        wszystkie = wg_zak.get(kat, [])
         for atr in atrybuty:
+            lista = [x for x in wszystkie if not _nie_dotyczy(atr, atrybuty, x[1])]
             z = brak = sprzecznych = 0
             zrodla = {"podtyp": 0, "nazwa": 0, "rodzina": 0, "zdjecie": 0, "inne": 0}
             for pid, w in lista:
@@ -885,10 +894,15 @@ def braki_filtra(con: sqlite3.Connection, przebieg: int | None, kategoria: str,
     """Produkty kategorii bez wartości filtra — z propozycją, jeśli jest."""
     otwarte = _otwarte_luki(con, przebieg, kategoria, atrybut) if przebieg else {}
     out = []
+    from . import config, wezly
+    wid = zakres_wezla(kategoria)
+    filtry_zakresu = (wezly.filtry_wezla(wid) if wid is not None
+                      else config.filtry().get(kategoria, ()))
     for r in _produkty_filtrow(con, kategoria):
         if producent and r["producent"] != producent:
             continue
-        if atrybut in _efektywne(r["atrybuty"], r["skladowe"], r["skladowe_odciete"]):
+        wartosci = _efektywne(r["atrybuty"], r["skladowe"], r["skladowe_odciete"])
+        if atrybut in wartosci or _nie_dotyczy(atrybut, filtry_zakresu, wartosci):
             continue
         o = otwarte.get((r["id"], atrybut)) or {}
         out.append({"id": r["id"], "nazwa": r["nazwa"], "producent": r["producent"],

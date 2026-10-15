@@ -3,6 +3,25 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-15 · Powierzchnia spania: z Rozmiaru i po funkcji spania
+
+- **Łóżka:** szerokość i długość powierzchni spania przepisywane z Rozmiaru —
+  krótszy wymiar to szerokość („180x200” → 180 i 200). „90x200, 90x200”
+  (łóżko piętrowe) to jeden materac. Różne rozmiary albo nieczytelny zapis
+  zostają do ręcznej weryfikacji. Na eksporcie z 30.09: **3 917 propozycji**
+  (`L2-LUKA-ROZMIAR`, 95%).
+- Wpisana powierzchnia spania **niezgodna z Rozmiarem nie jest nadpisywana** —
+  trafia do kolejki jako sprzeczność bez propozycji (`L2-LUKA-ROZMIAR-SPRZECZNE`,
+  51 na eksporcie z 30.09).
+- **Meble wypoczynkowe: najpierw funkcja spania.** Sofa, narożnik czy fotel bez
+  „funkcja spania” w Funkcjach nie dostaje luk w powierzchni spania (także
+  w licznikach `/filtry`). Gdy coś wskazuje spanie — pole „Funkcja spania”
+  z eksportu, typ mechanizmu (delfin, DL…), podkategoria „rozkładane” albo
+  nazwa — propozycja dopisania funkcji spania (`L2-LUKA-FUNKCJA-SPANIA`,
+  259 na eksporcie z 30.09). Po akceptacji i nowym eksporcie wchodzą luki
+  w wymiarach. „bez funkcji spania” w eksporcie = sprawdzone, bez propozycji.
+- Braki bez propozycji w powierzchni spania: z ~4 200 do ~100.
+
 ## 2026-10-15 · Węzły według decyzji Ewy
 
 - **Konfigurator Kuchni wykluczony w całości** — szafki do zabudowy AGD,

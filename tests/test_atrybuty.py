@@ -4400,3 +4400,112 @@ def test_kandydat_na_polki_tylko_z_otagowanym_wnetrzem(konfig_wezlow, tmp_path):
     poz = wizja.kandydaci_luk(con, przebieg, atrybut="Liczba półek")[0]
     assert wizja.wybierz_zdjecie(poz, "Liczba półek")[0] == "http://x/o.jpg"
     con.close()
+
+
+# --- powierzchnia spania: Rozmiar łóżek i funkcja spania (Ewa, 14.10.2026) ---
+
+SPANIE = ["Szerokość powierzchni spania", "Długość powierzchni spania"]
+WEZLY_SPANIA = {
+    89: {"nazwa": "Łóżka", "poziom": 2, "rodzic": None, "ukryty": False,
+         "sciezka": "Meble > Łóżka i materace > Łóżka", "filtry": SPANIE + ["Na nóżkach"]},
+    46: {"nazwa": "Sofy i kanapy", "poziom": 2, "rodzic": None, "ukryty": False,
+         "sciezka": "Meble > Meble wypoczynkowe > Sofy i kanapy", "filtry": SPANIE + ["Funkcje"]},
+    177: {"nazwa": "Sofy i kanapy rozkładane", "poziom": 3, "rodzic": 46, "ukryty": False,
+          "sciezka": "Meble > Meble wypoczynkowe > Sofy i kanapy > Sofy i kanapy rozkładane",
+          "filtry": SPANIE + ["Funkcje"]},
+}
+
+
+@_pytest.fixture
+def konfig_spania(konfig_luk):
+    import yaml
+    from atrybuty import config
+    etykiety = dict(ETYKIETY_LUK, Funkcje={"funkcja spania": "funkcja spania",
+                                            "funkcja relax": "funkcja relax"})
+    (konfig_luk / "etykiety_panelu.yaml").write_text(
+        yaml.safe_dump(etykiety, allow_unicode=True), encoding="utf-8")
+    (konfig_luk / "wezly.yaml").write_text(yaml.safe_dump(
+        {"meta": {}, "wezly": WEZLY_SPANIA}, allow_unicode=True), encoding="utf-8")
+    config.wyczysc_cache()
+    yield konfig_luk
+
+
+def _lozko(pid, rozmiar, **atr):
+    return _pl(pid, "lozko", "Łóżko Test", wezel=89,
+               atrybuty={"Rozmiar": rozmiar, "Na nóżkach": "tak", **atr})
+
+
+def test_rozmiar_lozka_wypelnia_powierzchnie_spania(konfig_spania):
+    """Łóżka miały Rozmiar „180x200”, a puste pola powierzchni spania — 4 tys.
+    braków bez propozycji. Krótszy wymiar to szerokość, dłuższy długość."""
+    l = _luki([_lozko("1", "200x180")])
+    assert l[("1", "Szerokość powierzchni spania")].proponowana_wartosc == "180"
+    assert l[("1", "Długość powierzchni spania")].proponowana_wartosc == "200"
+    assert l[("1", "Szerokość powierzchni spania")].regula_id == "L2-LUKA-ROZMIAR"
+
+
+def test_rozmiar_lozka_pietrowego_i_niejednoznaczny(konfig_spania):
+    """„90x200, 90x200” to jeden materac; różne rozmiary zostają brakiem do ręki."""
+    from atrybuty import luki
+    assert luki.wymiary_z_rozmiaru("90x200, 90x200") == (90, 200)
+    assert luki.wymiary_z_rozmiaru("90x200, 120x200") is None
+    assert luki.wymiary_z_rozmiaru("#140") is None
+    l = _luki([_lozko("2", "90x200, 120x200")])
+    assert l[("2", "Szerokość powierzchni spania")].regula_id == "L1-LUKA-BRAK"
+
+
+def test_rozmiar_niezgodny_z_wpisana_powierzchnia_nie_nadpisuje(konfig_spania):
+    """Wpisana powierzchnia spania niezgodna z Rozmiarem: zgłoszenie bez
+    propozycji — nie wiemy, które pole jest błędne. Zgodna: nic."""
+    l = _luki([_lozko("3", "180x200", **{"Szerokość powierzchni spania": "80",
+                                        "Długość powierzchni spania": "200"})])
+    f = l[("3", "Szerokość powierzchni spania")]
+    assert f.regula_id == "L2-LUKA-ROZMIAR-SPRZECZNE" and f.proponowana_wartosc is None
+    assert f.stara_wartosc == "80"
+    assert ("3", "Długość powierzchni spania") not in l
+
+
+def test_sofa_bez_funkcji_spania_nie_ma_luk_w_powierzchni(konfig_spania):
+    """Sofa bez funkcji spania nie ma czego wpisać w powierzchnię spania —
+    wcześniej każda dostawała dwa fałszywe braki (Ewa: najpierw Funkcje)."""
+    sofa = _pl("4", "sofa", "Sofa Prosta", wezel=46, atrybuty={"Funkcje": "funkcja relax"})
+    assert not [k for k in _luki([sofa]) if k[1] in SPANIE]
+    ze_spaniem = _pl("5", "sofa", "Sofa Duża", wezel=46, atrybuty={"Funkcje": "funkcja spania"})
+    assert {k[1] for k in _luki([ze_spaniem])} >= set(SPANIE)
+
+
+def test_propozycja_dopisania_funkcji_spania(konfig_spania):
+    """Pole eksportu, typ mechanizmu, podkategoria albo nazwa wskazują spanie —
+    propozycja dopisania do Funkcji z zachowaniem obecnych wartości.
+    „bez funkcji spania” w eksporcie to sprawdzone „nie”: bez propozycji."""
+    l = _luki([
+        _pl("6", "sofa", "Narożnik Lugano z funkcją spania", wezel=46,
+            atrybuty={"Funkcje": "funkcja relax", "Funkcja spania": "z funkcją spania"}),
+        _pl("7", "sofa", "Sofa Mała", wezel=177),
+        _pl("8", "sofa", "Sofa rozkładana Iga", wezel=46,
+            atrybuty={"Funkcja spania": "bez funkcji spania"}),
+        _pl("9", "sofa", "Sofa Zwykła", wezel=46),
+    ])
+    f = l[("6", "Funkcje")]
+    assert f.regula_id == "L2-LUKA-FUNKCJA-SPANIA"
+    assert f.proponowana_wartosc == "funkcja relax, funkcja spania"
+    assert f.stara_wartosc == "funkcja relax" and f.pewnosc == 0.92
+    assert l[("7", "Funkcje")].pewnosc == 0.92 and "podkategoria" in l[("7", "Funkcje")].dowod
+    assert ("8", "Funkcje") not in l and ("9", "Funkcje") not in l
+
+
+def test_pokrycie_nie_liczy_powierzchni_sofy_bez_spania(konfig_spania, tmp_path):
+    """/filtry liczyło sofy bez funkcji spania jako braki w powierzchni spania,
+    choć luki dla nich już nie powstają — licznik musi równać się zasięgowi."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, zapytania
+    produkty = [_pl("1", "sofa", "Sofa A", wezel=46, atrybuty={"Funkcje": "funkcja relax"}),
+                _pl("2", "sofa", "Sofa B", wezel=46, atrybuty={"Funkcje": "funkcja spania"})]
+    con = db.polacz(tmp_path / "s.db")
+    przebieg = db.zapisz_przebieg(con, "t.csv", produkty, pipeline.wszystkie_findingi(produkty, []))
+    w = {r["atrybut"]: r for r in zapytania.pokrycie_filtrow(con, przebieg) if r["kategoria"] == "w46"}
+    assert w["Szerokość powierzchni spania"]["produktow"] == 1
+    assert w["Szerokość powierzchni spania"]["brakow"] == 1
+    assert [r["id"] for r in zapytania.braki_filtra(
+        con, przebieg, "w46", "Szerokość powierzchni spania")] == ["2"]
+    con.close()
