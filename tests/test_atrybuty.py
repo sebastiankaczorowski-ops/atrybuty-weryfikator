@@ -4216,8 +4216,10 @@ def konfig_wezlow(konfig_luk):
     from atrybuty import config
     (konfig_luk / "wezly.yaml").write_text(yaml.safe_dump({
         "meta": {"zrodlo": "test.xlsx"},
-        "aliasy_typow": {"Kuchnie": "Szafki kuchenne"},
-        "aliasy_par": {"Kuchnie / Akcesoria": None},
+        "aliasy_typow": {},
+        "aliasy_par": {"Kuchnie / Szafki Górne": "Szafki kuchenne górne"},
+        "wykluczone_typy": {"Kuchnie": "Konfigurator Kuchni", "Akcesoria": "akcesoria"},
+        "poza_zakresem": {"": "brak typu", "Łóżka i szafki nocne": "osobne węzły"},
         "definicje": {"Na nóżkach": "TAK: wyraźne nóżki. NIE: stopki i ślizgacze do ok. 3 cm."},
         "wezly": WEZLY_TEST}, allow_unicode=True), encoding="utf-8")
     config.wyczysc_cache()
@@ -4241,10 +4243,25 @@ def test_stary_skrocony_podtyp_dopasowany_po_slowach(konfig_wezlow):
 
 def test_aliasy_typow_par_i_wezly_ukryte(konfig_wezlow):
     from atrybuty import wezly
-    assert wezly.przypisz("Kuchnie", "Szafki Górne") == (338, "podtyp")
+    assert wezly.przypisz("Kuchnie", "Szafki Górne") == (338, "alias")
     assert wezly.przypisz("Kuchnie", "Akcesoria") == (None, "wykluczony")
-    assert wezly.przypisz("Nadstawki na szafy", "") == (None, "brak")   # ukryty: wszystkie filtry
+    assert wezly.przypisz("Nadstawki na szafy", "") == (None, "ukryty")  # ukryty: wszystkie filtry
     assert wezly.przypisz("Lustra dziwne", "") == (None, "brak")
+
+
+def test_decyzje_ewy_konfigurator_kuchni_i_poza_zakresem(konfig_wezlow):
+    """Decyzje Ewy (14.10.2026): Konfigurator Kuchni wykluczony w całości — alias
+    Kuchnie → Szafki kuchenne dawał luki szafkom do zabudowy AGD i blatom.
+    Samodzielna szafka (Kuchnie / Szafki Górne) zostaje w węźle. Pusty i błędny
+    typ to nie „brak dopasowania”, tylko produkt do przetypowania w panelu."""
+    from atrybuty import wezly
+    assert wezly.przypisz("Kuchnie", "Szafki Wysokie") == (None, "wykluczony")
+    assert wezly.przypisz("Kuchnie", "Szafki Górne")[0] == 338
+    assert wezly.przypisz("", "") == (None, "poza zakresem")
+    assert wezly.przypisz("Łóżka i szafki nocne", "") == (None, "poza zakresem")
+    assert wezly.powod_bez_wezla("", "").startswith("do przetypowania")
+    assert wezly.powod_bez_wezla("Akcesoria", "").startswith("wykluczony")
+    assert wezly.powod_bez_wezla("Komody", "") == ""
 
 
 def test_wieszak_nie_ma_luk_w_drzwiach_i_nozkach(konfig_wezlow):

@@ -3,6 +3,20 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-15 · Węzły według decyzji Ewy
+
+- **Konfigurator Kuchni wykluczony w całości** — szafki do zabudowy AGD,
+  nadokapowe, blaty itp. nie dostają już luk. Samodzielne szafki kuchenne
+  (Kuchnie / Szafki Górne, Szafki Dolne) zostają w swoich węzłach.
+- **7 przypisań do węzłów**: Ławy → Ławy i stoliki kawowe, zagłówki → Zagłówki
+  do łóżek, meble ogrodowe z podtypem → krzesła / stoły / fotele i leżaki ogrodowe.
+- Na `/filtry` tabela produktów bez węzła mówi **dlaczego**: wykluczony
+  (akcesoria, oświetlenie, Konfigurator Kuchni), węzeł ukryty, albo
+  **do przetypowania w panelu** (pusty typ, „Łóżka i szafki nocne”,
+  „Meble ogrodowe” bez podtypu).
+- Eksport z 30.09: każdy produkt ma teraz jasny status — 29 377 w węzłach,
+  1 029 wykluczonych, 575 do przetypowania, 77 w węzłach ukrytych.
+
 ## 2026-10-14 · Niedostępne zdjęcia nazwane po imieniu
 
 - Gdy zdjęcie nie schodzi z CDN sklepu (np. HTTP 500 na części zdjęć ASM),

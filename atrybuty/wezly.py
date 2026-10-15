@@ -127,6 +127,9 @@ def zapisz(dane: dict, meta: dict, aliasy: dict | None = None) -> Path:
              # przez właścicielkę drzewa; zachowujemy przy ponownym wczytaniu arkusza.
              "aliasy_typow": aliasy if aliasy is not None else (obecne.get("aliasy_typow") or {}),
              "aliasy_par": obecne.get("aliasy_par") or {},
+             # Decyzje właścicielki drzewa (Ewa, 14.10.2026) — też edytowane ręcznie.
+             "wykluczone_typy": obecne.get("wykluczone_typy") or {},
+             "poza_zakresem": obecne.get("poza_zakresem") or {},
              "definicje": dane.get("definicje") or {},
              "wezly": dane["wezly"]}
     with sciezka.open("w", encoding="utf-8") as f:
@@ -166,7 +169,13 @@ def _konfig() -> dict[str, Any]:
         aliasy_par[(_klucz_nazwy(typ), _klucz_nazwy(pod))] = v
     return {"wezly": wezly, "dzieci": dzieci, "po_nazwie": po_nazwie,
             "aliasy_typow": {_klucz_nazwy(k): v for k, v in (d.get("aliasy_typow") or {}).items()},
-            "aliasy_par": aliasy_par}
+            "aliasy_par": aliasy_par,
+            # typ → powód. Wykluczone: celowo bez luk (akcesoria, Konfigurator
+            # Kuchni). Poza zakresem: błędny lub pusty typ — do przetypowania w panelu.
+            "wykluczone_typy": {_klucz_nazwy(k): str(v or "")
+                                for k, v in (d.get("wykluczone_typy") or {}).items()},
+            "poza_zakresem": {_klucz_nazwy(k): str(v or "")
+                              for k, v in (d.get("poza_zakresem") or {}).items()}}
 
 
 def wyczysc_cache() -> None:
@@ -225,7 +234,13 @@ def _dopasuj_podtyp(podtyp: str, kandydaci: list[int]) -> int | None:
 
 @functools.lru_cache(maxsize=None)
 def przypisz(typ: str, podtyp: str) -> tuple[int | None, str]:
-    """(id węzła, jak) dla produktu z eksportu. `jak`: podtyp | typ | alias | wykluczony | brak."""
+    """(id węzła, jak) dla produktu z eksportu.
+
+    `jak`: podtyp | typ | alias | wykluczony | poza zakresem | ukryty | brak.
+    Kolejność: para typ/podtyp z decyzji Ewy wygrywa z wykluczeniem całego typu —
+    „Kuchnie / Szafki Górne” to samodzielna szafka z gałęzi Meble, choć reszta
+    typu Kuchnie to wykluczony Konfigurator Kuchni.
+    """
     k = _konfig()
     if not k:
         return None, "brak"
@@ -237,9 +252,16 @@ def przypisz(typ: str, podtyp: str) -> tuple[int | None, str]:
         trafione = [w for w in k["po_nazwie"].get(_klucz_nazwy(cel), [])
                     if not k["wezly"][w].get("ukryty")]
         return (trafione[0], "alias") if len(trafione) == 1 else (None, "brak")
+    if _klucz_nazwy(typ) in k["wykluczone_typy"]:
+        return None, "wykluczony"
+    if _klucz_nazwy(typ) in k["poza_zakresem"]:
+        return None, "poza zakresem"
     nazwa_typu = k["aliasy_typow"].get(_klucz_nazwy(typ), typ)
-    kandydaci = [w for w in k["po_nazwie"].get(_klucz_nazwy(nazwa_typu), [])
-                 if not k["wezly"][w].get("ukryty")]
+    po_nazwie = k["po_nazwie"].get(_klucz_nazwy(nazwa_typu), [])
+    kandydaci = [w for w in po_nazwie if not k["wezly"][w].get("ukryty")]
+    if not kandydaci and po_nazwie:
+        # węzeł ukryty ma włączone wszystkie filtry — luki byłyby fałszywe
+        return None, "ukryty"
     if len(kandydaci) != 1:
         return None, "brak"
     wid = kandydaci[0]
@@ -252,6 +274,21 @@ def przypisz(typ: str, podtyp: str) -> tuple[int | None, str]:
         if glebszy:
             return glebszy, "podtyp"
     return wid, jak
+
+
+def powod_bez_wezla(typ: str, podtyp: str) -> str:
+    """Dlaczego produkt nie ma węzła — do tabeli na /filtry."""
+    wid, jak = przypisz(typ, podtyp)
+    if wid is not None:
+        return ""
+    k = _konfig()
+    if jak == "wykluczony":
+        return "wykluczony: " + (k["wykluczone_typy"].get(_klucz_nazwy(typ)) or "decyzja w wezly.yaml")
+    if jak == "poza zakresem":
+        return "do przetypowania w panelu: " + (k["poza_zakresem"].get(_klucz_nazwy(typ)) or "")
+    if jak == "ukryty":
+        return "węzeł ukryty w drzewie"
+    return "brak dopasowania — do decyzji"
 
 
 def definicja(atrybut: str) -> str:

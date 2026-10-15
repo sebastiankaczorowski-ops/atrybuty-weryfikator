@@ -6,14 +6,32 @@ meta:
   wczytano: '2026-10-13'
   opis: arkusz Macierz filtrów per kategoria (Ewa Swebocka)
 aliasy_typow:
-  Kuchnie: Szafki kuchenne
   Stelaże: Stelaże do łóżek
+  # decyzje Ewy, 14.10.2026 (Luki_wg_wezlow_do_akceptacji_Ewa_propozycje.xlsx)
+  Ławy: Ławy i stoliki kawowe
+  Zagłówki i wezgłowia: Zagłówki do łóżek
 aliasy_par:
-  Kuchnie / Blaty: Blaty kuchenne
-  Kuchnie / Akcesoria: null
-  Kuchnie / Uchwyty: null
-  Kuchnie / Fronty Do Zabudowy Podblatowej: null
+  # Samodzielne szafki kuchenne: typ Kuchnie, ale podtyp z gałęzi Meble.
+  # Reszta typu Kuchnie to Konfigurator Kuchni — wykluczony niżej.
+  Kuchnie / Szafki Górne: Szafki kuchenne górne
+  Kuchnie / Szafki Dolne: Szafki kuchenne dolne
   Szafki łazienkowe / Zestawy mebli łazienkowych: Zestawy mebli łazienkowych
+  Akcesoria / Zagłówki i wezgłowia: Zagłówki do łóżek
+  Meble ogrodowe / Leżaki ogrodowe: Fotele i leżaki ogrodowe
+  Meble ogrodowe / Krzesła ogrodowe: Krzesła ogrodowe
+  Meble ogrodowe / Stoliki ogrodowe: Stoły i stoliki ogrodowe
+  Meble ogrodowe / Stoły i stoliki ogrodowe: Stoły i stoliki ogrodowe
+wykluczone_typy:
+  Kuchnie: Konfigurator Kuchni — wykluczony w całości
+  Akcesoria: akcesoria — bez filtrów, bez luk
+  Akcesoria do szaf: akcesoria — bez filtrów, bez luk
+  Barierki: akcesoria — bez filtrów, bez luk
+  Oświetlenie: osobna gałąź poza Meblami
+  Nadstawki witryny: węzeł Nadstawki na witryny (205) jest ukryty
+poza_zakresem:
+  '': brak typu
+  Łóżka i szafki nocne: w drzewie to osobne węzły (Łóżka / Szafki nocne)
+  Meble ogrodowe: bez podtypu — drzewo dzieli meble ogrodowe na osobne węzły
 definicje:
   Na nóżkach: 'TAK: korpus stoi nad podłogą na wyraźnych nóżkach wyższych niż ok. 3 cm, które są osobnym elementem
     (dokręcone/doklejone do korpusu, zwykle z innego materiału niż korpus, np. metal, drewno lite) – pod meblem

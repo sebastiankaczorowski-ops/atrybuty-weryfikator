@@ -859,6 +859,8 @@ def filtry(request: Request, kategoria: str = "", atrybut: str = "",
         bez_wezla = [dict(r) for r in con.execute(
             "SELECT typ, podtyp, COUNT(*) n FROM produkty WHERE wezel IS NULL "
             "AND kompletnosc NOT IN ('pusty','szczatkowy') GROUP BY 1,2 ORDER BY n DESC")]
+        for b in bez_wezla:
+            b["powod"] = wezly.powod_bez_wezla(b["typ"] or "", b["podtyp"] or "")
     con.close()
     razem = {k: sum(w[k] for w in wiersze)
              for k in ("bez_wartosci", "propozycji", "brakow", "sprzecznych")}

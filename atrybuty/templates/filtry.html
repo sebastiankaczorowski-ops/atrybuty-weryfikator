@@ -154,11 +154,11 @@ details.konf .tresc{display:flex;flex-direction:column;gap:12px}
       dopasować — kategoria). Zmiany robi się w arkuszu i wczytuje komendą
       <code>python -m atrybuty.pipeline filtry-z-macierzy plik.xlsx</code>.</p>
     {% if bez_wezla %}
-    <p class="legenda"><b>Produkty bez węzła — nie dostają luk</b> (typ z eksportu nie ma odpowiednika
-      w drzewie albo para jest celowo wykluczona w <code>config/wezly.yaml</code>):</p>
+    <p class="legenda"><b>Produkty bez węzła — nie dostają luk.</b> Luki liczymy tylko w gałęzi Meble.
+      Wykluczenia i „do przetypowania” to decyzje Ewy w <code>config/wezly.yaml</code>:</p>
     <table class="pk" style="width:auto;min-width:420px">
-      <thead><tr><th class="l">Typ</th><th class="l">Podtyp</th><th>Produktów</th></tr></thead>
-      <tbody>{% for b in bez_wezla %}<tr><td class="l">{{ b.typ or '(pusty)' }}</td><td class="l">{{ b.podtyp or '' }}</td><td>{{ b.n }}</td></tr>{% endfor %}</tbody>
+      <thead><tr><th class="l">Typ</th><th class="l">Podtyp</th><th>Produktów</th><th class="l">Dlaczego</th></tr></thead>
+      <tbody>{% for b in bez_wezla %}<tr><td class="l">{{ b.typ or '(pusty)' }}</td><td class="l">{{ b.podtyp or '' }}</td><td>{{ b.n }}</td><td class="l">{{ b.powod }}</td></tr>{% endfor %}</tbody>
     </table>
     {% endif %}
   </div>
