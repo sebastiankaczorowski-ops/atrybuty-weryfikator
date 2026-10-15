@@ -3,6 +3,15 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-15 · Odczyt ze zdjęć nie „wisi” na ogromnych zdjęciach
+
+- Bardzo duże zdjęcia (np. 100 Mpx u ASM) są zmniejszane przy dekodowaniu,
+  a nieczytelny plik powyżej 4 MB nie jest wysyłany do Gemini w całości —
+  wcześniej taka wysyłka kończyła się timeoutem i trzema ponowieniami, czyli
+  minutami ciszy w terminalu. Stare kopie oryginałów w cache zdjęć skalujemy
+  ponownie.
+- Ponowienia zapytań do Gemini są widoczne w terminalu („ponawiam za N s”).
+
 ## 2026-10-15 · Nowe definicje Ewy i „Z pojemnikiem” ze zdjęć
 
 - Wczytany arkusz Ewy z 14.10: definicje Liczby miejsc, Rozkładanych, Szerokości

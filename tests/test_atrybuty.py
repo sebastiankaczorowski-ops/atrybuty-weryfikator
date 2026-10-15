@@ -4571,3 +4571,28 @@ def test_z_pojemnikiem_czytany_ze_zdjecia_otwartego():
     g = [zdjecia.Zdjecie("Zamknięty - front", "f"),
          zdjecia.Zdjecie("Narożnik - prezentacja schowka", "s")]
     assert zdjecia.wybierz(g, "Z pojemnikiem").url == "s"
+
+
+def test_ogromne_zdjecie_jest_zmniejszane_a_nie_wysylane_w_calosci(tmp_path, monkeypatch):
+    """Błąd: zdjęcie 100 Mpx przekraczało limit Pillow, skalowanie padało
+    i do Gemini szedł oryginał — wysyłka wisiała minutami (15.10.2026).
+    Także kopia oryginału z dysku jest skalowana ponownie."""
+    import io
+    from PIL import Image
+    from atrybuty import wizja
+    bufor = io.BytesIO()
+    Image.new("RGB", (2000, 1500), "white").save(bufor, format="PNG")
+    wynik = wizja._przeskaluj(bufor.getvalue())
+    assert max(Image.open(io.BytesIO(wynik)).size) <= wizja.MAKS_BOK
+    try:
+        wizja._przeskaluj(b"x" * (wizja.MAKS_ORYGINAL + 1))
+        assert False, "nieczytelny duży plik nie może pójść jako oryginał"
+    except ValueError:
+        pass
+    import hashlib
+    plik = tmp_path / (hashlib.sha1(b"http://x/d.jpg").hexdigest()[:20] + ".jpg")
+    big = io.BytesIO()
+    Image.effect_noise((3000, 3000), 100).convert("RGB").save(big, format="PNG")
+    assert len(big.getvalue()) > wizja.MAKS_ORYGINAL
+    plik.write_bytes(big.getvalue())
+    assert len(wizja.pobierz_zdjecie("http://x/d.jpg", tmp_path)) < wizja.MAKS_ORYGINAL

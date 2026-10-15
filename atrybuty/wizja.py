@@ -21,6 +21,7 @@ import io
 import json
 import os
 import sqlite3
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -199,7 +200,13 @@ def pobierz_zdjecie(url: str, katalog_cache: Path, timeout: int = 20) -> bytes:
     katalog_cache.mkdir(parents=True, exist_ok=True)
     plik = katalog_cache / (hashlib.sha1(url.encode()).hexdigest()[:20] + ".jpg")
     if plik.exists():
-        return plik.read_bytes()
+        dane = plik.read_bytes()
+        if len(dane) <= MAKS_ORYGINAL:
+            return dane
+        # kopia sprzed limitu — niezmniejszony oryginał; skalujemy jeszcze raz
+        dane = _przeskaluj(dane)
+        plik.write_bytes(dane)
+        return dane
 
     zadanie = urllib.request.Request(url, headers={"User-Agent": "atrybuty-oxm/1.0"})
     with urllib.request.urlopen(zadanie, timeout=timeout) as odp:
@@ -210,6 +217,12 @@ def pobierz_zdjecie(url: str, katalog_cache: Path, timeout: int = 20) -> bytes:
     return dane
 
 
+# Oryginał większy niż to nie idzie do Gemini: 100-megapikselowe zdjęcie
+# z CDN (ASM, 15.10.2026) po nieudanym skalowaniu szło w całości — wysyłka
+# kończyła się timeoutem, trzy próby, minuty ciszy wyglądające jak zawieszenie.
+MAKS_ORYGINAL = 4 * 1024 * 1024
+
+
 def _przeskaluj(surowe: bytes) -> bytes:
     """Zmniejsza dłuższy bok do MAKS_BOK. Bez Pillow zwraca oryginał."""
     try:
@@ -217,7 +230,13 @@ def _przeskaluj(surowe: bytes) -> bytes:
     except ImportError:
         return surowe
     try:
+        # Zdjęcia z naszego CDN, nie z obcych źródeł — limit „bomby
+        # dekompresyjnej” Pillow (89 Mpx) odrzucał prawdziwe duże packshoty.
+        Image.MAX_IMAGE_PIXELS = 400_000_000
         obraz = Image.open(io.BytesIO(surowe))
+        # JPEG dekoduje się od razu w zmniejszonej skali — 100 Mpx w pełnej
+        # rozdzielczości to kilkaset MB pamięci i długie sekundy na zdjęcie.
+        obraz.draft("RGB", (MAKS_BOK, MAKS_BOK))
         obraz = obraz.convert("RGB")
         if max(obraz.size) > MAKS_BOK:
             wsp = MAKS_BOK / max(obraz.size)
@@ -226,7 +245,10 @@ def _przeskaluj(surowe: bytes) -> bytes:
         bufor = io.BytesIO()
         obraz.save(bufor, format="JPEG", quality=85)
         return bufor.getvalue()
-    except Exception:
+    except Exception as e:
+        if len(surowe) > MAKS_ORYGINAL:
+            raise ValueError(f"zdjęcie {len(surowe) // 1024 // 1024} MB, nie da się "
+                             f"go zmniejszyć ({e}) — nie wysyłamy oryginału") from e
         return surowe
 
 
@@ -309,13 +331,21 @@ def zapytaj(zdjecie: bytes, pytanie: str, atrybut: str, wartosc_w_bazie: str,
         except urllib.error.HTTPError as e:
             ostatni = e
             if e.code in (429, 500, 503):        # limit albo chwilowa awaria
-                time.sleep(2 ** proba * 2)
+                _czekaj(e, 2 ** proba * 2, proba, prob)
                 continue
             raise
         except (urllib.error.URLError, TimeoutError) as e:
             ostatni = e
-            time.sleep(2 ** proba)
+            _czekaj(e, 2 ** proba, proba, prob)
     raise RuntimeError(f"Gemini nie odpowiedział po {prob} próbach: {ostatni}")
+
+
+def _czekaj(blad: Exception, sekund: int, proba: int, prob: int) -> None:
+    # Ponowienia po timeoucie 60 s trwały minutami bez słowa — w terminalu
+    # wyglądało to jak zawieszenie (15.10.2026). Mówimy, co się dzieje.
+    print(f"      … Gemini: {blad} — próba {proba + 1}/{prob}, ponawiam za {sekund} s",
+          file=sys.stderr, flush=True)
+    time.sleep(sekund)
 
 
 def _zparsuj(surowe: dict) -> Odpowiedz:
@@ -515,7 +545,7 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
                 podsumowanie["bledow"] += 1
                 podsumowanie["niedostepne_zdjecia"].append((poz["produkt_id"], url, str(e)))
                 echo(f"  [{i}/{len(pozycje)}] BRAK ZDJĘCIA {poz['produkt_id']} "
-                     f"{poz['atrybut']}: CDN sklepu zwrócił {e}")
+                     f"{poz['atrybut']}: {e}")
                 con.execute(
                     "INSERT OR REPLACE INTO werdykty_wizji (produkt_id,atrybut,hasz_pytania,"
                     "model,werdykt,wartosc_ze_zdjecia,pewnosc,uzasadnienie,wartosc_w_bazie,"
