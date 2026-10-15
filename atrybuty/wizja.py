@@ -272,17 +272,22 @@ def _tresc_pytania(pytanie: str, atrybut: str, wartosc_w_bazie: str,
 
 def zapytaj(zdjecie: bytes, pytanie: str, atrybut: str, wartosc_w_bazie: str,
             dozwolone: list[str], model: str = MODEL_WOLUMEN,
-            timeout: int = 60, prob: int = 3, ujecie: str = "") -> Odpowiedz:
+            timeout: int = 60, prob: int = 3, ujecie: str = "",
+            dodatkowe: list[tuple[bytes, str]] | None = None) -> Odpowiedz:
+    czesci = [{"inline_data": {"mime_type": "image/jpeg",
+                               "data": base64.b64encode(zdjecie).decode("ascii")}}]
+    for dane_zdj, etykieta in dodatkowe or []:
+        czesci.append({"text": f"Dodatkowe zdjęcie tego samego produktu: {etykieta}"})
+        czesci.append({"inline_data": {"mime_type": "image/jpeg",
+                                       "data": base64.b64encode(dane_zdj).decode("ascii")}})
+    tresc = _tresc_pytania(pytanie, atrybut, wartosc_w_bazie, dozwolone, ujecie)
+    if dodatkowe:
+        tresc += ("\nZdjęcia pokazują ten sam produkt. Przy zestawie policz wszystkie "
+                  "elementy — także te widoczne tylko na rysunku albo prezentacji zestawu.")
+    czesci.append({"text": tresc})
     ciało = {
         "systemInstruction": {"parts": [{"text": INSTRUKCJA}]},
-        "contents": [{
-            "role": "user",
-            "parts": [
-                {"inline_data": {"mime_type": "image/jpeg",
-                                 "data": base64.b64encode(zdjecie).decode("ascii")}},
-                {"text": _tresc_pytania(pytanie, atrybut, wartosc_w_bazie, dozwolone, ujecie)},
-            ],
-        }],
+        "contents": [{"role": "user", "parts": czesci}],
         "generationConfig": {
             "temperature": 0,
             "responseMimeType": "application/json",
@@ -409,6 +414,17 @@ def wybierz_zdjecie(poz: dict, atrybut: str) -> tuple[str, str]:
     return wybrane.url, opis
 
 
+def dodatkowe_zdjecia(poz: dict, atrybut: str, glowne_url: str) -> list[tuple[str, str]]:
+    """(url, etykieta) ujęć dołączanych do głównego — np. rysunek techniczny
+    przy liczbie półek w zestawie (zdjecia.DODATKOWE_UJECIA)."""
+    import json as _json
+    surowe = poz.get("zdjecia")
+    if not surowe:
+        return []
+    galeria = [zdjecia_mod.Zdjecie(e, u) for e, u in _json.loads(surowe)]
+    return [(z.url, z.etykieta) for z in zdjecia_mod.dodatkowe(galeria, atrybut, glowne_url)]
+
+
 def _dozwolone(atrybut: str) -> list[str]:
     """Lista wartości do wyboru: ręczny słownik, a gdy go nie ma — słownik
     panelu. Bez listy model odpowiada prozą („raczej tak”), której nie da się
@@ -474,7 +490,11 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
             podsumowanie["pominietych"] += 1
             continue
         pusta = not (poz["stara_wartosc"] or "").strip()
-        h = hasz_zapytania(url, pytanie + ("|" + TRYB_ODCZYTU if pusta else ""),
+        extra = dodatkowe_zdjecia(poz, poz["atrybut"], url)
+        # Inny zestaw zdjęć = inne pytanie: odpowiedź z samego „Otwartego…”
+        # nie może wrócić z cache jako odczyt z rysunkiem (zaniżone półki).
+        klucz_url = "|".join([url] + [u for u, _ in extra])
+        h = hasz_zapytania(klucz_url, pytanie + ("|" + TRYB_ODCZYTU if pusta else ""),
                            poz["stara_wartosc"] or "", model)
         z_cache = con.execute(
             "SELECT odpowiedz, tokenow_wejscia, tokenow_wyjscia FROM cache_wizji WHERE hasz=?",
@@ -505,10 +525,27 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
                      0, 0, _teraz()))
                 con.commit()
                 continue
+            dodatkowe = []
+            for u, etykieta in extra:
+                try:
+                    dodatkowe.append((pobierz_zdjecie(u, katalog_zdjec), etykieta))
+                except Exception:                    # noqa: BLE001
+                    # brak dodatkowego ujęcia nie blokuje pytania — główne jest
+                    podsumowanie["niedostepne_zdjecia"].append((poz["produkt_id"], u, "dodatkowe"))
+            if len(dodatkowe) < len(extra):
+                # pytamy bez brakującego ujęcia — klucz cache musi to oddać,
+                # żeby po naprawie zdjęcia pytanie z kompletem poszło na nowo
+                ok = {e for _, e in dodatkowe}
+                klucz_url = "|".join([url] + [u for u, e in extra if e in ok])
+                h = hasz_zapytania(klucz_url, pytanie + ("|" + TRYB_ODCZYTU if pusta else ""),
+                                   poz["stara_wartosc"] or "", model)
+            if dodatkowe:
+                ujecie = ujecie + " + " + " + ".join(e for _, e in dodatkowe)
             try:
                 odp = zapytaj(zdjecie, pytanie, poz["atrybut"],
                               poz["stara_wartosc"] or "", _dozwolone(poz["atrybut"]),
-                              model=model, ujecie=ujecie)
+                              model=model, ujecie=ujecie,
+                              **({"dodatkowe": dodatkowe} if dodatkowe else {}))
             except Exception as e:                       # noqa: BLE001
                 podsumowanie["bledow"] += 1
                 echo(f"  [{i}/{len(pozycje)}] BŁĄD {poz['produkt_id']} {poz['atrybut']}: {e}")

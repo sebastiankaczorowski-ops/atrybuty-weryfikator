@@ -3,6 +3,16 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-15 · Liczba półek: Gemini widzi cały zestaw
+
+- Do pytania o liczbę półek obok zdjęcia wnętrza idą też **rysunek techniczny**
+  i **prezentacja zestawu**, jeśli produkt je ma. Przy zestawach model widział
+  tylko element ze zdjęcia „Otwarty…” i zaniżał liczbę (uwagi Ewy, 14.10.2026:
+  590115, meblościanka RISE, garderoby przedpokojowe).
+- Odpowiedzi z samego zdjęcia wnętrza nie wracają z cache — ponowny odczyt
+  (`--powtorz`) pyta od nowa z kompletem zdjęć. Pytanie z trzema zdjęciami
+  kosztuje mniej więcej dwa razy tyle co z jednym (~0,004 USD).
+
 ## 2026-10-15 · Powierzchnia spania: z Rozmiaru i po funkcji spania
 
 - **Łóżka:** szerokość i długość powierzchni spania przepisywane z Rozmiaru —

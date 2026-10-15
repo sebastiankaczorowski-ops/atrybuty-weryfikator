@@ -4509,3 +4509,44 @@ def test_pokrycie_nie_liczy_powierzchni_sofy_bez_spania(konfig_spania, tmp_path)
     assert [r["id"] for r in zapytania.braki_filtra(
         con, przebieg, "w46", "Szerokość powierzchni spania")] == ["2"]
     con.close()
+
+
+def test_polki_w_zestawie_pytane_z_rysunkiem_i_prezentacja(tmp_path, monkeypatch):
+    """Ewa (14.10.2026): przy zestawach Gemini widział tylko element ze zdjęcia
+    „Otwarty…” i zaniżał liczbę półek. Do pytania idą też rysunek techniczny
+    i prezentacja zestawu — a odpowiedź z samego „Otwartego…” nie wraca z cache."""
+    import json
+    import sqlite3
+    from atrybuty import wizja
+    con = sqlite3.connect(tmp_path / "w.db"); con.row_factory = sqlite3.Row
+    wizja.przygotuj_baze(con)
+    galeria = [["Aranżacja", "http://x/a.jpg"], ["Otwarty - front", "http://x/o.jpg"],
+               ["Rysunek techniczny", "http://x/r.jpg"], ["Prezentacja zestawu", "http://x/p.jpg"]]
+    poz = {"produkt_id": "590115", "atrybut": "Liczba półek", "stara_wartosc": "",
+           "zdjecie": "http://x/a.jpg", "zdjecia": json.dumps(galeria)}
+    monkeypatch.setattr(wizja, "pobierz_zdjecie", lambda url, kat: url.encode())
+    wyslane = []
+
+    def atrapa(zdjecie, pytanie, atrybut, wartosc, dozwolone, model, ujecie="", dodatkowe=None):
+        wyslane.append((zdjecie, [d for d, _ in dodatkowe or []], ujecie))
+        return wizja.Odpowiedz("niezgodne", "4-półki", 0.9, "", 900, 60)
+    monkeypatch.setattr(wizja, "zapytaj", atrapa)
+    # stara odpowiedź z samego zdjęcia wnętrza — nie może zostać użyta
+    h_stary = wizja.hasz_zapytania("http://x/o.jpg", wizja.pytanie_dla("Liczba półek")
+                                   + "|" + wizja.TRYB_ODCZYTU, "", wizja.MODEL_WOLUMEN)
+    con.execute("INSERT INTO cache_wizji (hasz, odpowiedz, tokenow_wejscia, tokenow_wyjscia, "
+                "utworzono) VALUES (?, ?, 0, 0, '')", (h_stary, json.dumps(
+                    {"werdykt": "niezgodne", "wartosc_ze_zdjecia": "bez półek", "pewnosc": 0.9,
+                     "uzasadnienie": "", "tokenow_wejscia": 0, "tokenow_wyjscia": 0})))
+    w = wizja.przetworz(con, [poz], echo=lambda *_: None)
+    assert w["z_cache"] == 0
+    assert wyslane == [(b"http://x/o.jpg", [b"http://x/r.jpg", b"http://x/p.jpg"],
+                        "Otwarty - front + Rysunek techniczny + Prezentacja zestawu")]
+    con.close()
+
+
+def test_dodatkowe_ujecia_tylko_dla_polek():
+    from atrybuty import zdjecia
+    g = [zdjecia.Zdjecie("Otwarty", "o"), zdjecia.Zdjecie("Rysunek techniczny", "r")]
+    assert [z.url for z in zdjecia.dodatkowe(g, "Liczba półek", "o")] == ["r"]
+    assert zdjecia.dodatkowe(g, "Liczba drążków", "o") == []

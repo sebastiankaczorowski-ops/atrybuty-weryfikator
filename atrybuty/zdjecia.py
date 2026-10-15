@@ -130,6 +130,28 @@ def wybierz(zdjecia: list[Zdjecie], atrybut: str, zapasowe: str = "") -> Zdjecie
     return None if tylko_wnetrze else zdjecia[0]
 
 
+# Dodatkowe ujęcia dołączane do pytania (Ewa, 14.10.2026): przy zestawach
+# Gemini widział tylko element ze zdjęcia „Otwarty…” i zaniżał liczbę półek
+# (590115, meblościanka RISE, garderoby przedpokojowe). Rysunek techniczny
+# pokazuje wszystkie elementy, prezentacja zestawu — półki wiszące.
+DODATKOWE_UJECIA: dict[str, tuple[str, ...]] = {
+    "Liczba półek": ("rysunek techniczny", "technical drawing", "prezentacja zestawu"),
+}
+MAKS_DODATKOWYCH = 2
+
+
+def dodatkowe(zdjecia: list[Zdjecie], atrybut: str, glowne_url: str) -> list[Zdjecie]:
+    """Po jednym zdjęciu każdego wzorca z DODATKOWE_UJECIA, bez głównego i bez powtórek."""
+    out: list[Zdjecie] = []
+    uzyte = {glowne_url}
+    for wzorzec in DODATKOWE_UJECIA.get(atrybut, ()):
+        z = next((z for z in zdjecia if wzorzec in norm(z.etykieta) and z.url not in uzyte), None)
+        if z and len(out) < MAKS_DODATKOWYCH:
+            out.append(z)
+            uzyte.add(z.url)
+    return out
+
+
 def ma_wnetrze(zdjecia: list[Zdjecie]) -> bool:
     return any(z.rodzaj == "wnetrze" for z in zdjecia)
 
