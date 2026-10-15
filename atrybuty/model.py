@@ -123,4 +123,6 @@ WIDOCZNE_NA_ZDJECIU = {
     "Liczba drążków", "Materiał", "Oświetlenie", "Rodzaj drzwi",
     "Kształt blatu", "Podparcie", "Tapicerowane", "Zagłówek",
     "Na nóżkach", "Podłokietniki", "Styl", "Dekoracje", "Rodzaj frontu",
+    # jedyny z nowych filtrów, który Ewa dopuściła do odczytu ze zdjęć (14.10.2026)
+    "Z pojemnikiem",
 }

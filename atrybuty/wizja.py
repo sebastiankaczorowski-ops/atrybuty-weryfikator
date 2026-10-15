@@ -91,6 +91,7 @@ PYTANIA: dict[str, str] = {
     # Definicję filtra (stopki ≠ nóżki, boki do podłogi ≠ nóżki…) dokleja
     # `pytanie_dla` z arkusza Ewy — tu tylko samo pytanie.
     "Na nóżkach": "Czy ten mebel stoi na nóżkach?",
+    "Z pojemnikiem": "Czy ten mebel ma pojemnik lub schowek na pościel albo rzeczy?",
     "Rodzaj frontu": "Jakie są fronty tego mebla: pełne, ryflowane, przeszklone, z lustrem, ażurowe?",
     "Dekoracje": "Jakie zdobienia widać na tym meblu?",
     "Styl": "W jakim stylu utrzymany jest ten mebel?",

@@ -41,6 +41,7 @@ GRUPY_POMIJANE = {"Systemowe (nie z atrybutów produktu)"}
 # Wspólne filtry spoza naszych danych: Kolor i Pomieszczenia nie są atrybutami
 # eksportu, Styl jest wyjęty z obiegu (duplikaty w słowniku panelu).
 FILTRY_POMIJANE = {"Kolor", "Pomieszczenia", "Styl"}
+ZASLEPKA = re.compile(r"(?i)^\s*(do uzupełnienia|ukryty na froncie)")
 
 
 def slug(s: str) -> str:
@@ -107,6 +108,10 @@ def z_arkusza(sciezka: str | Path, znane_atrybuty: set[str]) -> tuple[dict, dict
         for r in reguly[1:]:
             w = dict(zip(nagl, r))
             tekst = str(w.get("definicja") or "").strip()
+            # Zaślepki z arkusza („do uzupełnienia”, „Ukryty na froncie…”) to nie
+            # definicje — trafiłyby do pytania dla Gemini jako wytyczna.
+            if not tekst or ZASLEPKA.match(tekst):
+                continue
             atr = (po_slugu.get(str(w.get("klucz_filtra") or ""))
                    or po_slugu.get(slug(str(w.get("nazwa_filtra") or ""))))
             if tekst and atr:

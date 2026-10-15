@@ -2,17 +2,14 @@
 # `pipeline filtry-z-macierzy <xlsx>` — nie edytuj ręcznie węzłów;
 # zmieniaj arkusz i wczytaj ponownie. `aliasy_typow` wolno edytować.
 meta:
-  zrodlo: macierz.xlsx
-  wczytano: '2026-10-13'
+  zrodlo: macierz-2026-10-15.xlsx
+  wczytano: '2026-10-15'
   opis: arkusz Macierz filtrów per kategoria (Ewa Swebocka)
 aliasy_typow:
   Stelaże: Stelaże do łóżek
-  # decyzje Ewy, 14.10.2026 (Luki_wg_wezlow_do_akceptacji_Ewa_propozycje.xlsx)
   Ławy: Ławy i stoliki kawowe
   Zagłówki i wezgłowia: Zagłówki do łóżek
 aliasy_par:
-  # Samodzielne szafki kuchenne: typ Kuchnie, ale podtyp z gałęzi Meble.
-  # Reszta typu Kuchnie to Konfigurator Kuchni — wykluczony niżej.
   Kuchnie / Szafki Górne: Szafki kuchenne górne
   Kuchnie / Szafki Dolne: Szafki kuchenne dolne
   Szafki łazienkowe / Zestawy mebli łazienkowych: Zestawy mebli łazienkowych
@@ -29,10 +26,28 @@ wykluczone_typy:
   Oświetlenie: osobna gałąź poza Meblami
   Nadstawki witryny: węzeł Nadstawki na witryny (205) jest ukryty
 poza_zakresem:
-  '': brak typu
+  ? ''
+  : brak typu
   Łóżka i szafki nocne: w drzewie to osobne węzły (Łóżka / Szafki nocne)
   Meble ogrodowe: bez podtypu — drzewo dzieli meble ogrodowe na osobne węzły
 definicje:
+  Liczba miejsc: 'Liczba osób, dla których mebel jest przeznaczony. Wartości: „1 miejsce”, „2 miejsca”, „3 miejsca”,
+    „4 miejsca”, „6 miejsc”, „8 miejsc”, „10 miejsc”, „12 miejsc”. Liczba spoza słownika (5, 7…) – zaokrąglamy w
+    dół. SOFY, WERSALKI, NAROŻNIKI, KOMPLETY: wg producenta (nazwa, opis, karta). Przy luce propozycja do akceptacji
+    (nigdy nie nadpisuje wpisanej wartości): 1) jest Szerokość siedziska → miejsca = szerokość siedziska ÷ 60 cm,
+    w dół; 2) narożnik → dłuższy bok jak sofa (siedzisko ÷ 60) + 1 za szezlong/otomanę, róg narożnika się nie liczy;
+    3) brak szerokości siedziska → wg szerokości całkowitej: sofa 140–170 cm = 2, 180–220 cm = 3; narożnik 200–240
+    cm = 3, 250–290 cm = 4, >300 cm = 6. Komplet = suma elementów. Sofa „2,5-osobowa” = 2. Zdjęcie (Gemini) tylko
+    pomocniczo: rozpoznanie kształtu narożnika (L/U, liczba szezlongów) i liczba modułów; liczba poduszek siedziska
+    nie jest liczbą miejsc. STOŁY, ŁAWOSTOŁY: liczba osób przy stole wg producenta; stół rozkładany – po rozłożeniu.
+    Zestaw stołu z krzesłami = liczba krzeseł. Przy luce propozycja do akceptacji (nie nadpisuje wpisanej wartości):
+    prostokątny/kwadratowy – 2 × (długość ÷ 60 cm, w dół) + 2 na szczytach; okrągły/owalny – obwód blatu ÷ 70 cm,
+    w dół. Stół rozkładany liczymy tylko z Szerokości po rozłożeniu – jeśli jej brak, najpierw uzupełniamy Szerokość
+    po rozłożeniu, nie szacujemy z wymiaru złożonego (systematycznie zaniża). Rozbieżność o jeden stopień względem
+    producenta przy znanym wymiarze nie jest błędem (producent deklaruje zachowawczo). Weryfikacja na froncie 14.10.2026:
+    12/16 zgodnych przy znanej szerokości po rozłożeniu. ŁÓŻKA, MATERACE, STELAŻE: szerokość do 120 cm = 1 miejsce,
+    od 140 cm = 2 miejsca. Wyjątki weryfikowane po zdjęciu lub nazwie: łóżko piętrowe, łóżko z wysuwanym dodatkowym
+    spaniem – liczba spań. NIE WIDAĆ: zdjęcie nie pokazuje całego mebla (ucięty narożnik, tylko detal).'
   Na nóżkach: 'TAK: korpus stoi nad podłogą na wyraźnych nóżkach wyższych niż ok. 3 cm, które są osobnym elementem
     (dokręcone/doklejone do korpusu, zwykle z innego materiału niż korpus, np. metal, drewno lite) – pod meblem
     widać wyraźny prześwit. Kształt nóżek nie ma znaczenia: pojedyncze nóżki, płozy, ramki w kształcie U lub prostokąta
@@ -44,11 +59,26 @@ definicje:
     widać prześwit; cokół lub korpus do samej podłogi; mebel wiszący; kółka. Wysokość do ziemi ≤3 cm = NIE (większa
     wartość sama nie przesądza o TAK – prześwit dają też przedłużone boki, wezgłowia i zanóżki). NIE WIDAĆ: zdjęcie
     ucina dół mebla, widać tylko detal albo nie da się ocenić, czym jest podparcie.'
-  Kształt blatu: 'Kształt blatu widzianego z góry: prostokątny, kwadratowy, okrągły, owalny albo inny (np. nieregularny,
-    organiczny). Kwadratowy = boki równe lub prawie równe; owalny = wydłużony z zaokrąglonymi końcami. Ścięte lub
-    lekko zaokrąglone narożniki nie zmieniają kształtu (prostokąt z zaokrąglonymi rogami = prostokątny). Przy stole
-    rozkładanym oceniamy blat złożony. Gdy jest kilka blatów (np. zestaw stolików) – kształt blatu głównego. NIE
-    WIDAĆ: zdjęcie pod kątem, na którym nie da się odróżnić okrągłego od owalnego albo kwadratu od prostokąta.'
+  Kształt blatu: 'Kształt blatu widzianego z góry: prostokątny, kwadratowy, okrągły, owalny albo nieregularny (np.
+    organiczny, asymetryczny). Kwadratowy = boki równe lub prawie równe; owalny = wydłużony z zaokrąglonymi końcami.
+    Ścięte lub lekko zaokrąglone narożniki nie zmieniają kształtu (prostokąt z zaokrąglonymi rogami = prostokątny).
+    Przy stole rozkładanym oceniamy blat złożony. Gdy jest kilka blatów (np. zestaw stolików) – kształt blatu głównego.
+    NIE WIDAĆ: zdjęcie pod kątem, na którym nie da się odróżnić okrągłego od owalnego albo kwadratu od prostokąta.'
+  Rozkładane: 'Czy blat stołu można powiększyć. Wartości: „tak” / „nie”. TAK: stół z wkładką (chowaną w stole lub
+    dokładaną), rozsuwany, z odkładanymi klapami/skrzydłami, stół-konsola rozkładana do stołu; stół okrągły rozkładany
+    do owalnego. NIE: blat stały; sama regulacja wysokości bez powiększenia blatu (to filtr Regulacja). Powiązanie:
+    TAK → Szerokość po rozłożeniu obowiązkowa; NIE → Szerokość po rozłożeniu pusta (luka odrzucana). Źródła po kolei:
+    1) podkategoria „Stoły rozkładane” → automatycznie TAK; 2) nazwa: „rozkładany”, „rozsuwany”, „z wkładką”, wymiar
+    z ukośnikiem lub myślnikiem (np. „140/180”, „80x80/200”); 3) opis: „po rozłożeniu”, „wkładka”; 4) zdjęcie tylko
+    pomocniczo – zdjęcie rozłożonego stołu lub widoczna wkładka potwierdza TAK, brak takiego zdjęcia nie oznacza
+    NIE. Zestaw stołu z krzesłami: wartość dotyczy stołu w zestawie. Ławostoły: z definicji rozkładane → domyślnie
+    TAK; NIE tylko gdy producent podaje wyłącznie podnoszenie blatu bez jego powiększenia. Ławy i stoliki kawowe
+    nie mają tego filtra – ława rozkładana do stołu powinna być przypisana do węzła Ławostoły.'
+  Szerokość po rozłożeniu: 'Szerokość po rozłożeniu – dłuższy wymiar blatu stołu po pełnym rozłożeniu (ze wszystkimi
+    wkładkami), w cm. Dotyczy tylko stołów z Rozkładane = tak; musi być większa niż Szerokość stołu złożonego. Stół
+    nierozkładany – pole puste, luka automatycznie odrzucana. Źródło: dane producenta, opis („po rozłożeniu blat
+    ma 175 × 80 cm”), nazwa (np. „80x80/200”, „140-240” – druga liczba to wymiar po rozłożeniu). Nie odczytujemy
+    ze zdjęcia. Stół rozkładany bez tej wartości blokuje wyliczenie Liczby miejsc – uzupełniamy ją w pierwszej kolejności.'
   Oświetlenie: 'Czy mebel ma oświetlenie zamontowane w meblu (LED w witrynie, listwy, podświetlenie półek, wnętrza
     szafy, wezgłowia, lampki do czytania w wezgłowiu, podświetlenie lustra). Wartości: „w zestawie” – oświetlenie
     jest w komplecie i w cenie; „opcjonalne” – można je dokupić osobno (niezależnie od tego, czy jest pokazane na
@@ -58,6 +88,61 @@ definicje:
     lub listwy LED w meblu = mebel ma oświetlenie (w zestawie albo opcjonalne – do potwierdzenia w opisie); brak
     widocznego oświetlenia nie oznacza „brak” (zgaszone LED pod wieńcem zwykle nie są widoczne). NIE WIDAĆ: zdjęcie
     bez zapalonego światła, na którym nie widać listew, diod ani przewodów.'
+  Szerokość powierzchni spania: 'Szerokość powierzchni spania – krótszy wymiar powierzchni do spania, w cm. ŁÓŻKA:
+    automatycznie z atrybutu Rozmiar (np. 180x200 → 180 = krótsza wartość); rozmiar z kilkoma takimi samymi wartościami
+    (łóżko piętrowe „90x200, 90x200”) → jeden rozmiar materaca; zapis niejednoznaczny → ręczna weryfikacja; wpisana
+    wartość niezgodna z Rozmiarem → sprzeczność do weryfikacji, bez nadpisywania. BRAK ROZMIARU (łóżka): kolejno
+    1) nazwa (np. „160x200”), 2) opis („na materac 160 × 200 cm”), 3) rysunek techniczny (Gemini) – tylko wymiar
+    opisany jako powierzchnia spania / materac / wymiar wewnętrzny ramy, NIE wymiar zewnętrzny łóżka; odczyt dopasowany
+    do standardowego rozmiaru materaca (szer. 80/90/100/120/140/160/180/200, dł. 190/200/220) – wartość spoza standardu
+    → ręczna weryfikacja. 4) nic z tych źródeł → luka do ręcznego uzupełnienia. Gdy powierzchnia spania znaleziona,
+    a Rozmiar pusty – propozycja uzupełnienia także Rozmiaru (szer. x dł.). MEBLE WYPOCZYNKOWE (sofy, wersalki,
+    narożniki, fotele, komplety): najpierw Funkcje – jest funkcja spania → wymiar obowiązkowy (brak = luka); brak
+    funkcji spania → weryfikacja po nazwie („rozkładana”, „z funkcją spania”, „wersalka”) lub zdjęciu, czy powinna
+    być; mebel bez funkcji spania → luka automatycznie odrzucana. Wymiar wg producenta, nie ze zdjęcia.'
+  Długość powierzchni spania: 'Długość powierzchni spania – dłuższy wymiar powierzchni do spania, w cm. ŁÓŻKA: automatycznie
+    z atrybutu Rozmiar (np. 180x200 → 200 = dłuższa wartość); te same zasady co dla Szerokości powierzchni spania
+    (łóżko piętrowe – jeden rozmiar materaca, niejednoznaczne → ręcznie, niezgodność z Rozmiarem → sprzeczność bez
+    nadpisywania). BRAK ROZMIARU (łóżka): kolejno 1) nazwa (np. „160x200”), 2) opis („na materac 160 × 200 cm”),
+    3) rysunek techniczny (Gemini) – tylko wymiar opisany jako powierzchnia spania / materac / wymiar wewnętrzny
+    ramy, NIE wymiar zewnętrzny łóżka; odczyt dopasowany do standardowego rozmiaru materaca (szer. 80/90/100/120/140/160/180/200,
+    dł. 190/200/220) – wartość spoza standardu → ręczna weryfikacja. 4) nic z tych źródeł → luka do ręcznego uzupełnienia.
+    Gdy powierzchnia spania znaleziona, a Rozmiar pusty – propozycja uzupełnienia także Rozmiaru (szer. x dł.).
+    MEBLE WYPOCZYNKOWE: obowiązkowa tylko przy funkcji spania (kolejność: najpierw Funkcje, potem wymiary); bez
+    funkcji spania luka automatycznie odrzucana. Wymiar wg producenta, nie ze zdjęcia.'
+  Materac w zestawie: 'Czy materac jest w komplecie i w cenie łóżka. Wartości: „tak” / „nie”. TAK: materac wchodzi
+    w skład produktu (także w osobnej paczce). NIE: materac kupowany osobno – także gdy na zdjęciu łóżko stoi z
+    materacem (aranżacja). Łóżko piętrowe / z dodatkowym spaniem: TAK tylko gdy w zestawie są materace do wszystkich
+    spań; tylko do części → NIE (info w opisie). Źródła po kolei: 1) dane producenta / feed; 2) nazwa („z materacem”,
+    „+ materac”); 3) opis („w zestawie materac”, „cena nie obejmuje materaca”). Ze zdjęcia nie odczytujemy (Gemini
+    – nie dotyczy). Powiązanie ze stelażem: materac w zestawie zwykle oznacza też stelaż w zestawie – brak stelaża
+    przy TAK to sygnał do weryfikacji. Powiązanie z zestawem „Skompletuj swój zestaw” na karcie produktu: TAK →
+    karta NIE powinna mieć zestawu łóżko + materac (do usunięcia); NIE → karta powinna mieć zestaw z materacem w
+    rozmiarze łóżka (brak → raport do uzupełnienia zestawów); łóżko z zestawem z materacem, a w filtrze TAK lub
+    pusto → do poprawki (powinno być NIE).'
+  Stelaż w zestawie: 'Czy stelaż (podstawa pod materac: listwowy, sprężynowy, płyta) jest w komplecie i w cenie
+    łóżka. Wartości: „tak” / „nie”. TAK: stelaż wchodzi w skład produktu (także w osobnej paczce); łóżko kontynentalne
+    / z pojemnikiem, w którym podstawa pod materac jest częścią konstrukcji (np. podnoszony stelaż nad pojemnikiem)
+    – TAK. NIE: stelaż kupowany osobno; łóżko wymaga dokupienia stelaża lub płyty. Łóżko piętrowe / z dodatkowym
+    spaniem: TAK tylko gdy stelaże są do wszystkich spań; tylko do części → NIE (info w opisie). Źródła po kolei:
+    1) dane producenta / feed; 2) nazwa („ze stelażem”, „+ stelaż”); 3) opis („w zestawie stelaż”, „stelaż w cenie”,
+    „bez stelaża”). Ze zdjęcia nie odczytujemy (stelaż zwykle niewidoczny pod materacem). Powiązanie z materacem:
+    Materac w zestawie = tak, a Stelaż = nie → sygnał do weryfikacji. Powiązanie z zestawem „Skompletuj swój zestaw”
+    na karcie produktu – ta sama zasada co przy materacu: TAK → karta NIE powinna mieć zestawu ze stelażem (do usunięcia);
+    NIE → karta powinna mieć zestaw ze stelażem w rozmiarze łóżka (brak → raport do uzupełnienia zestawów); łóżko
+    z zestawem ze stelażem, a w filtrze TAK lub pusto → do poprawki (powinno być NIE).'
+  Z pojemnikiem: 'Czy mebel ma schowek na pościel lub rzeczy. Wartości: „tak” / „nie”. Dotyczy łóżek oraz sof, wersalek,
+    narożników i kompletów wypoczynkowych. TAK – każdy typ pojemnika będący częścią produktu: w konstrukcji (pod
+    podnoszonym stelażem łóżka, pod podnoszonym siedziskiem sofy/narożnika, w skrzyni łóżka kontynentalnego) oraz
+    wysuwany (szuflada/szuflady pod łóżkiem lub kanapą, pojemnik na kółkach dołączony do mebla). NIE: brak schowka;
+    pojemnik kupowany osobno (np. pojemnik pod łóżko z kategorii akcesoriów). Szuflada pod łóżkiem liczy się tutaj,
+    nie w Liczbie szuflad (łóżka nie mają tego filtra). Źródła po kolei: 1) podkategoria „Łóżka z pojemnikiem” →
+    automatycznie TAK; 2) nazwa („z pojemnikiem”, „z szufladą”, „z szufladami”, „ze schowkiem”); 3) opis; 4) zdjęcie
+    (Gemini) – pomocne: zdjęcie z otwartym pojemnikiem, podniesionym stelażem/siedziskiem lub wysuniętą szufladą
+    potwierdza TAK; widoczne fronty szuflad w podstawie łóżka/kanapy też. NIE WIDAĆ: zdjęcie tylko zamkniętego mebla
+    bez widocznych frontów szuflad i bez opisu – brak schowka na zdjęciu nie oznacza NIE (pojemnik w konstrukcji
+    jest zwykle niewidoczny). Powiązanie: sofa/narożnik z funkcją spania często ma pojemnik – przy funkcji spania
+    i pustym filtrze warto sprawdzić zdjęcie.'
   Liczba drzwi: 'Liczba skrzydeł drzwiowych w meblu: drzwi uchylne, przesuwne, szklane, lustrzane oraz klapy (uchylne
     w górę lub w dół) – każda klapa liczy się jako drzwi. Wartości: „bez drzwi” (brak drzwi i klap), „1-drzwiowe”,
     „2-drzwiowe”, „3-drzwiowe”, „wielodrzwiowe” (4 i więcej). Liczymy skrzydła otwierane jako całość = 1: front
@@ -79,21 +164,32 @@ definicje:
   Liczba półek: 'Liczba półek w meblu. Półka to luźny element montowany na końcu – wkładany do gotowego korpusu
     (zwykle na kołkach, podpórkach lub prowadnicach, często przestawny), z płyty, szkła lub metalu, na którym można
     coś postawić. Liczymy półki wewnętrzne (za drzwiami) i otwarte – tylko te w zestawie i w cenie, nie dokupowane
-    osobno. Zestaw sprzedawany jako jeden produkt (jedno ID) – sumujemy półki wszystkich elementów. NIE liczymy
-    elementów konstrukcji korpusu, ramy ani frontu: blatu wierzchniego, górnego wieńca, dna korpusu (także gdy jest
-    dnem otwartej wnęki), stałych przegród poziomych łączących boki, przegród pionowych, dna szuflad, półek i półeczek
-    na wewnętrznej stronie drzwi; w meblu na stelażu, ramie lub nogach – blatu, wierzchu korpusu/skrzynki szuflady
-    ani dna korpusu wstawionego w ramę (otwarta przestrzeń między blatem a korpusem to nie półka). Źródło rozstrzygające:
-    instrukcja montażu / rysunek techniczny producenta (półki to wolne płyty montowane na końcu, np. na kołkach;
-    elementy konstrukcji są skręcane z bokami i trzymają korpus). Po samym zdjęciu często nie da się tego odróżnić
-    – wolna półka i płyta konstrukcyjna wyglądają tak samo. Przykłady „bez półek”: szafka RTV z otwartymi wnękami
-    nad szufladami/drzwiami rozdzielonymi przegrodami pionowymi; szafka RTV na metalowej ramie ze szklanym blatem
-    i korpusem z wnękami; szafka nocna na drewnianej ramie z blatem i szufladą pod nim. Przykład „4” (wg rysunku
-    technicznego): wysoki regał z wnękami i przegrodami pionowymi u góry i szafką z drzwiami na dole – 4 poziome
-    płyty między wieńcem a dnem są wolnymi półkami (na rysunku elementy 6–9), więc 4; przegrody pionowe się nie
-    liczą. Porównaj: w szafce RTV płyta między wnękami a szufladami jest częścią konstrukcji, więc się nie liczy.
-    Brak półek = wartość „bez półek”. NIE WIDAĆ: wnętrze jest zamknięte drzwiami lub zasłonięte albo nie da się
-    odróżnić półki luźnej od stałej przegrody.'
+    osobno. Zestaw sprzedawany jako jeden produkt (jedno ID) – sumujemy półki wszystkich elementów. W zestawie liczymy
+    też półki otwarte poza korpusem, będące osobnymi elementami zestawu: półki wiszące/naścienne (np. na panelu
+    ściennym), półkę nad wieszakami w garderobie przedpokojowej – o ile da się na nich coś postawić. Nie liczymy
+    górnego wieńca panelu, jeśli jest tylko maskownicą bez funkcji półki. Półka jako osobna bryła (półka wisząca,
+    półka skrzynkowa – w zestawie albo jako samodzielny produkt) = 1 półka, niezależnie od liczby przegród i przegródek;
+    komplet kilku osobnych półek = ich liczba. Wolne półki wewnątrz bryły doliczamy wg zwykłej zasady. Przykłady:
+    półka wisząca z dnem i dwiema przegrodami pionowymi = 1, nie 3; półka skrzynkowa (otwarta skrzynka) = 1, nie
+    „bez półek”. NIE liczymy elementów konstrukcji korpusu, ramy ani frontu: blatu wierzchniego, górnego wieńca,
+    dna korpusu (także gdy jest dnem otwartej wnęki), stałych przegród poziomych łączących boki, przegród pionowych,
+    dna szuflad, półek i półeczek na wewnętrznej stronie drzwi; w meblu na stelażu, ramie lub nogach – blatu, wierzchu
+    korpusu/skrzynki szuflady ani dna korpusu wstawionego w ramę (otwarta przestrzeń między blatem a korpusem to
+    nie półka). Źródło rozstrzygające: instrukcja montażu / rysunek techniczny producenta (półki to wolne płyty
+    montowane na końcu, np. na kołkach; elementy konstrukcji są skręcane z bokami i trzymają korpus). Jak czytać
+    instrukcję: półka leży na podpórkach/półkownikach (kołki w rzędzie otworów w bokach, często szkło 4–6 mm); konstrukcja
+    jest łączona z bokami złączami mimośrodowymi lub konfirmatami i często ma ten sam numer części co wieniec i
+    dno (np. element „4 × 3” = wieniec dolny, dno i przegroda między komorami). Przykład: witryna RISE-10 – 2 szklane
+    półki na podpórkach = półki; drewniana płyta między komorą z drzwiami drewnianymi a szklanymi (ten sam element
+    co dno) = konstrukcja; meblościanka RISE z półką wiszącą RISE-70 = 3 półki. Po samym zdjęciu często nie da się
+    tego odróżnić – wolna półka i płyta konstrukcyjna wyglądają tak samo. Przykłady „bez półek”: szafka RTV z otwartymi
+    wnękami nad szufladami/drzwiami rozdzielonymi przegrodami pionowymi; szafka RTV na metalowej ramie ze szklanym
+    blatem i korpusem z wnękami; szafka nocna na drewnianej ramie z blatem i szufladą pod nim. Przykład „4” (wg
+    rysunku technicznego): wysoki regał z wnękami i przegrodami pionowymi u góry i szafką z drzwiami na dole – 4
+    poziome płyty między wieńcem a dnem są wolnymi półkami (na rysunku elementy 6–9), więc 4; przegrody pionowe
+    się nie liczą. Porównaj: w szafce RTV płyta między wnękami a szufladami jest częścią konstrukcji, więc się nie
+    liczy. Brak półek = wartość „bez półek”. NIE WIDAĆ: wnętrze jest zamknięte drzwiami lub zasłonięte albo nie
+    da się odróżnić półki luźnej od stałej przegrody.'
   Liczba drążków: 'Liczba drążków na wieszaki (ubrania) w szafie lub garderobie (także garderobie do przedpokoju,
     która może mieć szafę) – tylko te, które są w zestawie i w cenie, a nie dokupowane osobno. Zestaw sprzedawany
     jako jeden produkt (jedno ID) – sumujemy drążki wszystkich elementów. Wysuwany drążek i pantograf liczą się

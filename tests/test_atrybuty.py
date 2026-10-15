@@ -4550,3 +4550,24 @@ def test_dodatkowe_ujecia_tylko_dla_polek():
     g = [zdjecia.Zdjecie("Otwarty", "o"), zdjecia.Zdjecie("Rysunek techniczny", "r")]
     assert [z.url for z in zdjecia.dodatkowe(g, "Liczba półek", "o")] == ["r"]
     assert zdjecia.dodatkowe(g, "Liczba drążków", "o") == []
+
+
+def test_zaslepka_w_arkuszu_nie_jest_definicja():
+    """Arkusz Ewy ma „do uzupełnienia” i „Ukryty na froncie…” w kolumnie
+    definicja — nie mogą trafić do pytania dla Gemini jako wytyczna."""
+    from atrybuty import wezly
+    assert wezly.ZASLEPKA.match("do uzupełnienia")
+    assert wezly.ZASLEPKA.match("Ukryty na froncie (za mało przypisań) — reguła")
+    assert not wezly.ZASLEPKA.match("Liczba osób, dla których mebel jest przeznaczony")
+
+
+def test_z_pojemnikiem_czytany_ze_zdjecia_otwartego():
+    """Ewa (14.10.2026): z nowych filtrów tylko „Z pojemnikiem” nadaje się do
+    odczytu ze zdjęć — i to ze zdjęcia z otwartym schowkiem, nie z frontu."""
+    from atrybuty import wizja, zdjecia
+    assert "Z pojemnikiem" in wizja.PYTANIA
+    for atr in ("Liczba miejsc", "Rozkładane", "Materac w zestawie", "Stelaż w zestawie"):
+        assert atr not in wizja.PYTANIA
+    g = [zdjecia.Zdjecie("Zamknięty - front", "f"),
+         zdjecia.Zdjecie("Narożnik - prezentacja schowka", "s")]
+    assert zdjecia.wybierz(g, "Z pojemnikiem").url == "s"

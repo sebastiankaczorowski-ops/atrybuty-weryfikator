@@ -3,6 +3,18 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-15 · Nowe definicje Ewy i „Z pojemnikiem” ze zdjęć
+
+- Wczytany arkusz Ewy z 14.10: definicje Liczby miejsc, Rozkładanych, Szerokości
+  po rozłożeniu, powierzchni spania, Materaca i Stelaża w zestawie, Z pojemnikiem;
+  Kształt blatu z „nieregularny”, Liczba półek z zasadami dla zestawów
+  (półki wiszące, półka jako osobna bryła). Filtry węzłów bez zmian.
+- Zaślepki z arkusza („do uzupełnienia”, „Ukryty na froncie…”) nie trafiają
+  już do pytań dla Gemini jako definicja.
+- **„Z pojemnikiem” czytany ze zdjęć** — ze zdjęcia z otwartym schowkiem
+  („prezentacja schowka”, wnętrze), z definicją Ewy. Pozostałe nowe filtry
+  (miejsca, rozkładane, materac, stelaż) zostają przy danych producenta i nazwie.
+
 ## 2026-10-15 · Liczba półek: Gemini widzi cały zestaw
 
 - Do pytania o liczbę półek obok zdjęcia wnętrza idą też **rysunek techniczny**

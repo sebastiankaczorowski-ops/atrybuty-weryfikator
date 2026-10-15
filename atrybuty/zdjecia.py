@@ -45,6 +45,9 @@ UJECIE_DLA_ATRYBUTU: dict[str, tuple[str, ...]] = {
     "Rodzaj frontu": ("front",),
     "Podparcie": ("front", "rysunek"),
     "Na nóżkach": ("front", "rysunek"),
+    # schowek widać na zdjęciu otwartym („Narożnik - prezentacja schowka”,
+    # podniesiony stelaż łóżka); zamknięty front zwykle nic nie mówi
+    "Z pojemnikiem": ("wnetrze", "front", "aranzacja"),
     "Materiał": ("front", "aranzacja"),
     "Dekoracje": ("front", "aranzacja"),
     "Styl": ("aranzacja", "front"),
