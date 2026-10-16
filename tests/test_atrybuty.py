@@ -4622,3 +4622,29 @@ def test_odczyty_trafiaja_do_najnowszego_przebiegu(konfig_luk, tmp_path, monkeyp
     assert con.execute("SELECT COUNT(*) FROM findingi WHERE przebieg_id=? AND "
                        "regula_id='L2-LUKA-ZDJECIE'", (nowy,)).fetchone()[0] == 3
     con.close()
+
+
+def test_niedostepne_dodatkowe_zdjecie_nie_placi_przy_kazdym_przebiegu(tmp_path, monkeypatch):
+    """Błąd: przy niedostępnym rysunku (CDN, MODO) pytanie szło bez niego, ale
+    cache szukał odpowiedzi z kompletem zdjęć — każdy przebieg płacił od nowa."""
+    import json
+    import sqlite3
+    from atrybuty import wizja
+    con = sqlite3.connect(tmp_path / "w.db"); con.row_factory = sqlite3.Row
+    wizja.przygotuj_baze(con)
+    galeria = [["Otwarty - front", "http://x/o.jpg"], ["Rysunek techniczny", "http://x/r.jpg"]]
+    poz = {"produkt_id": "773893", "atrybut": "Liczba półek", "stara_wartosc": "",
+           "zdjecie": "http://x/o.jpg", "zdjecia": json.dumps(galeria)}
+
+    def pobierz(url, kat):
+        if url.endswith("r.jpg"):
+            raise RuntimeError("HTTP Error 500")
+        return b"o"
+    monkeypatch.setattr(wizja, "pobierz_zdjecie", pobierz)
+    zapytan = []
+    monkeypatch.setattr(wizja, "zapytaj", lambda *a, **k: zapytan.append(1) or
+                        wizja.Odpowiedz("niezgodne", "2-półki", 0.9, "", 900, 60))
+    wizja.przetworz(con, [poz], echo=lambda *_: None)
+    w = wizja.przetworz(con, [poz], echo=lambda *_: None)
+    assert len(zapytan) == 1 and w["z_cache"] == 1
+    con.close()

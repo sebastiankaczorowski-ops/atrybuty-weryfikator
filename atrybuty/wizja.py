@@ -521,7 +521,20 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
             podsumowanie["pominietych"] += 1
             continue
         pusta = not (poz["stara_wartosc"] or "").strip()
-        extra = dodatkowe_zdjecia(poz, poz["atrybut"], url)
+        # Dodatkowe ujęcia pobieramy PRZED sprawdzeniem cache (z CDN, za darmo,
+        # kopia na dysku): klucz musi opisywać zdjęcia, które naprawdę pójdą.
+        # Wcześniej klucz brał wszystkie, a przy niedostępnym rysunku pytanie szło
+        # bez niego — cache nie trafiał nigdy i każdy przebieg płacił od nowa
+        # (MODO, 16.10.2026).
+        dodatkowe: list[tuple[bytes, str]] = []
+        extra: list[tuple[str, str]] = []
+        for u, etykieta in dodatkowe_zdjecia(poz, poz["atrybut"], url):
+            try:
+                dodatkowe.append((pobierz_zdjecie(u, katalog_zdjec), etykieta))
+                extra.append((u, etykieta))
+            except Exception:                        # noqa: BLE001
+                # brak dodatkowego ujęcia nie blokuje pytania — główne jest
+                podsumowanie["niedostepne_zdjecia"].append((poz["produkt_id"], u, "dodatkowe"))
         # Inny zestaw zdjęć = inne pytanie: odpowiedź z samego „Otwartego…”
         # nie może wrócić z cache jako odczyt z rysunkiem (zaniżone półki).
         klucz_url = "|".join([url] + [u for u, _ in extra])
@@ -556,20 +569,6 @@ def przetworz(con: sqlite3.Connection, pozycje: Iterable[dict],
                      0, 0, _teraz()))
                 con.commit()
                 continue
-            dodatkowe = []
-            for u, etykieta in extra:
-                try:
-                    dodatkowe.append((pobierz_zdjecie(u, katalog_zdjec), etykieta))
-                except Exception:                    # noqa: BLE001
-                    # brak dodatkowego ujęcia nie blokuje pytania — główne jest
-                    podsumowanie["niedostepne_zdjecia"].append((poz["produkt_id"], u, "dodatkowe"))
-            if len(dodatkowe) < len(extra):
-                # pytamy bez brakującego ujęcia — klucz cache musi to oddać,
-                # żeby po naprawie zdjęcia pytanie z kompletem poszło na nowo
-                ok = {e for _, e in dodatkowe}
-                klucz_url = "|".join([url] + [u for u, e in extra if e in ok])
-                h = hasz_zapytania(klucz_url, pytanie + ("|" + TRYB_ODCZYTU if pusta else ""),
-                                   poz["stara_wartosc"] or "", model)
             if dodatkowe:
                 ujecie = ujecie + " + " + " + ".join(e for _, e in dodatkowe)
             try:

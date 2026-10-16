@@ -3,6 +3,13 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-16 · Bez ponownego płacenia za produkty z niedostępnym rysunkiem
+
+- Gdy CDN sklepu nie wydawał dodatkowego zdjęcia (rysunku, prezentacji
+  zestawu), pytanie szło bez niego, ale przy następnym przebiegu cache go nie
+  znajdował i Gemini był pytany od nowa — za każdym razem. Teraz cache trafia;
+  po naprawie zdjęcia na CDN pytanie z kompletem pójdzie raz.
+
 ## 2026-10-16 · Odczyty trafiają do najnowszego importu; Z pojemnikiem tylko z otwartego schowka
 
 - Gdy w trakcie długiego odczytu ze zdjęć wgrano nowy eksport, propozycje
