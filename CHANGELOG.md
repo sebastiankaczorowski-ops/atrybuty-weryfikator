@@ -3,6 +3,16 @@
 Wpis po każdym commicie. Format: data, tytuł, co z tego ma użytkownik.
 Najnowsze na górze. Ten plik czyta zakładka „co nowego" w panelu.
 
+## 2026-10-16 · Odczyty trafiają do najnowszego importu; Z pojemnikiem tylko z otwartego schowka
+
+- Gdy w trakcie długiego odczytu ze zdjęć wgrano nowy eksport, propozycje
+  trafiały do poprzedniego importu i komunikat mówił „zaktualizowane: 0”.
+  Teraz zawsze do najnowszego. Nowa opcja `wizja --luki --zastosuj` przenosi
+  zapisane odczyty do kolejki bez żadnego zapytania do Gemini.
+- „Z pojemnikiem” czytamy tylko przy zdjęciu otwartego mebla albo
+  „prezentacji schowka” — próbka 30 z zamkniętych frontów dała 29× „nie widać”.
+  Takie zdjęcie ma ok. 20 z 217 produktów z tą luką (eksport z 30.09).
+
 ## 2026-10-15 · Odczyt ze zdjęć nie „wisi” na ogromnych zdjęciach
 
 - Bardzo duże zdjęcia (np. 100 Mpx u ASM) są zmniejszane przy dekodowaniu,

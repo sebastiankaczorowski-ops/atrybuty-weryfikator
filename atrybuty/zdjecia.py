@@ -23,7 +23,7 @@ UJECIA: dict[str, tuple[str, ...]] = {
     # „wnetrze” ogólnie: w danych są też „Wnętrze szafy – otwarte obie sekcje”,
     # „– rozsunięte lewe drzwi”, „- z ubraniami” (półpauza, różne końcówki).
     "wnetrze": ("otwarty - front", "wnetrze szafy - bez drzwi", "otwarty", "wnetrze",
-                "naroznik - prezentacja schowka", "przekroj", "schemat / przekroj mebla"),
+                "prezentacja schowka", "przekroj", "schemat / przekroj mebla"),
     # rysunek techniczny — wymiary są na nim wypisane
     "rysunek": ("rysunek techniczny", "schemat/infografika", "schemat / przekroj mebla",
                 "rysunek techniczny (szkic bez wymiarow)"),
@@ -47,7 +47,7 @@ UJECIE_DLA_ATRYBUTU: dict[str, tuple[str, ...]] = {
     "Na nóżkach": ("front", "rysunek"),
     # schowek widać na zdjęciu otwartym („Narożnik - prezentacja schowka”,
     # podniesiony stelaż łóżka); zamknięty front zwykle nic nie mówi
-    "Z pojemnikiem": ("wnetrze", "front", "aranzacja"),
+    "Z pojemnikiem": ("wnetrze",),
     "Materiał": ("front", "aranzacja"),
     "Dekoracje": ("front", "aranzacja"),
     "Styl": ("aranzacja", "front"),
@@ -103,7 +103,10 @@ def parsuj(surowe: str) -> list[Zdjecie]:
 
 # Półki i drążki widać wyłącznie we wnętrzu. Z frontu albo aranżacji model
 # zgadywał; bez zdjęcia wnętrza nie pytamy wcale — i nie płacimy.
-TYLKO_WNETRZE = {"Liczba półek", "Liczba drążków"}
+# „Z pojemnikiem” tak samo: z zamkniętego frontu schowka nie widać — próbka 30
+# (15.10.2026) dała 29× „nie widać” za pieniądze. Pytamy tylko przy zdjęciu
+# otwartego mebla albo „prezentacji schowka”.
+TYLKO_WNETRZE = {"Liczba półek", "Liczba drążków", "Z pojemnikiem"}
 
 
 def wybierz(zdjecia: list[Zdjecie], atrybut: str, zapasowe: str = "") -> Zdjecie | None:

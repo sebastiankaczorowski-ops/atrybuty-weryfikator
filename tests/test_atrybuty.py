@@ -4571,6 +4571,10 @@ def test_z_pojemnikiem_czytany_ze_zdjecia_otwartego():
     g = [zdjecia.Zdjecie("Zamknięty - front", "f"),
          zdjecia.Zdjecie("Narożnik - prezentacja schowka", "s")]
     assert zdjecia.wybierz(g, "Z pojemnikiem").url == "s"
+    # sam zamknięty front: nie pytamy (próbka 15.10: 29 z 30 „nie widać”)
+    assert zdjecia.wybierz([zdjecia.Zdjecie("Zamknięty - front", "f")], "Z pojemnikiem") is None
+    assert zdjecia.wybierz([zdjecia.Zdjecie("Sofa - prezentacja schowka", "s")],
+                           "Z pojemnikiem").url == "s"
 
 
 def test_ogromne_zdjecie_jest_zmniejszane_a_nie_wysylane_w_calosci(tmp_path, monkeypatch):
@@ -4596,3 +4600,25 @@ def test_ogromne_zdjecie_jest_zmniejszane_a_nie_wysylane_w_calosci(tmp_path, mon
     assert len(big.getvalue()) > wizja.MAKS_ORYGINAL
     plik.write_bytes(big.getvalue())
     assert len(wizja.pobierz_zdjecie("http://x/d.jpg", tmp_path)) < wizja.MAKS_ORYGINAL
+
+
+def test_odczyty_trafiaja_do_najnowszego_przebiegu(konfig_luk, tmp_path, monkeypatch, capsys):
+    """Błąd: import w trakcie długiego odczytu tworzył nowy przebieg, a odczyty
+    zamieniały braki w starym — „zaktualizowane: 0” po 113 odczytach półek.
+    `wizja --luki --zastosuj` przenosi zapisane odczyty bez kosztu Gemini."""
+    import atrybuty.pipeline as pipeline
+    from atrybuty import db, wizja
+    con, przebieg, _ = _baza_ze_zdjeciami(
+        tmp_path, monkeypatch, {"Na nóżkach": ("niezgodne", "Tak", 0.97)})
+    wizja.przetworz(con, wizja.kandydaci_luk(con, przebieg), echo=lambda *_: None)
+    produkty = [_pl(str(i), atrybuty={"Szerokość": "80", "Materiał": "płyta", "Oświetlenie": "brak",
+                                      "Liczba drzwi": "2-drzwiowe"}) for i in range(3)]
+    nowy = db.zapisz_przebieg(con, "t2.csv", produkty, pipeline.wszystkie_findingi(produkty, []))
+    con.close()
+    pipeline.komenda_wizja(None, "", "", wizja.MODEL_WOLUMEN, False, False, False,
+                           luki_=True, zastosuj=True)
+    assert "zaktualizowane z zapisanych odczytów: 3" in capsys.readouterr().out
+    con = db.polacz(pipeline.BAZA)
+    assert con.execute("SELECT COUNT(*) FROM findingi WHERE przebieg_id=? AND "
+                       "regula_id='L2-LUKA-ZDJECIE'", (nowy,)).fetchone()[0] == 3
+    con.close()

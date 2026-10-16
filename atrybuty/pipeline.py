@@ -239,13 +239,19 @@ def _podsumowanie(produkty: list[Produkt], findingi: list[Finding]) -> None:
 
 def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
                   na_sucho: bool, losowo: bool, wszystko: bool, luki_: bool = False,
-                  powtorz: bool = False) -> None:
+                  powtorz: bool = False, zastosuj: bool = False) -> None:
     """Warstwa L3 — Gemini na kandydatach przepuszczonych przez bramkę kosztową."""
     con = db.polacz(BAZA)
     wizja.przygotuj_baze(con)
     p = db.ostatni_przebieg(con)
     if not p:
         print("Brak przebiegów — uruchom najpierw `import`.")
+        return
+    if zastosuj:
+        # Bez Gemini: zapisane odczyty → propozycje w najnowszym przebiegu.
+        n = wizja.zamien_braki(con, int(p["id"]))
+        print(f"Braki/propozycje zaktualizowane z zapisanych odczytów: {n} (bez kosztu)")
+        con.close()
         return
 
     if luki_:
@@ -286,6 +292,10 @@ def komenda_wizja(limit: int | None, atrybut: str, producent: str, model: str,
     print(f"Tokeny: {w['tok_we']:,} wejścia / {w['tok_wy']:,} wyjścia "
           f"→ ${w['koszt_usd']:.3f}")
     if luki_:
+        # Najnowszy przebieg, nie ten ze startu: import w trakcie długiego
+        # odczytu tworzy nowy przebieg i propozycje trafiałyby do starego
+        # (15.10.2026: „zaktualizowane: 0” po 113 odczytach).
+        p = db.ostatni_przebieg(con)
         n = wizja.zamien_braki(con, int(p["id"]))
         print(f"Braki/propozycje zaktualizowane z odczytów ze zdjęcia: {n} — "
               f"do akceptacji w kolejce (L2-LUKA-ZDJECIE)")
@@ -447,6 +457,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="także te, które mają już werdykt")
     w.add_argument("--luki", action="store_true",
                    help="odczytaj ze zdjęć braki w filtrach bez propozycji (L1-LUKA-BRAK)")
+    w.add_argument("--zastosuj", action="store_true",
+                   help="bez Gemini: zamień zapisane odczyty luk w propozycje w najnowszym przebiegu")
     w.add_argument("--powtorz", action="store_true",
                    help="z --luki: odczytaj ponownie także już odczytane, nierozstrzygnięte "
                         "(po zmianie pytania; to samo pytanie wraca z cache za darmo)")
@@ -486,7 +498,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "wizja":
         model = wizja.MODEL_SPORNE if args.sporne else args.model
         komenda_wizja(args.limit, args.atrybut, args.producent, model,
-                      args.na_sucho, args.losowo, args.wszystko, args.luki, args.powtorz)
+                      args.na_sucho, args.losowo, args.wszystko, args.luki, args.powtorz,
+                      args.zastosuj)
     elif args.cmd == "kalibracja":
         komenda_kalibracja(args.akcja, args.plik)
     elif args.cmd == "wyczysc":
